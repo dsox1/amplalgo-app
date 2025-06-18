@@ -220,15 +220,7 @@ body {
     box-shadow: var(--shadow-medium);
     transition: var(--transition-medium);
     position: relative;
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(20px);
-}
-
-.panel.visible {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
+    animation: fadeIn 0.6s ease-out;
 }
 
 .panel:hover {
@@ -721,49 +713,36 @@ body {
     accent-color: #333333;
 }
 
-/* B&W Theme */
+/* B&W Theme - Fixed borders to be more subtle */
 .theme-bw .webhook-panel,
 .theme-bw .chart-panel,
 .theme-bw .order-panel {
     background: var(--panel-bw);
-    border: 2px solid #ffffff;
-    border-left: 4px solid #ffffff;
-}
-
-.theme-bw .webhook-panel {
-    border-left-color: #ffffff;
-}
-
-.theme-bw .chart-panel {
-    border-left-color: #ffffff;
-}
-
-.theme-bw .order-panel {
-    border-left-color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-left: 4px solid rgba(255, 255, 255, 0.7);
 }
 
 .theme-bw .control-panel {
     background: var(--panel-bw);
-    border: 2px solid #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .theme-bw .zoom-button,
 .theme-bw .price-button {
-    background: #ffffff;
-    color: #000000;
-    border: 2px solid #ffffff;
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .theme-bw .zoom-button:hover,
 .theme-bw .price-button:hover {
-    background: #000000;
-    color: #ffffff;
-    border-color: #ffffff;
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
 }
 
 .theme-bw .price-button.active {
-    background: #000000;
-    color: #ffffff;
+    background: #ffffff;
+    color: #000000;
     border-color: #ffffff;
 }
 
@@ -778,6 +757,17 @@ body {
 
 .panel:nth-child(3) {
     animation-delay: 0.3s;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @keyframes zoomIn {
