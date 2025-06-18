@@ -73,6 +73,27 @@ body {
     flex-direction: column;
 }
 
+/* Theme-specific backgrounds */
+body.theme-mono {
+    background: 
+        linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)),
+        url('background4.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+
+body.theme-bw {
+    background: 
+        linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)),
+        url('background2.jpg') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    background-attachment: fixed !important;
+}
+
 /* Main Container for Centering */
 .main-container {
     flex: 1;
@@ -148,7 +169,7 @@ body {
     border-radius: 8px;
     padding: 8px 16px;
     backdrop-filter: blur(5px);
-    max-width: 400px;
+    max-width: 513px; /* Increased by 3cm (113px) from 400px */
 }
 
 .smart-phrase-text {
@@ -732,17 +753,6 @@ body {
     border-left: 4px solid transparent;
 }
 
-/* B&W theme background overlay - 10% more transparent */
-body.theme-bw {
-    background: 
-        linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)),
-        url('background.jpg') !important;
-    background-size: cover !important;
-    background-position: center !important;
-    background-repeat: no-repeat !important;
-    background-attachment: fixed !important;
-}
-
 /* Remove colorization in B&W theme except zoom controls */
 .theme-bw .panel-title,
 .theme-bw .control-panel-title,
@@ -804,6 +814,69 @@ body.theme-bw {
         flex-direction: column;
         gap: 8px;
         text-align: center;
+    }
+    
+    /* Mobile Panel Height Fixes */
+    .panel {
+        width: 100% !important;
+        min-width: unset !important;
+        max-width: unset !important;
+    }
+    
+    /* Webhook Panel - Fixed height + 1cm (38px) */
+    .webhook-panel {
+        height: 358px !important;
+        min-height: 358px !important;
+        max-height: 358px !important;
+    }
+    
+    /* Chart Panel - Fixed height + 3cm (113px) */
+    .chart-panel {
+        height: 433px !important;
+        min-height: 433px !important;
+        max-height: 433px !important;
+    }
+    
+    /* Order Panel - Fixed height + 1cm (38px) */
+    .order-panel {
+        height: 358px !important;
+        min-height: 358px !important;
+        max-height: 358px !important;
+    }
+    
+    /* Panel Content - Fixed height with scroll */
+    .webhook-panel .panel-content,
+    .order-panel .panel-content {
+        height: 280px !important;
+        max-height: 280px !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+    }
+    
+    .chart-panel .panel-content {
+        height: 355px !important;
+        max-height: 355px !important;
+        overflow: hidden !important;
+    }
+    
+    /* TradingView Chart Mobile Optimization */
+    #tradingview_chart_widget {
+        height: 355px !important;
+        min-height: 355px !important;
+    }
+    
+    /* Disable background on mobile */
+    body {
+        background: #0a0a0a !important;
+        animation: none !important;
+    }
+    
+    body.theme-mono {
+        background: #0a0a0a !important;
+    }
+    
+    body.theme-bw {
+        background: #0a0a0a !important;
     }
 }
 
