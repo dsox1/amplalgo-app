@@ -7,7 +7,7 @@
     --bg-secondary: #1a1a1a;
     --bg-pattern: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
     
-    /* Panel Colors - Color Theme */
+    /* Panel Colors - Color Theme - RESTORED ORIGINAL COLORS */
     --panel-webhook: #006064;
     --panel-chart: #263238;
     --panel-order: #BF360C;
@@ -191,14 +191,16 @@ body {
     color: var(--accent-success);
 }
 
-/* Content Wrapper */
+/* Content Wrapper - FIXED: Remove initial 100% display, only smooth zoom animation */
 .content-wrapper {
     width: 100%;
     max-width: 1400px;
     margin: 0 auto;
     padding: 0 20px;
     transform-origin: center top;
-    transition: transform var(--transition-medium);
+    transform: scale(0.3);
+    opacity: 0;
+    animation: smoothZoomIn 1.5s ease-out forwards;
 }
 
 /* Panels Row */
@@ -210,8 +212,8 @@ body {
     width: 100%;
 }
 
+/* RESTORED ORIGINAL PANEL COLORS */
 .panel {
-    background: rgba(26, 26, 26, 0.95);
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
     overflow: hidden;
@@ -220,7 +222,6 @@ body {
     box-shadow: var(--shadow-medium);
     transition: var(--transition-medium);
     position: relative;
-    animation: fadeIn 0.6s ease-out;
 }
 
 .panel:hover {
@@ -277,25 +278,28 @@ body {
     min-height: 350px;
 }
 
-/* Specific Panel Styling */
+/* Specific Panel Styling - RESTORED ORIGINAL COLORS */
 .webhook-panel {
     width: 333px;
     min-width: 333px;
     max-width: 333px;
-    border-left: 4px solid var(--panel-webhook);
+    background: var(--panel-webhook);
+    border-left: 4px solid #00ACC1;
 }
 
 .chart-panel {
     flex: 1;
     min-width: 400px;
-    border-left: 4px solid var(--panel-chart);
+    background: var(--panel-chart);
+    border-left: 4px solid #546E7A;
 }
 
 .order-panel {
     width: 333px;
     min-width: 333px;
     max-width: 333px;
-    border-left: 4px solid var(--panel-order);
+    background: var(--panel-order);
+    border-left: 4px solid #FF5722;
 }
 
 /* Panel Actions (Scroll Buttons) */
@@ -629,35 +633,23 @@ body {
 
 /* Theme Variations */
 
-/* Mono Theme */
+/* Mono Theme - FIXED: Better text readability */
 .theme-mono .webhook-panel,
 .theme-mono .chart-panel,
 .theme-mono .order-panel {
-    border-left-color: #666666;
-    background: var(--panel-mono);
-}
-
-.theme-mono .webhook-panel {
-    border-left-color: #666666;
-}
-
-.theme-mono .chart-panel {
-    border-left-color: #666666;
-}
-
-.theme-mono .order-panel {
+    background: #f5f5f5;
     border-left-color: #666666;
 }
 
 .theme-mono .webhook-panel .panel-content,
 .theme-mono .chart-panel .panel-content,
 .theme-mono .order-panel .panel-content {
-    color: #000000 !important;
+    color: #333333 !important;
 }
 
 .theme-mono .webhook-panel .entry-data,
 .theme-mono .order-panel .entry-data {
-    color: #000000 !important;
+    color: #333333 !important;
 }
 
 .theme-mono .webhook-panel .entry-timestamp,
@@ -665,26 +657,14 @@ body {
     color: #666666 !important;
 }
 
-.theme-mono .webhook-panel {
-    border-left-color: #666666;
-}
-
-.theme-mono .chart-panel {
-    border-left-color: #666666;
-}
-
-.theme-mono .order-panel {
-    border-left-color: #666666;
-}
-
 .theme-mono .control-panel {
-    background: var(--panel-mono);
+    background: #f5f5f5;
 }
 
 .theme-mono .zoom-button,
 .theme-mono .price-button {
     background: rgba(255, 255, 255, 0.9);
-    color: #000000;
+    color: #333333;
     border-color: #666666;
 }
 
@@ -702,11 +682,11 @@ body {
 
 .theme-mono .control-panel-title,
 .theme-mono .panel-title {
-    color: #000000;
+    color: #333333;
 }
 
 .theme-mono .checkbox-item span {
-    color: #000000;
+    color: #333333;
 }
 
 .theme-mono .theme-option input[type="radio"] {
@@ -746,43 +726,16 @@ body {
     border-color: #ffffff;
 }
 
-/* Panel Animations */
-.panel:nth-child(1) {
-    animation-delay: 0.1s;
-}
-
-.panel:nth-child(2) {
-    animation-delay: 0.2s;
-}
-
-.panel:nth-child(3) {
-    animation-delay: 0.3s;
-}
-
-@keyframes fadeIn {
-    from {
+/* Animations - FIXED: Only smooth zoom animation */
+@keyframes smoothZoomIn {
+    0% {
+        transform: scale(0.3);
         opacity: 0;
-        transform: translateY(20px);
     }
-    to {
+    100% {
+        transform: scale(0.8);
         opacity: 1;
-        transform: translateY(0);
     }
-}
-
-@keyframes zoomIn {
-    from {
-        opacity: 0;
-        transform: scale(0.9);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-
-.content-wrapper {
-    animation: zoomIn 1s ease-out;
 }
 
 /* Luminous amplALGO Title Effect */
@@ -841,9 +794,6 @@ body {
     animation: backgroundBreathe 8s ease-in-out infinite;
 }
 
-/* Remove the automatic zoom animation to prevent double-take effect */
-/* Zoom will be handled by JavaScript only */
-
 /* Hide TradingView copyright */
 .tradingview-widget-copyright {
     display: none !important;
@@ -879,6 +829,7 @@ body {
     .content-wrapper {
         transform: none !important;
         animation: none !important;
+        opacity: 1 !important;
     }
     
     /* Hide zoom controls on mobile */
@@ -886,10 +837,10 @@ body {
         display: none;
     }
     
-    /* Mobile background optimization */
+    /* Mobile background - REMOVED, dark theme instead */
     body {
-        background-attachment: scroll; /* Better mobile support */
-        animation: none; /* Disable breathing animation on mobile */
+        background: #0a0a0a !important;
+        animation: none;
     }
     
     /* Mobile header adjustments */
@@ -916,33 +867,46 @@ body {
         padding: 10px;
     }
     
-    /* Mobile panels layout */
+    /* Mobile panels layout - FIXED: Chart at bottom */
     .panels-row {
         flex-direction: column;
         height: auto;
         gap: 15px;
     }
     
-    /* Mobile panel sizing */
+    /* Reorder panels: Webhooks → Order Log → Chart */
+    .webhook-panel {
+        order: 1;
+    }
+    
+    .order-panel {
+        order: 2;
+    }
+    
+    .chart-panel {
+        order: 3;
+    }
+    
+    /* Mobile panel sizing - INCREASED HEIGHT for scroll buttons */
     .panel {
         width: 100% !important;
         min-width: 100% !important;
         max-width: 100% !important;
-        height: 280px; /* Fixed height to prevent stretching */
+        height: 320px; /* Increased from 280px */
     }
     
-    /* Mobile panel content - CRITICAL FIX */
+    /* Mobile panel content - INCREASED HEIGHT */
     .panel-content {
-        max-height: 200px !important;
-        min-height: 200px !important;
+        max-height: 240px !important; /* Increased from 200px */
+        min-height: 240px !important;
         overflow-y: auto;
         font-size: 11px;
     }
     
-    /* Mobile TradingView chart optimization */
+    /* Mobile TradingView chart optimization - INCREASED HEIGHT */
     #tradingview_chart_widget {
-        height: 200px !important;
-        min-height: 200px !important;
+        height: 240px !important; /* Increased from 200px */
+        min-height: 240px !important;
     }
     
     /* Mobile control panels */
@@ -981,12 +945,12 @@ body {
         gap: 10px;
     }
     
-    /* Mobile scroll buttons */
+    /* Mobile scroll buttons - BETTER VISIBILITY */
     .action-btn {
-        padding: 8px 10px;
-        font-size: 14px;
-        min-width: 35px;
-        height: 35px;
+        padding: 10px 12px; /* Increased padding */
+        font-size: 16px; /* Larger font */
+        min-width: 40px; /* Wider buttons */
+        height: 40px; /* Taller buttons */
     }
     
     /* Mobile theme controls */
@@ -1011,18 +975,18 @@ body {
     }
     
     .panel {
-        height: 250px; /* Smaller height for very small screens */
+        height: 300px; /* Increased from 250px */
     }
     
     .panel-content {
-        max-height: 170px !important;
-        min-height: 170px !important;
+        max-height: 220px !important; /* Increased from 170px */
+        min-height: 220px !important;
         font-size: 10px;
     }
     
     #tradingview_chart_widget {
-        height: 170px !important;
-        min-height: 170px !important;
+        height: 220px !important; /* Increased from 170px */
+        min-height: 220px !important;
     }
     
     .app-title {
@@ -1052,21 +1016,21 @@ body {
     }
     
     .panel {
-        width: 300px !important;
-        min-width: 300px !important;
-        max-width: 300px !important;
-        height: 250px;
+        width: 320px !important; /* Increased from 300px */
+        min-width: 320px !important;
+        max-width: 320px !important;
+        height: 280px; /* Increased from 250px */
         flex-shrink: 0;
     }
     
     .panel-content {
-        max-height: 170px !important;
-        min-height: 170px !important;
+        max-height: 200px !important; /* Increased from 170px */
+        min-height: 200px !important;
     }
     
     #tradingview_chart_widget {
-        height: 170px !important;
-        min-height: 170px !important;
+        height: 200px !important; /* Increased from 170px */
+        min-height: 200px !important;
     }
     
     .control-panels-row {
