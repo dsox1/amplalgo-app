@@ -1,5 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
-
 /* CSS Variables */
 :root {
     /* Color Theme Variables */
@@ -877,6 +875,84 @@ body.theme-bw {
     
     body.theme-bw {
         background: #0a0a0a !important;
+    }
+}
+
+/* Mobile Landscape Orientation Fix - Prevents panel elongation in pseudo web app view */
+@media screen and (orientation: landscape) and (max-height: 768px) {
+    /* Force mobile panel behavior even in landscape */
+    .panel {
+        width: 100% !important;
+        min-width: unset !important;
+        max-width: unset !important;
+    }
+    
+    /* Webhook Panel - Fixed height + 1cm (38px) */
+    .webhook-panel {
+        height: 358px !important;
+        min-height: 358px !important;
+        max-height: 358px !important;
+    }
+    
+    /* Chart Panel - Fixed height + 3cm (113px) */
+    .chart-panel {
+        height: 433px !important;
+        min-height: 433px !important;
+        max-height: 433px !important;
+    }
+    
+    /* Order Panel - Fixed height + 1cm (38px) */
+    .order-panel {
+        height: 358px !important;
+        min-height: 358px !important;
+        max-height: 358px !important;
+    }
+    
+    /* Panel Content - Fixed height with scroll */
+    .webhook-panel .panel-content,
+    .order-panel .panel-content {
+        height: 280px !important;
+        max-height: 280px !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+    }
+    
+    .chart-panel .panel-content {
+        height: 355px !important;
+        max-height: 355px !important;
+        overflow: hidden !important;
+    }
+    
+    /* TradingView Chart Mobile Optimization */
+    #tradingview_chart_widget {
+        height: 355px !important;
+        min-height: 355px !important;
+    }
+    
+    /* Disable background on mobile landscape */
+    body {
+        background: #0a0a0a !important;
+        animation: none !important;
+    }
+    
+    body.theme-mono {
+        background: #0a0a0a !important;
+    }
+    
+    body.theme-bw {
+        background: #0a0a0a !important;
+    }
+    
+    /* Ensure panels stack vertically in landscape */
+    .panels-row {
+        flex-direction: column;
+        height: auto;
+        gap: 15px;
+    }
+    
+    .control-panels-row {
+        flex-direction: column;
+        gap: 15px;
     }
 }
 
