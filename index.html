@@ -147,6 +147,11 @@
                                 <input type="checkbox" id="sell-on-threshold">
                                 <span>Sell threshold only</span>
                             </label>
+                            <label class="checkbox-item ladder-panel-toggle">
+                                <input type="checkbox" id="show-ladder-panel">
+                                <span class="checkbox-text">Show Ladder Panel</span>
+                                <span class="led-indicator"></span>
+                            </label>
                         </div>
                     </div>
                 </div>
@@ -187,6 +192,138 @@
                                 <div class="theme-option">
                                     <input type="radio" id="theme-bw" name="theme" value="bw">
                                     <label for="theme-bw">B&W</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Properly Integrated Ladder Panel -->
+            <div class="integrated-ladder-panel" id="integrated-ladder-panel" style="display: none;">
+                <div class="ladder-panel-grid">
+                    <!-- Limit Orders Section -->
+                    <div class="ladder-section limit-orders-section">
+                        <div class="section-header">
+                            <h3><i class="fas fa-list-ol"></i> Limit Orders</h3>
+                        </div>
+                        <div class="section-content">
+                            <div class="stylish-digit-grid">
+                                <div class="digit-box active-trades-box">
+                                    <div class="digit-label">ACTIVE TRADES</div>
+                                    <div class="stylish-digit active-digit" id="active-trades-count">0</div>
+                                </div>
+                                <div class="digit-box pending-trades-box">
+                                    <div class="digit-label">PENDING TRADES</div>
+                                    <div class="stylish-digit pending-digit" id="pending-trades-count">8</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- AMPL Rebase Protection Section -->
+                    <div class="ladder-section rebase-section">
+                        <div class="section-header">
+                            <h3><i class="fas fa-shield-alt"></i> AMPL Rebase Protection Monitor</h3>
+                        </div>
+                        <div class="section-content">
+                            <div class="stylish-digit-grid">
+                                <div class="digit-box cost-box">
+                                    <div class="digit-label">COST (ACCUMULATED BUY ORDERS)</div>
+                                    <div class="stylish-digit cost-digit" id="buy-orders-total">$0</div>
+                                </div>
+                                <div class="digit-box value-box">
+                                    <div class="digit-label">CURRENT VALUE (WITH REBASE)</div>
+                                    <div class="stylish-digit value-digit" id="current-rebase-value">$2,847</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Blank Filler Section -->
+                    <div class="ladder-section filler-section">
+                        <div class="section-header">
+                            <h3><i class="fas fa-chart-line"></i> Trading Stats</h3>
+                        </div>
+                        <div class="section-content">
+                            <div class="stats-display">
+                                <div class="stat-item">
+                                    <span class="stat-label">Success Rate</span>
+                                    <span class="stat-value">87%</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Total Trades</span>
+                                    <span class="stat-value">142</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Avg. Profit</span>
+                                    <span class="stat-value">+3.2%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Properly Integrated Ladder Panel -->
+            <div class="integrated-ladder-panel" id="integrated-ladder-panel" style="display: none;">
+                <div class="ladder-panel-grid">
+                    <!-- Limit Orders Section -->
+                    <div class="ladder-section limit-orders-section">
+                        <div class="section-header">
+                            <h3><i class="fas fa-list-ol"></i> Limit Orders</h3>
+                        </div>
+                        <div class="section-content">
+                            <div class="stylish-digit-grid">
+                                <div class="digit-box active-trades-box">
+                                    <div class="digit-label">ACTIVE TRADES</div>
+                                    <div class="stylish-digit active-digit" id="active-trades-count">0</div>
+                                </div>
+                                <div class="digit-box pending-trades-box">
+                                    <div class="digit-label">PENDING TRADES</div>
+                                    <div class="stylish-digit pending-digit" id="pending-trades-count">8</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- AMPL Rebase Protection Section -->
+                    <div class="ladder-section rebase-section">
+                        <div class="section-header">
+                            <h3><i class="fas fa-shield-alt"></i> AMPL Rebase Protection Monitor</h3>
+                        </div>
+                        <div class="section-content">
+                            <div class="stylish-digit-grid">
+                                <div class="digit-box cost-box">
+                                    <div class="digit-label">COST (ACCUMULATED BUY ORDERS)</div>
+                                    <div class="stylish-digit cost-digit" id="buy-orders-total">$0</div>
+                                </div>
+                                <div class="digit-box value-box">
+                                    <div class="digit-label">CURRENT VALUE (WITH REBASE)</div>
+                                    <div class="stylish-digit value-digit" id="current-rebase-value">$2,847</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Blank Filler Section -->
+                    <div class="ladder-section filler-section">
+                        <div class="section-header">
+                            <h3><i class="fas fa-chart-line"></i> Trading Stats</h3>
+                        </div>
+                        <div class="section-content">
+                            <div class="stats-display">
+                                <div class="stat-item">
+                                    <span class="stat-label">Success Rate</span>
+                                    <span class="stat-value">87%</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Total Trades</span>
+                                    <span class="stat-value">142</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Avg. Profit</span>
+                                    <span class="stat-value">+3.2%</span>
                                 </div>
                             </div>
                         </div>
