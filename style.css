@@ -734,6 +734,32 @@ body[data-theme="color"] {
 }
 
 
+/* ===== MOBILE OPTIMIZATION - ADD AT END OF FILE ===== */
+@media (max-width: 768px) {
+    /* Remove background images on mobile, use black background */
+    body {
+        background-image: none !important;
+        background-color: #000000 !important;
+    }
+    
+    /* Ensure all themes use black background on mobile */
+    body[data-theme="color"],
+    body[data-theme="mono"], 
+    body[data-theme="bw"] {
+        background-image: none !important;
+        background-color: #000000 !important;
+    }
+    
+    /* Mobile-specific adjustments */
+    .panel {
+        margin: 5px;
+    }
+    
+    .control-panels {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
 
 
 
