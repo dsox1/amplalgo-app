@@ -735,26 +735,24 @@ body[data-theme="color"] {
 
 
 
-/* Mobile-only: 20% transparent black overlay over background image */
 @media (max-width: 768px) {
-    body::after {
-        content: '';
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.2);
-        z-index: 1; /* Above background but below panels */
-        pointer-events: none;
+    body {
+        position: relative;
     }
     
-    /* Ensure panels are above the overlay */
-    .panel, .main-panels, .control-panels, .ladder-panel {
-        position: relative;
-        z-index: 2;
+    body::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.2);
+        z-index: 0;
+        pointer-events: none;
     }
 }
+
 
 
 
