@@ -735,27 +735,6 @@ body[data-theme="color"] {
 
 
 
-@media (max-width: 768px) {
-    body {
-        position: relative;
-    }
-    
-    body::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100vh;
-        background: rgba(0, 0, 0, 0.2);
-        z-index: 5;
-        pointer-events: none;
-    }
-}
-
-
-
-
 
 
 /* Animations */
