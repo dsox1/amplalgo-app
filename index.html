@@ -152,6 +152,11 @@
                                 <span class="checkbox-text">Show Ladder Panel</span>
                                 <span class="led-indicator"></span>
                             </label>
+                            <label class="checkbox-item ampl-manager-toggle">
+                                <input type="checkbox" id="ampl-manager-toggle">
+                                <span class="checkbox-text">AMPL Manager</span>
+                                <span class="ampl-led-indicator"></span>
+                            </label>
                         </div>
                     </div>
                 </div>
@@ -355,6 +360,7 @@
     </footer>
 
     <!-- Scripts -->
+    <script src="/socket.io/socket.io.js"></script>
     <script src="https://s3.tradingview.com/tv.js"></script>
     <script src="supabase.js"></script>
     <script src="script.js"></script>
