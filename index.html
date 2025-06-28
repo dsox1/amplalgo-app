@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>amplALGO. - Amplify your edge. Optimize every trade.</title>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <!-- Force cache refresh -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <!-- Supabase JS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <!-- Header (Your Preferred Style) -->
+    <header class="main-header">
+        <div class="header-content">
+            <!-- Logo Section -->
+            <div class="logo-section">
+                <div class="logo-container">
+                    <h1 class="app-title">ampl<span class="algo-part">ALGO</span>.</h1>
+                </div>
+                <div class="subtitle">
+                    <span class="bismillah">B I S M I L L A H</span>
+                </div>
+            </div>
+            
+            <!-- Tagline Section -->
+            <div class="tagline-section">
+                <div class="smart-phrase-box">
+                    <span class="smart-phrase-text">Amplify your edge. Optimize every trade.</span>
+                </div>
+            </div>
+            
+            <!-- Balance Section -->
+            <div class="balance-section">
+                <div class="balance-card">
+                    <div class="balance-label">
+                        <i class="fas fa-coins"></i>
+                        KuCoin Balance (USDT)
+                    </div>
+                    <div class="balance-value" id="usdt-balance">Loading...</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <div class="main-container">
+        <!-- Main Content (Your Preferred Style with Modern Panels) -->
+        <main class="content-wrapper">
+            <div class="panels-row">
+                <!-- Incoming Webhooks Panel -->
+                <section class="webhook-display-section log-section panel webhook-panel">
+                    <div class="log-header panel-header">
+                        <h2 class="panel-title"><i class="fas fa-satellite-dish"></i> Incoming Webhooks</h2>
+                        <button id="clear-data-btn" class="clear-btn" title="Clear Webhook Log">
+                            <i class="fas fa-trash-alt"></i> Clear
+                        </button>
+                    </div>
+                    <div id="webhook-panel-content" class="log-content-wrapper panel-content">
+                        <div id="webhook-data" class="log-content webhook-data-log">
+                            <p>Waiting for webhook data...</p>
+                        </div>
+                    </div>
+                    <!-- Custom Scroll Buttons -->
+                    <div class="custom-scroll-controls panel-actions">
+                        <button class="scroll-btn scroll-up action-btn" onclick="scrollPanelUp('webhook-panel-content')" title="Scroll Up">▲</button>
+                        <button class="scroll-btn scroll-down action-btn" onclick="scrollPanelDown('webhook-panel-content')" title="Scroll Down">▼</button>
+                    </div>
+                </section>
+
+                <!-- TradingView Chart Panel -->
+                <section class="tradingview-chart-section panel chart-panel">
+                    <div class="log-header panel-header">
+                        <h2 class="panel-title"><i class="fas fa-chart-bar"></i> AMPL/USDT Chart</h2>
+                        <!-- Chart Toggle Button -->
+                        <button id="chart-toggle-btn" class="chart-toggle-btn clear-btn" title="Toggle Chart Type">
+                            <i class="fas fa-chart-line"></i>
+                        </button>
+                    </div>
+                    <!-- TradingView Widget Container -->
+                    <div class="tradingview-widget-container panel-content chart-content">
+                        <div id="tradingview_chart_widget"></div>
+                        <!-- Copyright hidden via CSS -->
+                        <div class="tradingview-widget-copyright"></div>
+                    </div>
+                    <!-- No scroll buttons for chart as requested -->
+                </section>
+
+                <!-- KuCoin Order Log Panel -->
+                <section class="order-log-section log-section panel order-panel">
+                    <div class="log-header panel-header">
+                        <h2 class="panel-title"><i class="fas fa-clipboard-list"></i> KuCoin Order Log</h2>
+                        <button id="clear-order-log-btn" class="clear-btn" title="Clear Order Log">
+                            <i class="fas fa-trash-alt"></i> Clear
+                        </button>
+                    </div>
+                    <div id="order-panel-content" class="log-content-wrapper panel-content">
+                        <div id="order-log" class="log-content order-data-log">
+                            <p>No orders placed yet...</p>
+                        </div>
+                    </div>
+                    <!-- Custom Scroll Buttons -->
+                    <div class="custom-scroll-controls panel-actions">
+                        <button class="scroll-btn scroll-up action-btn" onclick="scrollPanelUp('order-panel-content')" title="Scroll Up">▲</button>
+                        <button class="scroll-btn scroll-down action-btn" onclick="scrollPanelDown('order-panel-content')" title="Scroll Down">▼</button>
+                    </div>
+                </section>
+            </div>
+        
+            <!-- Control Panels Row (Below Main Panels) -->
+            <div class="control-panels-row">
+                <!-- Sell Price Targets Panel -->
+                <div class="control-panel price-targets-panel">
+                    <div class="control-panel-header">
+                        <h3 class="control-panel-title"><i class="fas fa-target"></i> Sell Price Targets</h3>
+                    </div>
+                    <div class="control-panel-content">
+                        <div class="price-buttons">
+                            <button class="price-button threshold-btn price-btn" data-value="1.10">1.10</button>
+                            <button class="price-button threshold-btn price-btn" data-value="1.25">1.25</button>
+                            <button class="price-button threshold-btn price-btn" data-value="1.40">1.40</button>
+                        </div>
+                        <div class="current-target">
+                            <span>Current Target:</span>
+                            <span id="current-threshold">1.25</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Trading Controls Panel -->
+                <div class="control-panel trading-controls-panel">
+                    <div class="control-panel-header">
+                        <h3 class="control-panel-title"><i class="fas fa-cogs"></i> Trading Controls</h3>
+                    </div>
+                    <div class="control-panel-content">
+                        <div class="checkbox-container">
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="wait-for-webhook" checked>
+                                <span>Wait for webhook signal</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="sell-on-threshold">
+                                <span>Sell threshold only</span>
+                            </label>
+                            <label class="checkbox-item ladder-panel-toggle">
+                                <input type="checkbox" id="show-ladder-panel">
+                                <span class="checkbox-text">Show Ladder Panel</span>
+                                <span class="led-indicator"></span>
+                            </label>
+                            <label class="checkbox-item ampl-manager-toggle">
+                                <input type="checkbox" id="ampl-manager-toggle">
+                                <span class="checkbox-text">AMPL Manager</span>
+                                <span class="ampl-led-indicator"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Zoom & Theme Panel -->
+                <div class="control-panel zoom-theme-panel">
+                    <div class="control-panel-header">
+                        <h3 class="control-panel-title"><i class="fas fa-sliders-h"></i> View Controls</h3>
+                    </div>
+                    <div class="control-panel-content">
+                        <div class="zoom-section">
+                            <div class="zoom-buttons">
+                                <button id="zoom-out-btn" class="zoom-button" title="Zoom Out">
+                                    <i class="fas fa-search-minus"></i>
+                                </button>
+                                <button id="zoom-reset-btn" class="zoom-button" title="Reset Zoom">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                                <button id="zoom-in-btn" class="zoom-button" title="Zoom In">
+                                    <i class="fas fa-search-plus"></i>
+                                </button>
+                            </div>
+                            <div class="zoom-level">
+                                <span>Zoom:</span>
+                                <span id="current-zoom">80%</span>
+                            </div>
+                        </div>
+                        <div class="theme-section">
+                            <div class="theme-controls">
+                                <div class="theme-option">
+                                    <input type="radio" id="theme-color" name="theme" value="color" checked>
+                                    <label for="theme-color">Color</label>
+                                </div>
+                                <div class="theme-option">
+                                    <input type="radio" id="theme-mono" name="theme" value="mono">
+                                    <label for="theme-mono">Mono</label>
+                                </div>
+                                <div class="theme-option">
+                                    <input type="radio" id="theme-bw" name="theme" value="bw">
+                                    <label for="theme-bw">B&W</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Properly Integrated Ladder Panel -->
+            <div class="integrated-ladder-panel" id="integrated-ladder-panel" style="display: none;">
+                <div class="ladder-panel-grid">
+                    <!-- Limit Orders Section -->
+                    <div class="ladder-section limit-orders-section">
+                        <div class="section-header">
+                            <h3><i class="fas fa-list-ol"></i> Limit Orders</h3>
+                        </div>
+                        <div class="section-content">
+                            <div class="stylish-digit-grid">
+                                <div class="digit-box active-trades-box">
+                                    <div class="digit-label">ACTIVE TRADES</div>
+                                    <div class="stylish-digit active-digit" id="active-trades-count">0</div>
+                                </div>
+                                <div class="digit-box pending-trades-box">
+                                    <div class="digit-label">PENDING TRADES</div>
+                                    <div class="stylish-digit pending-digit" id="pending-trades-count">8</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- AMPL Rebase Protection Section -->
+                    <div class="ladder-section rebase-section">
+                        <div class="section-header">
+                            <h3><i class="fas fa-shield-alt"></i> AMPL Rebase Protection Monitor</h3>
+                        </div>
+                        <div class="section-content">
+                            <div class="stylish-digit-grid">
+                                <div class="digit-box cost-box">
+                                    <div class="digit-label">COST (ACCUMULATED BUY ORDERS)</div>
+                                    <div class="stylish-digit cost-digit" id="buy-orders-total">$0</div>
+                                </div>
+                                <div class="digit-box value-box">
+                                    <div class="digit-label">CURRENT VALUE (WITH REBASE)</div>
+                                    <div class="stylish-digit value-digit" id="current-rebase-value">$2,847</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Trading Stats Section -->
+                    <div class="ladder-section filler-section">
+                        <div class="section-header">
+                            <h3><i class="fas fa-chart-line"></i> Trading Stats</h3>
+                        </div>
+                        <div class="section-content">
+                            <div class="stats-display">
+                                <div class="stat-item">
+                                    <span class="stat-label">Success Rate</span>
+                                    <span class="stat-value">87%</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Total Trades</span>
+                                    <span class="stat-value">142</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Avg. Profit</span>
+                                    <span class="stat-value">+3.2%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-info">
+                <div class="footer-item">
+                    <i class="fas fa-link"></i> 
+                    <span>Webhook Endpoint:</span> 
+                    <code id="webhook-endpoint-url">/webhook</code>
+                </div>
+                <div class="footer-item">
+                    <i class="fas fa-chart-line"></i> 
+                    <span>AMPL Price:</span> 
+                    <code id="current-ampl-price">Loading...</code>
+                </div>
+            </div>
+            <button class="simulate-btn" onclick="simulateWebhook()">
+                Simulate Webhook
+            </button>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://s3.tradingview.com/tv.js"></script>
+    <script src="supabase.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
+
