@@ -203,73 +203,33 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
     
-    // Function to start real price and balance updates
+    // Function to simulate AMPL price updates
     function startAmplPriceUpdates() {
-        // Initial fetch of both price and balance
-        fetchRealPrice();
-        fetchRealBalance();
+        // Initial price
+        updateAmplPrice(1.20);
         
-        // Update price every 30 seconds
+        // Update price every 10 seconds with a small random change
         setInterval(() => {
-            fetchRealPrice();
-        }, 30000);
-        
-        // Update balance every 60 seconds (less frequent as it changes less often)
-        setInterval(() => {
-            fetchRealBalance();
-        }, 60000);
+            const randomChange = (Math.random() - 0.5) * 0.02; // Random change between -0.01 and 0.01
+            const newPrice = Math.max(0.5, Math.min(2.0, currentAmplPrice + randomChange)); // Keep price between 0.5 and 2.0
+            updateAmplPrice(newPrice);
+            
+            // Check if we should place a limit order based on the new price
+            checkAndPlaceLimitOrder(newPrice);
+        }, 10000);
     }
     
-    // Function to fetch real balance from API
-    async function fetchRealBalance() {
-        try {
-            const response = await fetch('/api/ampl/balance');
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const data = await response.json();
-            
-            if (data.usdt && balanceDisplay) {
-                balanceDisplay.textContent = data.usdt.balance.toFixed(2);
-            }
-            
-            console.log('Balance updated:', data.usdt?.balance);
-        } catch (error) {
-            console.error('Error fetching balance:', error);
-            // Fallback to show "Loading..." if API fails
-            if (balanceDisplay) {
-                balanceDisplay.textContent = 'Loading...';
-            }
-        }
-    }
-    
-    // Function to fetch real AMPL price from API
-    async function fetchRealPrice() {
-        try {
-            const response = await fetch('/api/ampl/price');
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const data = await response.json();
-            
-            if (data.price) {
-                updateAmplPrice(data.price);
-            }
-            
-            console.log('Price updated:', data.price);
-        } catch (error) {
-            console.error('Error fetching price:', error);
-            // Fallback to simulated price if API fails
-            const fallbackPrice = 1.20 + (Math.random() - 0.5) * 0.02;
-            updateAmplPrice(fallbackPrice);
-        }
-    }
-    
-    // Function to update AMPL price display
+    // Function to update AMPL price
     function updateAmplPrice(price) {
         currentAmplPrice = price;
         if (currentAmplPriceDisplay) {
             currentAmplPriceDisplay.textContent = price.toFixed(3);
+        }
+        
+        // Simulate a balance update as well (just for demo purposes)
+        const randomBalance = 2000 + Math.random() * 1000;
+        if (balanceDisplay) {
+            balanceDisplay.textContent = randomBalance.toFixed(2);
         }
     }
     
