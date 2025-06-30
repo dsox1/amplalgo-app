@@ -46,13 +46,13 @@ document.addEventListener("DOMContentLoaded", function() {
     // Initialize zoom level display
     updateZoomDisplay();
     
-    // Apply initial zoom level (30%) - static for 3 seconds
+    // Apply initial zoom level (30%) - static for 2 seconds
     applyZoom();
     
-    // Hold at 30% for 3 seconds, then animate to 80%
+    // Hold at 30% for 2 seconds, then animate to 80%
     setTimeout(() => {
         animateZoomTo(80);
-    }, 3000); // Wait 3 seconds before starting animation
+    }, 2000); // Wait 2 seconds before starting animation
     
     // Initialize threshold display and highlight active button
     updateThresholdDisplay();
@@ -203,13 +203,13 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
     
-     // Function to start real price and balance updates
+    // Function to start real price and balance updates
     function startAmplPriceUpdates() {
         // Initial fetch of both price and balance
         fetchRealPrice();
-        //fetchRealBalance();
+        fetchRealBalance();
         
-        // Update price every 30 seconds
+        // Update price every 60 seconds
         setInterval(() => {
             fetchRealPrice();
         }, 60000);
@@ -219,7 +219,11 @@ document.addEventListener("DOMContentLoaded", function() {
             fetchRealBalance();
         }, 120000);
     }
-    
+    // Real KuCoin balance via API
+    const response = await fetch('/api/ampl/balance');
+    const data = await response.json();
+    balanceDisplay.textContent = data.usdt.balance.toFixed(2);
+
     // Function to fetch real balance from API
     async function fetchRealBalance() {
         try {
