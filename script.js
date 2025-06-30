@@ -219,11 +219,7 @@ document.addEventListener("DOMContentLoaded", function() {
             fetchRealBalance();
         }, 120000);
     }
-    // Real KuCoin balance via API
-    const response = await fetch('/api/ampl/balance');
-    const data = await response.json();
-    balanceDisplay.textContent = data.usdt.balance.toFixed(2);
-
+    
     // Function to fetch real balance from API
     async function fetchRealBalance() {
         try {
@@ -245,6 +241,11 @@ document.addEventListener("DOMContentLoaded", function() {
                 balanceDisplay.textContent = 'Loading...';
             }
         }
+	// Real KuCoin balance via API
+	const response = await fetch('/api/ampl/balance');
+	const data = await response.json();
+	balanceDisplay.textContent = data.usdt.balance.toFixed(2);
+
     }
     
     // Function to fetch real AMPL price from API
