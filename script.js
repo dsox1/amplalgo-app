@@ -203,21 +203,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
     
-    // Function to simulate AMPL price updates
-    function startAmplPriceUpdates() {
-        // Initial price
-        updateAmplPrice(1.20);
-        
-        // Update price every 10 seconds with a small random change
-        setInterval(() => {
-            const randomChange = (Math.random() - 0.5) * 0.02; // Random change between -0.01 and 0.01
-            const newPrice = Math.max(0.5, Math.min(2.0, currentAmplPrice + randomChange)); // Keep price between 0.5 and 2.0
-            updateAmplPrice(newPrice);
-            
-            // Check if we should place a limit order based on the new price
-            checkAndPlaceLimitOrder(newPrice);
-        }, 10000);
-    }
+  
     
     // Function to update AMPL price
     function updateAmplPrice(price) {
