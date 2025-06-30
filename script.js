@@ -207,7 +207,7 @@ document.addEventListener("DOMContentLoaded", function() {
     function startAmplPriceUpdates() {
         // Initial fetch of both price and balance
         fetchRealPrice();
-        fetchRealBalance();
+        //fetchRealBalance();
         
         // Update price every 30 seconds
         setInterval(() => {
