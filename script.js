@@ -212,12 +212,12 @@ document.addEventListener("DOMContentLoaded", function() {
         // Update price every 30 seconds
         setInterval(() => {
             fetchRealPrice();
-        }, 30000);
+        }, 60000);
         
-        // Update balance every 60 seconds (less frequent as it changes less often)
+        // Update balance every 120 seconds (less frequent as it changes less often)
         setInterval(() => {
             fetchRealBalance();
-        }, 60000);
+        }, 120000);
     }
     
     // Function to fetch real balance from API
