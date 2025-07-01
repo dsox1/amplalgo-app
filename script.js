@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", function() {
     // Initialize variables
     let currentZoom = 30; // Start zoom level at 30%
-    let currentThreshold = 1.25; // Default threshold is 1.25
+    let currentThreshold = 1.25; // Default threshold is 1.40
     let waitForWebhook = true; // Default to wait for webhook
     let sellOnThreshold = false; // Default not to sell immediately on threshold
     let currentAmplPrice = 0; // Current AMPL price
@@ -23,6 +23,9 @@ document.addEventListener("DOMContentLoaded", function() {
     const themeRadios = document.querySelectorAll('input[name="theme"]');
     const luminousAmplAlgoOverlay = document.getElementById("luminous-amplalgo-overlay");
     const webhookEndpointDisplay = document.getElementById("webhook-endpoint-url");
+    // Supabase configuration for AMPL Manager
+    const SUPABASE_URL = 'https://fbkcdirkshubectuvxzi.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZia2NkaXJrc2h1YmVjdHV2eHppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY0NDc0ODAsImV4cCI6MjA2MjAyMzQ4MH0.yhy1JL-V9zQVK1iIdSVK1261qD8gmHmo2vB-qe7Kit8'
     
     // Set the webhook endpoint URL (this would be your public URL when deployed)
     if (webhookEndpointDisplay) {
@@ -43,13 +46,13 @@ document.addEventListener("DOMContentLoaded", function() {
     // Initialize zoom level display
     updateZoomDisplay();
     
-    // Apply initial zoom level (30%) - static for 3 seconds
+    // Apply initial zoom level (30%) - static for 2 seconds
     applyZoom();
     
-    // Hold at 30% for 3 seconds, then animate to 80%
+    // Hold at 30% for 2 seconds, then animate to 80%
     setTimeout(() => {
         animateZoomTo(80);
-    }, 3000); // Wait 3 seconds before starting animation
+    }, 2000); // Wait 2 seconds before starting animation
     
     // Initialize threshold display and highlight active button
     updateThresholdDisplay();
@@ -104,13 +107,10 @@ document.addEventListener("DOMContentLoaded", function() {
     
     // Function to show control panels one by one with staggered animation
     function showControlPanelsSequentially() {
-        const controlPanels = document.querySelectorAll('.control-panel');
-        
-        controlPanels.forEach((panel, index) => {
-            setTimeout(() => {
-                panel.classList.add('visible');
-            }, index * 300); // 300ms delay between each panel
-        });
+        const controlPanelsRow = document.querySelector('.control-panels-row');
+        if (controlPanelsRow) {
+            controlPanelsRow.classList.add('visible');
+        }
     }
     
     // Function to load initial settings from Supabase
@@ -202,36 +202,76 @@ document.addEventListener("DOMContentLoaded", function() {
             console.error("Error loading orders from Supabase:", error);
         }
     }
-    
-    // Function to simulate AMPL price updates
-    function startAmplPriceUpdates() {
-        // Initial price
-        updateAmplPrice(1.20);
+   
+
+    // Function to fetch real balance from Supabase (REPLACE)
+    async function fetchRealBalance() {
+    	try {
+            const response = await fetch(`${SUPABASE_URL}/functions/v1/ampl-manager/balance`, {
+            	headers: {
+                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                    'Content-Type': 'application/json'
+           	}
+            });
         
-        // Update price every 10 seconds with a small random change
-        setInterval(() => {
-            const randomChange = (Math.random() - 0.5) * 0.02; // Random change between -0.01 and 0.01
-            const newPrice = Math.max(0.5, Math.min(2.0, currentAmplPrice + randomChange)); // Keep price between 0.5 and 2.0
-            updateAmplPrice(newPrice);
-            
-            // Check if we should place a limit order based on the new price
-            checkAndPlaceLimitOrder(newPrice);
-        }, 10000);
+            if (!response.ok) {
+            	throw new Error(`HTTP error! status: ${response.status}`);
+            }
+        
+            const data = await response.json();
+        
+            if (data.usdt && balanceDisplay) {
+            	balanceDisplay.textContent = data.usdt.balance.toFixed(2);
+            }
+        
+            console.log('Balance updated via Supabase:', data.usdt?.balance);
+    	} catch (error) {
+            console.error('Error fetching balance from Supabase:', error);
+            if (balanceDisplay) {
+            	balanceDisplay.textContent = 'Loading...';
+            }
+    	}
     }
-    
-    // Function to update AMPL price
+
+    // Function to fetch real AMPL price from Supabase (REPLACE)
+    async function fetchRealPrice() {
+    	try {
+            const response = await fetch(`${SUPABASE_URL}/functions/v1/ampl-manager/price`, {
+            	headers: {
+                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                    'Content-Type': 'application/json'
+            	}
+            });
+        
+            if (!response.ok) {
+            	throw new Error(`HTTP error! status: ${response.status}`);
+            }
+        
+            const data = await response.json();
+        
+            if (data.price) {
+            	updateAmplPrice(data.price);
+            }
+        
+            console.log('Price updated via Supabase:', data.price);
+    	} catch (error) {
+            console.error('Error fetching price from Supabase:', error);
+            // Fallback to simulated price if API fails
+            const fallbackPrice = 1.20 + (Math.random() - 0.5) * 0.02;
+            updateAmplPrice(fallbackPrice);
+    	}
+    }
+
+ 
+       
+    // Function to update AMPL price display
     function updateAmplPrice(price) {
         currentAmplPrice = price;
         if (currentAmplPriceDisplay) {
             currentAmplPriceDisplay.textContent = price.toFixed(3);
         }
-        
-        // Simulate a balance update as well (just for demo purposes)
-        const randomBalance = 2000 + Math.random() * 1000;
-        if (balanceDisplay) {
-            balanceDisplay.textContent = randomBalance.toFixed(2);
-        }
     }
+    
     
     // Function to check if we should place a limit order based on price
     function checkAndPlaceLimitOrder(price) {
@@ -1077,4 +1117,323 @@ window.checkTradingState = function() {
     console.log('Ladder Orders:', ladderOrders);
     return { tradingState, ladderOrders };
 };
+
+
+    // Ladder Panel Functionality
+    const showLadderPanelCheckbox = document.getElementById("show-ladder-panel");
+    const integratedLadderPanel = document.getElementById("integrated-ladder-panel");
+    
+    // Initialize ladder panel as hidden
+    if (integratedLadderPanel) {
+        integratedLadderPanel.style.display = 'none';
+    }
+    
+    // Handle ladder panel toggle
+    if (showLadderPanelCheckbox) {
+        showLadderPanelCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                showLadderPanel();
+            } else {
+                hideLadderPanel();
+            }
+        });
+    }
+    
+    function showLadderPanel() {
+        if (integratedLadderPanel) {
+            integratedLadderPanel.style.display = 'block';
+            // Trigger reflow
+            integratedLadderPanel.offsetHeight;
+            integratedLadderPanel.classList.add('visible');
+            
+            // Update ladder panel data
+            updateLadderPanelData();
+            
+            // Start updating ladder panel every 3 seconds
+            if (!window.ladderUpdateInterval) {
+                window.ladderUpdateInterval = setInterval(updateLadderPanelData, 3000);
+            }
+        }
+    }
+    
+    function hideLadderPanel() {
+        if (integratedLadderPanel) {
+            integratedLadderPanel.classList.remove('visible');
+            setTimeout(() => {
+                integratedLadderPanel.style.display = 'none';
+            }, 500); // Wait for animation to complete
+            
+            // Stop updating ladder panel
+            if (window.ladderUpdateInterval) {
+                clearInterval(window.ladderUpdateInterval);
+                window.ladderUpdateInterval = null;
+            }
+        }
+    }
+    
+    function updateLadderPanelData() {
+        // Update Active Trades count from real trading state
+        const activeTradesElement = document.getElementById('active-trades-count');
+        if (activeTradesElement) {
+            activeTradesElement.textContent = tradingState.activeTrades || 0;
+        }
+        
+        // Update Pending Trades count from real trading state
+        const pendingTradesElement = document.getElementById('pending-trades-count');
+        if (pendingTradesElement) {
+            const pendingCount = ladderOrders.filter(order => order.status === 'pending').length;
+            pendingTradesElement.textContent = pendingCount;
+        }
+        
+        // Update Accumulated Buy Orders from real trading state
+        const buyOrdersElement = document.getElementById('buy-orders-total');
+        if (buyOrdersElement) {
+            const accumulatedValue = tradingState.accumulatedBuyOrders || 0;
+            buyOrdersElement.textContent = `$${accumulatedValue.toLocaleString()}`;
+        }
+        
+        // Update Current Value with rebase from real calculation
+        const currentValueElement = document.getElementById('current-rebase-value');
+        if (currentValueElement) {
+            const rebaseValue = calculateRebaseValue();
+            currentValueElement.textContent = `$${Math.floor(rebaseValue).toLocaleString()}`;
+        }
+        
+        // Update Trading Stats with real data
+        updateTradingStats();
+    }
+    
+    function updateTradingStats() {
+        // Calculate real success rate
+        const successRateElement = document.querySelector('.stat-value');
+        if (successRateElement && tradingState.tradingHistory.length > 0) {
+            const profitableTrades = tradingState.tradingHistory.filter(trade => 
+                trade.profit && trade.profit > 0
+            ).length;
+            const successRate = Math.round((profitableTrades / tradingState.tradingHistory.length) * 100);
+            successRateElement.textContent = `${successRate}%`;
+        }
+        
+        // Update total trades count
+        const totalTradesElements = document.querySelectorAll('.stat-value');
+        if (totalTradesElements[1]) {
+            totalTradesElements[1].textContent = tradingState.tradingHistory.length;
+        }
+        
+        // Calculate average profit
+        if (totalTradesElements[2] && tradingState.tradingHistory.length > 0) {
+            const totalProfit = tradingState.tradingHistory.reduce((sum, trade) => 
+                sum + (trade.profit || 0), 0
+            );
+            const avgProfit = (totalProfit / tradingState.tradingHistory.length);
+            const sign = avgProfit >= 0 ? '+' : '';
+            totalTradesElements[2].textContent = `${sign}${avgProfit.toFixed(1)}%`;
+        }
+    }
+
+
+    // Theme switching functionality
+    function initializeTheme() {
+        const savedTheme = localStorage.getItem('amplAlgoTheme') || 'color';
+        const themeRadios = document.querySelectorAll('input[name="theme"]');
+        
+        // Apply saved theme
+        applyTheme(savedTheme);
+        
+        // Set the correct radio button
+        themeRadios.forEach(radio => {
+            if (radio.value === savedTheme) {
+                radio.checked = true;
+            }
+        });
+    }
+    
+    function applyTheme(theme) {
+        console.log(`Applying theme: ${theme}`);
+        document.body.setAttribute('data-theme', theme);
+        localStorage.setItem('amplAlgoTheme', theme);
+        
+        // Force CSS recalculation
+        document.body.style.display = 'none';
+        document.body.offsetHeight; // Trigger reflow
+        document.body.style.display = '';
+        
+        console.log(`Theme applied: ${theme}, data-theme: ${document.body.getAttribute('data-theme')}`);
+    }
+    
+    // Add theme change listeners
+    const themeRadios = document.querySelectorAll('input[name="theme"]');
+    if (themeRadios) {
+        themeRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                console.log(`Theme radio changed: ${this.value}, checked: ${this.checked}`);
+                if (this.checked) {
+                    applyTheme(this.value);
+                    
+                    // Reinitialize TradingView widget with new theme
+                    setTimeout(() => {
+                        if (typeof initializeTradingViewWidget === 'function') {
+                            initializeTradingViewWidget();
+                        }
+                    }, 100);
+                }
+            });
+        });
+    }
+    
+    // Initialize theme on page load
+    document.addEventListener('DOMContentLoaded', initializeTheme);
+// ===== SOCKET.IO CONNECTION AND AMPL MANAGER INTEGRATION =====
+
+// Initialize Socket.io connection
+const socket = io();
+
+// AMPL Manager state
+let amplManagerEnabled = false;
+
+// Socket connection events
+socket.on('connect', function() {
+    console.log('Connected to server via Socket.io');
+    
+    // Request initial AMPL Manager status
+    socket.emit('get_ampl_manager_status');
+});
+
+socket.on('disconnect', function() {
+    console.log('Disconnected from server');
+});
+
+// AMPL Manager event handlers
+socket.on('ampl_manager_status', function(data) {
+    console.log('AMPL Manager status update:', data);
+    
+    // Update the checkbox state
+    updateAmplManagerUI(data.enabled);
+    
+    if (data.message) {
+        console.log('AMPL Manager message:', data.message);
+    }
+});
+
+socket.on('ampl_manager_toggle_result', function(data) {
+    console.log('AMPL Manager toggle result:', data);
+    
+    if (data.success) {
+        amplManagerEnabled = data.enabled;
+        updateAmplManagerUI(data.enabled);
+        
+        // Show notification
+        if (data.message) {
+            console.log('AMPL Manager:', data.message);
+        }
+    } else {
+        console.error('AMPL Manager toggle failed:', data.error);
+        
+        // Revert checkbox state on error
+        const checkbox = document.getElementById('ampl-manager-toggle');
+        if (checkbox) {
+            checkbox.checked = amplManagerEnabled;
+        }
+    }
+});
+
+// AMPL Manager UI functions
+function updateAmplManagerUI(enabled) {
+    amplManagerEnabled = enabled;
+    
+    const checkbox = document.getElementById('ampl-manager-toggle');
+    if (checkbox) {
+        checkbox.checked = enabled;
+    }
+    
+    console.log(`AMPL Manager UI updated: ${enabled ? 'ENABLED' : 'DISABLED'}`);
+}
+
+// AMPL Manager toggle event listener
+document.addEventListener('DOMContentLoaded', function() {
+    const amplManagerCheckbox = document.getElementById('ampl-manager-toggle');
+    
+    if (amplManagerCheckbox) {
+        amplManagerCheckbox.addEventListener('change', function() {
+            const enable = this.checked;
+            
+            console.log(`AMPL Manager toggle clicked: ${enable ? 'ENABLE' : 'DISABLE'}`);
+            
+            // Send toggle request via Socket.io
+            socket.emit('toggle_ampl_manager', { enable: enable });
+        });
+    }
+    
+    // Request initial status when page loads
+    if (socket.connected) {
+        socket.emit('get_ampl_manager_status');
+    }
+});
+
+// AMPL Manager status monitoring
+socket.on('ampl_order_update', function(data) {
+    console.log('AMPL order update:', data);
+    
+    // Update ladder panel if visible
+    updateLadderPanelData(data);
+});
+
+// Real-time price and balance updates
+socket.on('price_update', function(data) {
+    console.log('Price update:', data);
+    
+    // Update AMPL price in footer
+    const priceElement = document.getElementById('current-ampl-price');
+    if (priceElement && data.symbol === 'AMPL-USDT') {
+        priceElement.textContent = `$${data.price}`;
+    }
+});
+
+socket.on('balance_update', function(data) {
+    console.log('Balance update:', data);
+    
+    // Update USDT balance in header
+    const balanceElement = document.getElementById('usdt-balance');
+    if (balanceElement && data.currency === 'USDT') {
+        balanceElement.textContent = data.balance;
+    }
+});
+
+function updateLadderPanelData(data) {
+    // Update active trades count
+    const activeTradesElement = document.getElementById('active-trades-count');
+    if (activeTradesElement && data.active_trades !== undefined) {
+        activeTradesElement.textContent = data.active_trades;
+    }
+    
+    // Update pending trades count
+    const pendingTradesElement = document.getElementById('pending-trades-count');
+    if (pendingTradesElement && data.pending_trades !== undefined) {
+        pendingTradesElement.textContent = data.pending_trades;
+    }
+    
+    // Update buy orders total
+    const buyOrdersTotalElement = document.getElementById('buy-orders-total');
+    if (buyOrdersTotalElement && data.buy_orders_total !== undefined) {
+        buyOrdersTotalElement.textContent = `$${data.buy_orders_total}`;
+    }
+    
+    // Update current rebase value
+    const currentRebaseValueElement = document.getElementById('current-rebase-value');
+    if (currentRebaseValueElement && data.current_value !== undefined) {
+        currentRebaseValueElement.textContent = `$${data.current_value}`;
+    }
+}
+
+// Auto-detection on page load
+socket.on('ampl_auto_detection', function(data) {
+    console.log('AMPL auto-detection result:', data);
+    
+    if (data.system_detected) {
+        console.log(`AMPL Manager auto-enabled with ${data.buy_orders_count} existing buy orders`);
+        updateAmplManagerUI(true);
+    }
+});
+
+console.log('AMPL Manager Socket.io integration loaded');
 

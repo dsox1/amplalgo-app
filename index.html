@@ -137,28 +137,26 @@
                     <div class="control-panel-header">
                         <h3 class="control-panel-title"><i class="fas fa-cogs"></i> Trading Controls</h3>
                     </div>
-                    <div class="control-panel-content"                        <div class="checkbox-container">
+                    <div class="control-panel-content">
+                        <div class="checkbox-container">
                             <label class="checkbox-item">
                                 <input type="checkbox" id="wait-for-webhook" checked>
                                 <span>Wait for webhook signal</span>
                             </label>
                             <label class="checkbox-item">
-                                <input type="checkbox" id="sell-threshold-only">
+                                <input type="checkbox" id="sell-on-threshold">
                                 <span>Sell threshold only</span>
                             </label>
-                            <label class="checkbox-item">
+                            <label class="checkbox-item ladder-panel-toggle">
                                 <input type="checkbox" id="show-ladder-panel">
-                                <span class="flashing-indicator">Show Ladder Panel</span>
-                                <div class="led-indicator" id="ladder-led"></div>
+                                <span class="checkbox-text">Show Ladder Panel</span>
+                                <span class="led-indicator"></span>
                             </label>
-                        </div>
-                        <div class="ladder-controls">
-                            <button id="deploy-fresh-ladder" class="small-action-btn">
-                                <i class="fas fa-rocket"></i> Deploy
-                            </button>
-                            <button id="cancel-all-orders" class="small-action-btn danger">
-                                <i class="fas fa-times"></i> Cancel
-                            </button>
+                            <label class="checkbox-item ampl-manager-toggle">
+                                <input type="checkbox" id="ampl-manager-toggle">
+                                <span class="checkbox-text">AMPL Manager</span>
+                                <span class="ampl-led-indicator"></span>
+                            </label>
                         </div>
                     </div>
                 </div>
@@ -206,46 +204,135 @@
                 </div>
             </div>
             
-            <!-- Smart L            <!-- Simplified Ladder Management Panel -->
-            <div class="ladder-management-panel control-panel" id="ladder-panel" style="display: none;">
-                <div class="ladder-panel-content">
-                    <div class="ladder-sections">
-                        <!-- Simplified Limit Orders Section -->
-                        <div class="ladder-section limit-orders-section">
-                            <div class="section-header">
-                                <h4>Limit Orders</h4>
-                            </div>
-                            <div class="large-digit-display">
-                                <div class="digit-container active-trades">
-                                    <div class="digit-label">Active Trades</div>
-                                    <div class="large-digit" id="active-trades-count">0</div>
+            <!-- Properly Integrated Ladder Panel -->
+            <div class="integrated-ladder-panel" id="integrated-ladder-panel" style="display: none;">
+                <div class="ladder-panel-grid">
+                    <!-- Limit Orders Section -->
+                    <div class="ladder-section limit-orders-section">
+                        <div class="section-header">
+                            <h3><i class="fas fa-list-ol"></i> Limit Orders</h3>
+                        </div>
+                        <div class="section-content">
+                            <div class="stylish-digit-grid">
+                                <div class="digit-box active-trades-box">
+                                    <div class="digit-label">ACTIVE TRADES</div>
+                                    <div class="stylish-digit active-digit" id="active-trades-count">0</div>
                                 </div>
-                                <div class="digit-container pending-trades">
-                                    <div class="digit-label">Pending Trades</div>
-                                    <div class="large-digit" id="pending-trades-count">0</div>
+                                <div class="digit-box pending-trades-box">
+                                    <div class="digit-label">PENDING TRADES</div>
+                                    <div class="stylish-digit pending-digit" id="pending-trades-count">8</div>
                                 </div>
                             </div>
                         </div>
-                        
-                        <!-- Simplified AMPL Rebase Protection Section -->
-                        <div class="ladder-section rebase-protection-section">
-                            <div class="section-header">
-                                <h4>AMPL Rebase Protection Monitor</h4>
-                            </div>
-                            <div class="large-digit-display">
-                                <div class="digit-container buy-orders-cost">
-                                    <div class="digit-label">Accumulated Buy Orders</div>
-                                    <div class="large-digit" id="buy-orders-total">$0</div>
+                    </div>
+                    
+                    <!-- AMPL Rebase Protection Section -->
+                    <div class="ladder-section rebase-section">
+                        <div class="section-header">
+                            <h3><i class="fas fa-shield-alt"></i> AMPL Rebase Protection Monitor</h3>
+                        </div>
+                        <div class="section-content">
+                            <div class="stylish-digit-grid">
+                                <div class="digit-box cost-box">
+                                    <div class="digit-label">COST (ACCUMULATED BUY ORDERS)</div>
+                                    <div class="stylish-digit cost-digit" id="buy-orders-total">$0</div>
                                 </div>
-                                <div class="digit-container current-value">
-                                    <div class="digit-label">Current Value (with rebase)</div>
-                                    <div class="large-digit" id="current-rebase-value">$0</div>
+                                <div class="digit-box value-box">
+                                    <div class="digit-label">CURRENT VALUE (WITH REBASE)</div>
+                                    <div class="stylish-digit value-digit" id="current-rebase-value">$2,847</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Blank Filler Section -->
+                    <div class="ladder-section filler-section">
+                        <div class="section-header">
+                            <h3><i class="fas fa-chart-line"></i> Trading Stats</h3>
+                        </div>
+                        <div class="section-content">
+                            <div class="stats-display">
+                                <div class="stat-item">
+                                    <span class="stat-label">Success Rate</span>
+                                    <span class="stat-value">87%</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Total Trades</span>
+                                    <span class="stat-value">142</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Avg. Profit</span>
+                                    <span class="stat-value">+3.2%</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>                    </div>
+            </div>
+            
+            <!-- Properly Integrated Ladder Panel -->
+            <div class="integrated-ladder-panel" id="integrated-ladder-panel" style="display: none;">
+                <div class="ladder-panel-grid">
+                    <!-- Limit Orders Section -->
+                    <div class="ladder-section limit-orders-section">
+                        <div class="section-header">
+                            <h3><i class="fas fa-list-ol"></i> Limit Orders</h3>
+                        </div>
+                        <div class="section-content">
+                            <div class="stylish-digit-grid">
+                                <div class="digit-box active-trades-box">
+                                    <div class="digit-label">ACTIVE TRADES</div>
+                                    <div class="stylish-digit active-digit" id="active-trades-count">0</div>
+                                </div>
+                                <div class="digit-box pending-trades-box">
+                                    <div class="digit-label">PENDING TRADES</div>
+                                    <div class="stylish-digit pending-digit" id="pending-trades-count">8</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- AMPL Rebase Protection Section -->
+                    <div class="ladder-section rebase-section">
+                        <div class="section-header">
+                            <h3><i class="fas fa-shield-alt"></i> AMPL Rebase Protection Monitor</h3>
+                        </div>
+                        <div class="section-content">
+                            <div class="stylish-digit-grid">
+                                <div class="digit-box cost-box">
+                                    <div class="digit-label">COST (ACCUMULATED BUY ORDERS)</div>
+                                    <div class="stylish-digit cost-digit" id="buy-orders-total">$0</div>
+                                </div>
+                                <div class="digit-box value-box">
+                                    <div class="digit-label">CURRENT VALUE (WITH REBASE)</div>
+                                    <div class="stylish-digit value-digit" id="current-rebase-value">$2,847</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Blank Filler Section -->
+                    <div class="ladder-section filler-section">
+                        <div class="section-header">
+                            <h3><i class="fas fa-chart-line"></i> Trading Stats</h3>
+                        </div>
+                        <div class="section-content">
+                            <div class="stats-display">
+                                <div class="stat-item">
+                                    <span class="stat-label">Success Rate</span>
+                                    <span class="stat-value">87%</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Total Trades</span>
+                                    <span class="stat-value">142</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Avg. Profit</span>
+                                    <span class="stat-value">+3.2%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
@@ -273,6 +360,7 @@
     </footer>
 
     <!-- Scripts -->
+    <script src="/socket.io/socket.io.js"></script>
     <script src="https://s3.tradingview.com/tv.js"></script>
     <script src="supabase.js"></script>
     <script src="script.js"></script>
