@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test AMPL Manager</title>
+</head>
+<body>
+    <h1>AMPL Manager Test</h1>
+    <button onclick="testPrice()">Test Price</button>
+    <button onclick="testBalance()">Test Balance</button>
+
+    <div id="result"></div>
+
+    <script>
+        const SUPABASE_URL = 'https://fbkcdirkshubectuvxzi.supabase.co'
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZia2NkaXJrc2h1YmVjdHV2eHppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY0NDc0ODAsImV4cCI6MjA2MjAyMzQ4MH0.yhy1JL-V9zQVK1iIdSVK1261qD8gmHmo2vB-qe7Kit8' // Replace with your actual anon key
+
+        async function testPrice( ) {
+            try {
+                const response = await fetch(`${SUPABASE_URL}/functions/v1/ampl-manager/price`, {
+                    headers: {
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'Content-Type': 'application/json'
+                    }
+                })
+                
+                const data = await response.json()
+                document.getElementById('result').innerHTML = `
+                    <h3>Price Result:</h3>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `
+            } catch (error) {
+                document.getElementById('result').innerHTML = `
+                    <h3>Error:</h3>
+                    <pre>${error.message}</pre>
+                `
+            }
+        }
+
+       async function testBalance() {
+           try {
+       	       const response = await fetch(`${SUPABASE_URL}/functions/v1/ampl-manager/balance`, {
+                   headers: {
+                       'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                       'Content-Type': 'application/json'
+                  }
+              })
+        
+              const data = await response.json()
+              document.getElementById('result').innerHTML = `
+                  <h3>Balance Result:</h3>
+                  <pre>${JSON.stringify(data, null, 2)}</pre>
+              `
+            } catch (error) {
+                document.getElementById('result').innerHTML = `
+                    <h3>Error:</h3>
+                    <pre>${error.message}</pre>
+                `
+   	   }
+       }
+
+    </script>
+</body>
+</html>
