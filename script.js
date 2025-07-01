@@ -272,6 +272,25 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
     
+    // Function to start real price and balance updates
+    function startAmplPriceUpdates() {
+    	// Initial fetch of both price and balance
+    	fetchRealPrice();
+    	fetchRealBalance();
+    
+    	// Update price every 30 seconds
+    	setInterval(() => {
+            fetchRealPrice();
+    	}, 30000);
+
+    
+    // Update balance every 60 seconds
+    setInterval(() => {
+        fetchRealBalance();
+    }, 60000);
+}
+
+
     
     // Function to check if we should place a limit order based on price
     function checkAndPlaceLimitOrder(price) {
