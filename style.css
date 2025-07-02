@@ -591,7 +591,7 @@ body {
 }
 
 /* Footer Styles */
-.main-footer {
+.footer {
     background: rgba(0, 0, 0, 0.9);
     backdrop-filter: blur(20px);
     border-top: 1px solid var(--border-color);
@@ -650,123 +650,6 @@ body {
     transform: translateY(-1px);
 }
 
-/* Theme Variations */
-body[data-theme="mono"] {
-    --panel-webhook: var(--panel-mono);
-    --panel-chart: var(--panel-mono);
-    --panel-order: var(--panel-mono);
-    background-image: url('background4.jpg');
-}
-
-body[data-theme="bw"] {
-    --panel-webhook: var(--panel-bw);
-    --panel-chart: var(--panel-bw);
-    --panel-order: var(--panel-bw);
-    --text-primary: #ffffff;
-    --text-secondary: #cccccc;
-    --text-muted: #999999;
-    background-image: url('background2.jpg');
-}
-
-body[data-theme="color"] {
-    background-image: url('background.jpg');
-}
-
-/* Responsive Design */
-@media (max-width: 1200px) {
-    .header-content {
-        max-width: 100%;
-        flex-direction: column;
-        gap: 20px;
-        text-align: center;
-    }
-    
-    .panels-row {
-        grid-template-columns: 1fr;
-        gap: 15px;
-    }
-    
-    .control-panels-row {
-        grid-template-columns: 1fr;
-        gap: 15px;
-    }
-}
-
-@media (max-width: 768px) {
-    .main-container {
-        padding: 0 15px;
-    }
-    
-    .content-wrapper {
-        padding: 20px 0;
-    }
-    
-    .panel-content {
-        height: 250px;
-    }
-    
-    .footer-content {
-        flex-direction: column;
-        gap: 15px;
-        text-align: center;
-    }
-    
-    .footer-info {
-        flex-direction: column;
-        gap: 10px;
-    }
-    
-    .smart-phrase-box {
-        white-space: normal;
-        text-align: center;
-    }
-}
-
-/* Mobile landscape orientation fix */
-@media screen and (orientation: landscape) and (max-height: 768px) {
-    .panel-content {
-        height: 200px;
-    }
-    
-    .panel {
-        transform: none;
-    }
-}
-
-
-
-/* ===== MOBILE OPTIMIZATION - ADD AT END OF FILE ===== */
-@media (max-width: 768px) {
-    /* Remove background images on mobile, use black background */
-    body {
-        background-image: none !important;
-        background-color: #000000 !important;
-    }
-    
-    /* Ensure all themes use black background on mobile */
-    body[data-theme="color"],
-    body[data-theme="mono"], 
-    body[data-theme="bw"] {
-        background-image: none !important;
-        background-color: #000000 !important;
-    }
-    
-    /* Mobile-specific adjustments */
-    .panel {
-        margin: 5px;
-    }
-    
-    .control-panels {
-        flex-direction: column;
-        gap: 10px;
-    }
-}
-
-
-
-
-
-
 /* Animations */
 @keyframes panelSlideIn {
     to {
@@ -787,15 +670,13 @@ body[data-theme="color"] {
     animation-delay: 0.3s;
 }
 
-/* Control panels will be shown via JavaScript when zoom reaches 80% */
-
 /* Logo Glow Animation */
 @keyframes logoGlow {
     0%, 100% {
-        text-shadow: 0 0 5px var(--accent-primary);
+        text-shadow: 0 0 5px var(--accent-primary), 0 0 10px var(--accent-primary);
     }
     50% {
-        text-shadow: 0 0 20px var(--accent-primary), 0 0 30px var(--accent-primary);
+        text-shadow: 0 0 10px var(--accent-primary), 0 0 20px var(--accent-primary), 0 0 30px var(--accent-primary);
     }
 }
 
@@ -816,9 +697,6 @@ body[data-theme="color"] {
 body {
     animation: backgroundBreathe 8s ease-in-out infinite;
 }
-
-/* Remove the automatic zoom animation to prevent double-take effect */
-/* Zoom will be handled by JavaScript only */
 
 /* Hide TradingView copyright */
 .tradingview-widget-copyright {
@@ -1090,27 +968,247 @@ body {
     font-family: 'Courier New', monospace;
 }
 
-/* Responsive adjustments for ladder panel */
-@media (max-width: 1000px) {
-    .ladder-panel-grid {
-        grid-template-columns: 1fr;
-        gap: 15px;
+/* Enhanced AMPL Manager Ladder Panel Styling */
+
+/* Smart Order Ladder Grid */
+.order-ladder-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+/* Price Level Badges */
+.price-level-badge {
+    background: rgba(0, 0, 0, 0.4);
+    border: 2px solid;
+    border-radius: 6px;
+    padding: 8px 12px;
+    text-align: center;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    font-size: 12px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.price-level-badge.filled {
+    border-color: #00ff41;
+    background: rgba(0, 255, 65, 0.1);
+    color: #00ff41;
+    box-shadow: 0 0 8px rgba(0, 255, 65, 0.3);
+}
+
+.price-level-badge.pending {
+    border-color: #ff9500;
+    background: rgba(255, 149, 0, 0.1);
+    color: #ff9500;
+    box-shadow: 0 0 8px rgba(255, 149, 0, 0.3);
+    animation: pendingPulse 2s ease-in-out infinite;
+}
+
+.price-level-badge.empty {
+    border-color: #666666;
+    background: rgba(102, 102, 102, 0.1);
+    color: #666666;
+}
+
+@keyframes pendingPulse {
+    0%, 100% {
+        opacity: 0.7;
+        transform: scale(1);
     }
-    
-    .ladder-section {
-        aspect-ratio: auto;
-        min-height: 200px;
-    }
-    
-    .stylish-digit-grid {
-        grid-template-columns: 1fr 1fr;
-    }
-    
-    .stylish-digit {
-        font-size: 28px;
+    50% {
+        opacity: 1;
+        transform: scale(1.02);
     }
 }
 
+/* Order Status Display */
+.order-status-display {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 6px;
+    padding: 12px;
+    text-align: center;
+    font-size: 14px;
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: 10px;
+}
+
+/* Enhanced Rebase Protection Section */
+.rebase-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    height: calc(100% - 60px);
+}
+
+.progress-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.progress-label {
+    font-size: 12px;
+    color: #cccccc;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: center;
+}
+
+.progress-bar-container {
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 10px;
+    height: 20px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 10px;
+    position: relative;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #ff0000 0%, #ff9500 50%, #00ff41 100%);
+    width: 0%;
+    transition: width 0.5s ease;
+    position: relative;
+}
+
+.progress-percentage {
+    text-align: center;
+    font-size: 14px;
+    font-weight: bold;
+    color: #00ff41;
+}
+
+/* Holdings Tracker */
+.holdings-tracker {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    padding: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.holdings-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 12px;
+}
+
+.holdings-row:last-child {
+    margin-bottom: 0;
+}
+
+.holdings-label {
+    color: #cccccc;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.holdings-value {
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+}
+
+.holdings-value.original {
+    color: #00bfff;
+}
+
+.holdings-value.current {
+    color: #32cd32;
+}
+
+.holdings-value.difference.positive {
+    color: #00ff41;
+}
+
+.holdings-value.difference.negative {
+    color: #ff4444;
+}
+
+/* AMPL Manager Control */
+.ampl-manager-control {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 6px;
+    padding: 12px;
+    margin-top: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ampl-manager-control .checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #ffffff;
+}
+
+.ampl-manager-control .checkbox-item input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #00ff41;
+}
+
+.ampl-manager-control .ampl-led-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: #ff0000;
+    border-radius: 50%;
+    margin-left: 8px;
+    box-shadow: 0 0 6px #ff0000;
+    animation: amplLedPulse 1s ease-in-out infinite alternate;
+}
+
+.ampl-manager-control input[type="checkbox"]:checked ~ .ampl-led-indicator {
+    background: #00ff41;
+    box-shadow: 0 0 6px #00ff41;
+    animation: none;
+}
+
+/* Pause Button LED Indicator */
+.pause-led-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: #666666;
+    border-radius: 50%;
+    margin-left: 8px;
+    box-shadow: 0 0 6px #666666;
+    transition: all 0.3s ease;
+}
+
+.ampl-manager-control input[type="checkbox"]:checked ~ .pause-led-indicator {
+    background: #ff9500;
+    box-shadow: 0 0 6px #ff9500;
+    animation: pausePulse 1s ease-in-out infinite alternate;
+}
+
+.ampl-manager-control input[type="checkbox"]:disabled ~ .pause-led-indicator {
+    background: #333333;
+    box-shadow: none;
+    animation: none;
+}
+
+@keyframes pausePulse {
+    0% {
+        opacity: 0.5;
+        box-shadow: 0 0 3px #ff9500;
+    }
+    100% {
+        opacity: 1;
+        box-shadow: 0 0 12px #ff9500, 0 0 20px #ff9500;
+    }
+}
 
 /* Theme-specific background images */
 body[data-theme="color"] {
@@ -1199,8 +1297,9 @@ body[data-theme="mono"] .panel:nth-child(1) {
 
 body[data-theme="mono"] .panel:has([data-panel="chart"]),
 body[data-theme="mono"] .panel:nth-child(2) {
-    background: rgba(33, 37, 41, 0.9); /* Keep dark neutral */
-    color: #ffffff;
+    background: rgba(255, 255, 255, 0.95); /* White background */
+    color: #000000; /* Black text */
+    border: 1px solid rgba(0, 0, 0, 0.2);
 }
 
 body[data-theme="mono"] .panel:has([data-panel="orderlog"]),
@@ -1210,108 +1309,26 @@ body[data-theme="mono"] .panel:nth-child(3) {
     border: 1px solid rgba(0, 0, 0, 0.2);
 }
 
-/* B&W THEME - All panels black */
+/* B&W THEME - Panel overrides */
 body[data-theme="bw"] .panel:has([data-panel="webhooks"]),
-body[data-theme="bw"] .panel:nth-child(1),
+body[data-theme="bw"] .panel:nth-child(1) {
+    background: rgba(0, 0, 0, 0.95); /* Black background */
+    color: #ffffff; /* White text */
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
 body[data-theme="bw"] .panel:has([data-panel="chart"]),
-body[data-theme="bw"] .panel:nth-child(2),
+body[data-theme="bw"] .panel:nth-child(2) {
+    background: rgba(0, 0, 0, 0.95); /* Black background */
+    color: #ffffff; /* White text */
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
 body[data-theme="bw"] .panel:has([data-panel="orderlog"]),
 body[data-theme="bw"] .panel:nth-child(3) {
     background: rgba(0, 0, 0, 0.95); /* Black background */
     color: #ffffff; /* White text */
-    border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.control-panel {
-    background: rgba(33, 37, 41, 0.9); /* Dark neutral for control panels */
-    backdrop-filter: blur(15px);
-    position: relative;
-    z-index: 2;
-    color: #ffffff;
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* MONO THEME - Control panels */
-body[data-theme="mono"] .control-panel {
-    background: rgba(33, 37, 41, 0.9);
-    color: #ffffff;
-}
-
-/* B&W THEME - Control panels black */
-body[data-theme="bw"] .control-panel {
-    background: rgba(0, 0, 0, 0.95);
-    color: #ffffff;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.integrated-ladder-panel {
-    background: transparent;
-    position: relative;
-    z-index: 2;
-}
-
-.ladder-section {
-    background: rgba(33, 37, 41, 0.9); /* Dark neutral for ladder sections */
-    backdrop-filter: blur(15px);
-    position: relative;
-    z-index: 2;
-    color: #ffffff;
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* MONO THEME - Ladder sections */
-body[data-theme="mono"] .ladder-section {
-    background: rgba(33, 37, 41, 0.9);
-    color: #ffffff;
-}
-
-/* B&W THEME - Ladder sections black */
-body[data-theme="bw"] .ladder-section {
-    background: rgba(0, 0, 0, 0.95);
-    color: #ffffff;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-
-/* Enhanced text readability for Color theme */
-body[data-theme="color"] .panel:has([data-panel="webhooks"]) .panel-content,
-body[data-theme="color"] .panel:nth-child(1) .panel-content,
-body[data-theme="color"] .panel:has([data-panel="orderlog"]) .panel-content,
-body[data-theme="color"] .panel:nth-child(3) .panel-content {
-    color: #ffffff;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-    font-weight: 500;
-}
-
-/* Enhanced text readability for all text in colored panels */
-body[data-theme="color"] .panel:has([data-panel="webhooks"]) *,
-body[data-theme="color"] .panel:nth-child(1) *,
-body[data-theme="color"] .panel:has([data-panel="orderlog"]) *,
-body[data-theme="color"] .panel:nth-child(3) * {
-    color: #ffffff !important;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-}
-
-/* Mono theme - Grey header background */
-body[data-theme="mono"] header,
-body[data-theme="mono"] .header,
-body[data-theme="mono"] .top-section {
-    background: rgba(128, 128, 128, 0.9) !important;
-    color: #000000;
-}
-
-/* Mono theme - Grey inner background panels for text content */
-body[data-theme="mono"] .panel:has([data-panel="webhooks"]) .panel-content,
-body[data-theme="mono"] .panel:nth-child(1) .panel-content,
-body[data-theme="mono"] .panel:has([data-panel="orderlog"]) .panel-content,
-body[data-theme="mono"] .panel:nth-child(3) .panel-content {
-    background: rgba(200, 200, 200, 0.8);
-    padding: 15px;
-    border-radius: 8px;
-    margin: 10px;
-    color: #000000;
+    border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 /* Mono theme - Ensure all text in white panels has grey backgrounds */
@@ -1359,5 +1376,144 @@ body[data-theme="mono"] .header,
 body[data-theme="mono"] .top-section {
     background: rgba(128, 128, 128, 0.2) !important; /* 70% transparent */
     color: #000000;
+}
+
+/* Responsive adjustments for ladder panel */
+@media (max-width: 1000px) {
+    .ladder-panel-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .ladder-section {
+        aspect-ratio: auto;
+        min-height: 200px;
+    }
+    
+    .stylish-digit-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .stylish-digit {
+        font-size: 28px;
+    }
+    
+    .order-ladder-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    
+    .price-level-badge {
+        font-size: 11px;
+        padding: 6px 8px;
+    }
+    
+    .holdings-tracker {
+        padding: 12px;
+    }
+    
+    .holdings-row {
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 768px) {
+    .order-ladder-grid {
+        grid-template-columns: 1fr;
+        gap: 6px;
+    }
+    
+    .rebase-content {
+        gap: 15px;
+    }
+    
+    .progress-bar-container {
+        height: 16px;
+    }
+    
+    /* Remove background images on mobile, use black background */
+    body {
+        background-image: none !important;
+        background-color: #000000 !important;
+    }
+    
+    /* Ensure all themes use black background on mobile */
+    body[data-theme="color"],
+    body[data-theme="mono"], 
+    body[data-theme="bw"] {
+        background-image: none !important;
+        background-color: #000000 !important;
+    }
+    
+    /* Mobile-specific adjustments */
+    .panel {
+        margin: 5px;
+    }
+    
+    .control-panels {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .header-content {
+        max-width: 100%;
+        flex-direction: column;
+        gap: 20px;
+        text-align: center;
+    }
+    
+    .panels-row {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .control-panels-row {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-container {
+        padding: 0 15px;
+    }
+    
+    .content-wrapper {
+        padding: 20px 0;
+    }
+    
+    .panel-content {
+        height: 250px;
+    }
+    
+    .footer-content {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+    
+    .footer-info {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .smart-phrase-box {
+        white-space: normal;
+        text-align: center;
+    }
+}
+
+/* Mobile landscape orientation fix */
+@media screen and (orientation: landscape) and (max-height: 768px) {
+    .panel-content {
+        height: 200px;
+    }
+    
+    .panel {
+        transform: none;
+    }
 }
 

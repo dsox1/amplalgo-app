@@ -1,0 +1,111 @@
+/* Simple Panel Backing - Dark Transparent Background */
+/* Matches 80% zoom width with 7-second fade-in animation (NO LOOPING) */
+
+/* Create a dark backing layer for the main content area */
+.main-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%; /* Matches the 80% zoom width of panels */
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6); /* Default 60% opacity */
+    z-index: 1;
+    pointer-events: none; /* Allows clicks to pass through to panels below */
+    
+    /* Start invisible and fade in over 7 seconds - NO LOOPING */
+    opacity: 0;
+    animation: fadeInBacking 7s ease-in-out forwards;
+    animation-iteration-count: 1; /* Explicitly run only once */
+}
+
+/* B&W Theme - 10% darker opacity (70% instead of 60%) */
+body[data-theme="bw"] .main-container::before {
+    background: rgba(0, 0, 0, 0.8); /* 70% opacity for B&W theme */
+}
+
+/* Animation for the backing to fade in over 7 seconds - RUNS ONCE ONLY */
+@keyframes fadeInBacking {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+/* Ensure main container is positioned relative for the overlay */
+.main-container {
+    position: relative;
+    z-index: 2;
+}
+
+/* Ensure all panels sit above the dark backing */
+.panel,
+.control-panel,
+.integrated-ladder-panel {
+    position: relative;
+    z-index: 3;
+}
+
+/* Alternative approach with more precise width control */
+/* Uncomment this section if you need more precise width matching */
+
+/*
+.content-wrapper::before {
+    content: '';
+    position: absolute;
+    top: -1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(80% + 2rem);
+    height: calc(100% + 2rem);
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 1;
+    pointer-events: none;
+    border-radius: 12px;
+    
+    opacity: 0;
+    animation: fadeInBacking 7s ease-in-out forwards;
+    animation-iteration-count: 1;
+}
+
+body[data-theme="bw"] .content-wrapper::before {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+.content-wrapper {
+    position: relative;
+    z-index: 2;
+}
+
+.panels-row,
+.control-panels-row,
+.integrated-ladder-panel {
+    position: relative;
+    z-index: 3;
+}
+*/
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+    .main-container::before {
+        width: 90%; /* Slightly wider on smaller screens */
+    }
+}
+
+@media (max-width: 768px) {
+    .main-container::before {
+        width: 95%; /* Even wider on mobile */
+    }
+}
+
+/* Disable animations on mobile to save bandwidth */
+@media (max-width: 768px) {
+    .main-container::before {
+        animation: none;
+        opacity: 1; /* Just show immediately on mobile */
+    }
+}
+

@@ -980,15 +980,8 @@ function placeLimitBuyOrder(order) {
     tradingState.accumulatedBuyOrders += order.size;
     
     updateLargeDigits();
-    
-    // Simulate order fills (for demo purposes)
-    if (Math.random() < 0.1) {
-        setTimeout(() => {
-            order.status = 'filled';
-            handleOrderFill(order);
-        }, Math.random() * 5000 + 2000);
-    }
 }
+
 
 function handleOrderFill(order) {
     console.log(`Order filled: Level ${order.level} at $${order.price.toFixed(4)}`);
@@ -1078,26 +1071,15 @@ function updateLargeDigits() {
     }
 }
 
+
+
 function startLargeDigitUpdates() {
     // Update displays every 3 seconds
     setInterval(() => {
         updateLargeDigits();
-        
-        // Simulate some trading activity for demo
-        if (Math.random() < 0.1 && tradingState.activeTrades < 8) {
-            // Randomly add a pending trade
-            tradingState.pendingTrades++;
-        }
-        
-        if (Math.random() < 0.05 && tradingState.pendingTrades > 0) {
-            // Randomly convert pending to active
-            tradingState.pendingTrades--;
-            tradingState.activeTrades++;
-            tradingState.accumulatedBuyOrders += Math.random() * 500 + 100;
-        }
-        
     }, 3000);
 }
+
 
 // Enhanced sell threshold functionality with 1% spacing
 function enhancedSellThresholdLogic() {
