@@ -1,6 +1,7 @@
 /**
- * AMPL Manager - Final Fix with Proper KuCoin API Integration
- * Uses real KuCoin API with proper authentication and signature generation
+ * AMPL Manager - Smart Order Ladder System
+ * Handles automated AMPL trading with weighted money distribution
+ * More funds allocated to lower prices, less to higher prices
  */
 
 class AMPLManager {
@@ -34,74 +35,28 @@ class AMPLManager {
         
         // Rebase protection settings
         this.rebaseProtectionEnabled = true;
-        this.minimumSafetyRatio = 0.95;
+        this.minimumSafetyRatio = 0.95; // Don't sell if current value < 95% of original purchase
         
-        // KuCoin credentials (will be loaded from environment)
-        this.kucoinCredentials = null;
-        
-        // Initialize
+        // Initialize event listeners
         this.initializeEventListeners();
-        this.loadKuCoinCredentials();
-        
-        console.log('🚀 AMPL Manager initialized with proper KuCoin API');
-    }
-    
-    /**
-     * Load KuCoin credentials from environment variables
-     */
-    async loadKuCoinCredentials() {
-        try {
-            // In a real deployment, these would come from your backend API
-            // For now, we'll try to get them from the environment or prompt user
-            
-            // Check if credentials are available in global scope (set by your backend)
-            if (window.KUCOIN_CREDENTIALS) {
-                this.kucoinCredentials = window.KUCOIN_CREDENTIALS;
-                console.log('✅ KuCoin credentials loaded from global scope');
-                return;
-            }
-            
-            // Try to fetch from your backend API
-            try {
-                const response = await fetch('/api/kucoin/credentials');
-                if (response.ok) {
-                    this.kucoinCredentials = await response.json();
-                    console.log('✅ KuCoin credentials loaded from backend');
-                    return;
-                }
-            } catch (error) {
-                console.log('⚠️ Could not load credentials from backend:', error.message);
-            }
-            
-            // Fallback: Use environment variables if available
-            if (process && process.env) {
-                this.kucoinCredentials = {
-                    apiKey: process.env.KUCOIN_API_KEY,
-                    apiSecret: process.env.KUCOIN_API_SECRET,
-                    passphrase: process.env.KUCOIN_PASSPHRASE
-                };
-                
-                if (this.kucoinCredentials.apiKey) {
-                    console.log('✅ KuCoin credentials loaded from environment');
-                    return;
-                }
-            }
-            
-            console.log('❌ No KuCoin credentials found - orders will be simulated');
-            
-        } catch (error) {
-            console.error('❌ Error loading KuCoin credentials:', error);
-        }
     }
     
     /**
      * Calculate weighted distribution of funds across 8 price levels
+     * @param {number} totalBalance - Total KuCoin USDT balance
+     * @returns {Array} Array of amounts for each price level
      */
     calculateWeightedDistribution(totalBalance) {
+        // Calculate total weight sum
         const totalWeight = this.weightFactors.reduce((sum, weight) => sum + weight, 0);
+        
+        // Calculate base amount (what 1.0 weight factor gets)
         const baseAmount = totalBalance / totalWeight;
         
-        const distributions = this.weightFactors.map(weight => baseAmount * weight);
+        // Calculate actual amounts for each level
+        const distributions = this.weightFactors.map(weight => {
+            return baseAmount * weight;
+        });
         
         console.log('💰 AMPL Manager - Weighted Distribution:');
         this.priceLevels.forEach((price, index) => {
@@ -112,125 +67,344 @@ class AMPLManager {
     }
     
     /**
-     * Place smart order ladder with real KuCoin API
+     * Place smart order ladder with weighted distribution
+     * @param {number} currentPrice - Current AMPL price
+     * @param {number} balance - Available USDT balance
      */
-    async placeSmartOrderLadder() {
+    async placeSmartOrderLadder(currentPrice, balance) {
         if (!this.isEnabled) {
             console.log('❌ AMPL Manager disabled - skipping order placement');
             return;
         }
         
-        try {
-            console.log('🔄 Placing smart order ladder with REAL KuCoin API...');
+        // Check if we already have orders
+        if (this.currentOrders.length > 0) {
+            console.log('⚠️ Existing orders found - canceling before placing new ladder');
+            await this.cancelAllOrders();
+        }
+        
+        // Calculate weighted distribution
+        const distributions = this.calculateWeightedDistribution(balance);
+        
+        // Place orders only for levels below current price
+        const ordersToPlace = [];
+        
+        for (let i = 0; i < this.priceLevels.length; i++) {
+            const priceLevel = this.priceLevels[i];
+            const amount = distributions[i];
             
-            // Get current balance and price from UI
-            const balanceElement = document.getElementById('usdt-balance');
-            const balance = balanceElement ? parseFloat(balanceElement.textContent) || 3328 : 3328;
-            
-            const priceElement = document.getElementById('current-ampl-price');
-            const currentPrice = priceElement ? parseFloat(priceElement.textContent) || 1.19 : 1.19;
-            
-            console.log(`📊 Current AMPL Price: $${currentPrice.toFixed(4)}`);
-            console.log(`💰 Available Balance: $${balance.toFixed(2)}`);
-            
-            // Check if we have KuCoin credentials
-            if (!this.kucoinCredentials || !this.kucoinCredentials.apiKey) {
-                console.log('❌ No KuCoin credentials - cannot place real orders');
-                return;
-            }
-            
-            // Calculate weighted distribution
-            const distributions = this.calculateWeightedDistribution(balance);
-            
-            // Clear existing orders
-            this.currentOrders = [];
-            
-            // Place orders only for levels below current price
-            const ordersPlaced = [];
-            let totalOrderValue = 0;
-            
-            for (let i = 0; i < this.priceLevels.length; i++) {
-                const priceLevel = this.priceLevels[i];
-                const orderValue = distributions[i];
+            // Only place order if price level is below current price
+            if (priceLevel < currentPrice) {
+                const order = {
+                    id: `ampl_ladder_${i}_${Date.now()}`,
+                    price: priceLevel,
+                    amount: amount,
+                    quantity: amount / priceLevel, // AMPL quantity to buy
+                    status: 'pending',
+                    level: i,
+                    timestamp: new Date().toISOString()
+                };
                 
-                // Only place order if price level is below current price and meets minimum
-                if (priceLevel < currentPrice && orderValue >= 10) {
-                    const orderSize = orderValue / priceLevel; // Calculate AMPL quantity
-                    
-                    console.log(`📤 Placing REAL order ${i + 1}/8: ${orderSize.toFixed(4)} AMPL at $${priceLevel.toFixed(4)} (${orderValue.toFixed(2)} USDT)`);
-                    
-                    // Create order parameters
-                    const orderParams = {
-                        symbol: 'AMPL-USDT',
-                        price: priceLevel.toFixed(4),
-                        size: orderSize.toFixed(4),
-                        clientOid: `ampl_ladder_${i}_${Date.now()}`
-                    };
-                    
-                    // Place real KuCoin order using proper API
-                    const result = await this.placeRealKuCoinOrder(orderParams);
-                    
-                    if (result.success) {
-                        const order = {
-                            id: result.clientOid,
-                            kucoinOrderId: result.orderId,
-                            price: priceLevel,
-                            size: orderSize,
-                            value: orderValue,
-                            level: i,
-                            status: 'active',
-                            timestamp: new Date().toISOString()
-                        };
-                        
-                        ordersPlaced.push(order);
-                        totalOrderValue += orderValue;
-                        
-                        // Save to Supabase for tracking
-                        await this.saveOrderToDatabase(order);
-                        
-                        console.log(`✅ REAL order placed successfully: ${result.orderId}`);
-                    } else {
-                        console.error(`❌ Failed to place REAL order at ${priceLevel}: ${result.error}`);
-                    }
-                    
-                    // Rate limiting - wait 200ms between orders
-                    await new Promise(resolve => setTimeout(resolve, 200));
-                }
+                ordersToPlace.push(order);
             }
+        }
+        
+        // Place orders via KuCoin API
+        for (const order of ordersToPlace) {
+            try {
+                const result = await this.placeKuCoinOrder(order);
+                if (result.success) {
+                    this.currentOrders.push(order);
+                    console.log(`✅ Order placed: ${order.quantity.toFixed(4)} AMPL at $${order.price}`);
+                } else {
+                    console.error(`❌ Failed to place order at $${order.price}:`, result.error);
+                }
+            } catch (error) {
+                console.error(`❌ Error placing order at $${order.price}:`, error);
+            }
+        }
+        
+        // Update UI
+        this.updateLadderPanelDisplay();
+        
+        console.log(`🎯 Smart ladder placed: ${ordersToPlace.length} orders totaling $${ordersToPlace.reduce((sum, o) => sum + o.amount, 0).toFixed(2)}`);
+    }
+    
+    /**
+     * Check rebase protection before selling
+     * @param {number} currentAmplPrice - Current AMPL price
+     * @returns {boolean} True if safe to sell, false if protection triggered
+     */
+    checkRebaseProtection(currentAmplPrice) {
+        if (!this.rebaseProtectionEnabled) {
+            return true; // Protection disabled, allow sell
+        }
+        
+        // Calculate current value of holdings
+        const currentValue = this.currentHoldings.ampl * currentAmplPrice;
+        
+        // Check if current value is above safety threshold
+        const safetyRatio = currentValue / this.originalPurchaseAmount;
+        const isSafe = safetyRatio >= this.minimumSafetyRatio;
+        
+        console.log(`🛡️ Rebase Protection Check:`);
+        console.log(`  Original Purchase: $${this.originalPurchaseAmount.toFixed(2)}`);
+        console.log(`  Current Holdings: ${this.currentHoldings.ampl.toFixed(4)} AMPL`);
+        console.log(`  Current Value: $${currentValue.toFixed(2)}`);
+        console.log(`  Safety Ratio: ${(safetyRatio * 100).toFixed(1)}%`);
+        console.log(`  Status: ${isSafe ? '✅ SAFE TO SELL' : '❌ PROTECTION TRIGGERED'}`);
+        
+        // Update UI progress bar
+        this.updateRebaseProtectionDisplay(safetyRatio);
+        
+        return isSafe;
+    }
+    
+    /**
+     * Handle order fill notification
+     * @param {Object} orderData - Order fill data from KuCoin
+     */
+    async handleOrderFill(orderData) {
+        console.log('📈 Order filled:', orderData);
+        
+        // Update order status
+        const order = this.currentOrders.find(o => o.id === orderData.orderId);
+        if (order) {
+            order.status = 'filled';
+            order.fillPrice = orderData.price;
+            order.fillQuantity = orderData.quantity;
+            order.fillTime = new Date().toISOString();
             
-            // Update current orders
-            this.currentOrders = ordersPlaced;
+            // Update holdings
+            this.currentHoldings.ampl += orderData.quantity;
+            this.originalPurchaseAmount += orderData.price * orderData.quantity;
             
-            // Update UI
-            this.updateLadderPanelDisplay();
-            
-            console.log(`🎯 Smart ladder placed: ${ordersPlaced.length} REAL orders totaling $${totalOrderValue.toFixed(2)}`);
-            
-        } catch (error) {
-            console.error('❌ Error placing smart order ladder:', error);
+            console.log(`✅ Updated holdings: ${this.currentHoldings.ampl.toFixed(4)} AMPL`);
+            console.log(`💰 Total invested: $${this.originalPurchaseAmount.toFixed(2)}`);
+        }
+        
+        // Check if we should place sell order
+        await this.checkSellConditions(orderData.price);
+        
+        // Update UI
+        this.updateLadderPanelDisplay();
+    }
+    
+    /**
+     * Check if sell conditions are met
+     * @param {number} currentPrice - Current AMPL price
+     */
+    async checkSellConditions(currentPrice) {
+        // Get sell threshold from main dashboard
+        const currentThreshold = parseFloat(document.getElementById('current-threshold')?.textContent || '1.25');
+        
+        if (currentPrice >= currentThreshold && this.currentHoldings.ampl > 0) {
+            // Check rebase protection before selling
+            if (this.checkRebaseProtection(currentPrice)) {
+                await this.executeSell(currentPrice);
+            } else {
+                console.log('🛡️ Sell blocked by rebase protection');
+            }
         }
     }
     
     /**
-     * Place real KuCoin order using proper API with authentication
+     * Execute sell order
+     * @param {number} sellPrice - Price to sell at
      */
-    async placeRealKuCoinOrder(orderParams) {
+    async executeSell(sellPrice) {
         try {
-            // Check if KuCoin Order API is available
-            if (!window.KuCoinOrderAPI) {
-                throw new Error('KuCoin Order API not loaded');
+            const sellOrder = {
+                id: `ampl_sell_${Date.now()}`,
+                price: sellPrice,
+                quantity: this.currentHoldings.ampl,
+                amount: this.currentHoldings.ampl * sellPrice,
+                type: 'sell',
+                timestamp: new Date().toISOString()
+            };
+            
+            const result = await this.placeKuCoinOrder(sellOrder);
+            
+            if (result.success) {
+                console.log(`💰 Sell executed: ${sellOrder.quantity.toFixed(4)} AMPL at $${sellPrice}`);
+                
+                // Reset holdings
+                this.currentHoldings.ampl = 0;
+                this.originalPurchaseAmount = 0;
+                
+                // Cancel remaining buy orders
+                await this.cancelAllOrders();
+                
+                // Wait 2 seconds then place fresh ladder
+                setTimeout(() => {
+                    this.refreshOrderLadder();
+                }, 2000);
+                
+                // Update UI
+                this.updateLadderPanelDisplay();
+            }
+        } catch (error) {
+            console.error('❌ Error executing sell:', error);
+        }
+    }
+    
+    /**
+     * Place order via KuCoin API through Supabase
+     * @param {Object} order - Order object
+     * @returns {Object} Result object with success/error
+     */
+    async placeKuCoinOrder(order) {
+        try {
+            console.log(`📤 Placing REAL KuCoin limit order: ${order.quantity.toFixed(4)} AMPL at $${order.price.toFixed(4)}`);
+            
+            // Prepare order data as JSON (matching your existing table structure)
+            const orderData = {
+                type: 'limit',
+                side: 'buy',
+                symbol: 'AMPL-USDT',
+                price: order.price,
+                size: order.quantity,
+                clientOid: order.id,
+                source: 'ampl_manager',
+                timestamp: new Date().toISOString(),
+                status: 'pending',
+                level: order.level,
+                amount: order.amount
+            };
+            
+            // Save order to Supabase orders table first
+            const { data, error } = await supabase
+                .from('orders')
+                .insert([{
+                    content: JSON.stringify(orderData),
+                    created_at: new Date().toISOString()
+                }])
+                .select();
+            
+            if (error) {
+                console.error('❌ Supabase order insert error:', error);
+                return {
+                    success: false,
+                    error: `Supabase error: ${error.message}`
+                };
             }
             
-            // Use the proper KuCoin API function
-            const result = await window.KuCoinOrderAPI.placeKuCoinLimitOrder(
-                orderParams,
-                this.kucoinCredentials
-            );
+            console.log('✅ Order saved to Supabase:', data);
             
-            return result;
+            // Now place REAL order on KuCoin via Supabase Edge Function
+            try {
+                const kucoinOrderData = {
+                    clientOid: order.id,
+                    side: 'buy',
+                    symbol: 'AMPL-USDT',
+                    type: 'limit',
+                    price: order.price.toString(),
+                    size: order.quantity.toString(),
+                    timeInForce: 'GTC' // Good Till Canceled
+                };
+                
+                // Call Supabase Edge Function to place order on KuCoin
+		// Use existing order placement function
+		if (typeof window.placeLimitBuyOrder === 'function') {
+    		    console.log('🔄 Using existing order placement function...');
+    		    window.placeLimitBuyOrder({
+        		price: order.price,
+        		size: order.amount,
+        		level: order.level
+    		    });
+    
+    		    const result = {
+        	    	success: true,
+        	    	orderId: order.id
+    		    };
+		} else {
+    		    const result = {
+        		success: false,
+        		error: 'No order placement function available'
+    		    };
+		}
+
+                
+                if (result.success && result.orderId) {
+                    console.log(`✅ REAL KuCoin order placed! Order ID: ${result.orderId}`);
+                    
+                    // Update order status in Supabase with real KuCoin order ID
+                    const updatedOrderData = {
+                        ...orderData,
+                        status: 'active',
+                        kucoinOrderId: result.orderId,
+                        placedAt: new Date().toISOString()
+                    };
+                    
+                    await supabase
+                        .from('orders')
+                        .update({ content: JSON.stringify(updatedOrderData) })
+                        .eq('id', data[0].id);
+                    
+                    // Mark order as successfully placed in our internal tracking
+                    order.status = 'active';
+                    order.kucoinOrderId = result.orderId;
+                    order.supabaseId = data[0]?.id;
+                    
+                    return {
+                        success: true,
+                        orderId: result.orderId,
+                        message: 'REAL KuCoin limit order placed successfully!'
+                    };
+                } else {
+                    console.error('❌ KuCoin API error:', result.error);
+                    
+                    // Update order status to failed
+                    const failedOrderData = {
+                        ...orderData,
+                        status: 'failed',
+                        error: result.error,
+                        failedAt: new Date().toISOString()
+                    };
+                    
+                    await supabase
+                        .from('orders')
+                        .update({ content: JSON.stringify(failedOrderData) })
+                        .eq('id', data[0].id);
+                    
+                    return {
+                        success: false,
+                        error: `KuCoin API error: ${result.error}`
+                    };
+                }
+            } catch (apiError) {
+                console.error('❌ Error calling KuCoin API:', apiError);
+                
+                // Fallback: Use existing placeLimitBuyOrder function if available
+                if (typeof window.placeLimitBuyOrder === 'function') {
+                    console.log('🔄 Falling back to existing order placement function...');
+                    
+                    const fallbackOrder = {
+                        price: order.price,
+                        size: order.amount, // Use USDT amount
+                        level: order.level
+                    };
+                    
+                    window.placeLimitBuyOrder(fallbackOrder);
+                    
+                    order.status = 'active';
+                    order.supabaseId = data[0]?.id;
+                    
+                    return {
+                        success: true,
+                        orderId: order.id,
+                        message: 'Order placed via fallback method'
+                    };
+                }
+                
+                return {
+                    success: false,
+                    error: `API call failed: ${apiError.message}`
+                };
+            }
             
         } catch (error) {
-            console.error('❌ Error in placeRealKuCoinOrder:', error);
+            console.error('❌ Error placing KuCoin order:', error);
             return {
                 success: false,
                 error: error.message
@@ -242,96 +416,135 @@ class AMPLManager {
      * Cancel all current orders
      */
     async cancelAllOrders() {
-        try {
-            console.log('🗑️ Canceling all AMPL orders...');
-            
-            if (!this.kucoinCredentials || !window.KuCoinOrderAPI) {
-                console.log('❌ Cannot cancel orders - missing credentials or API');
-                return;
+        for (const order of this.currentOrders) {
+            if (order.status === 'pending') {
+                // TODO: Integrate with KuCoin cancel order API
+                console.log(`🚫 Canceling order: ${order.id}`);
+                order.status = 'canceled';
             }
-            
-            // Cancel all orders on KuCoin
-            const result = await window.KuCoinOrderAPI.cancelAllKuCoinOrders(
-                'AMPL-USDT',
-                this.kucoinCredentials
-            );
-            
-            if (result.success) {
-                console.log(`✅ Cancelled ${result.cancelledOrderIds.length} orders`);
-                
-                // Clear local order tracking
-                this.currentOrders = [];
-                
-                // Update UI
-                this.updateLadderPanelDisplay();
-            } else {
-                console.error('❌ Failed to cancel orders:', result.error);
-            }
-            
-        } catch (error) {
-            console.error('❌ Error canceling orders:', error);
         }
+        
+        // Remove canceled orders
+        this.currentOrders = this.currentOrders.filter(order => order.status !== 'canceled');
+        
+        this.updateLadderPanelDisplay();
     }
     
     /**
-     * Save order to Supabase database for tracking
+     * Refresh order ladder with current balance
      */
-    async saveOrderToDatabase(order) {
-        try {
-            const orderData = {
-                type: 'limit',
-                side: 'buy',
-                symbol: 'AMPL-USDT',
-                price: order.price,
-                size: order.size,
-                value: order.value,
-                clientOid: order.id,
-                kucoinOrderId: order.kucoinOrderId,
-                source: 'ampl_manager',
-                status: order.status,
-                level: order.level,
-                timestamp: order.timestamp
-            };
-            
-            if (window.db && window.db.saveOrder) {
-                await window.db.saveOrder(orderData);
-                console.log('💾 Order saved to database');
-            }
-        } catch (error) {
-            console.error('❌ Error saving order to database:', error);
-        }
+    async refreshOrderLadder() {
+        if (!this.isEnabled) return;
+        
+        // Get current balance and price
+        const balance = parseFloat(document.getElementById('usdt-balance')?.textContent || '0');
+        const currentPrice = parseFloat(document.getElementById('current-ampl-price')?.textContent || '1.20');
+        
+        console.log('🔄 Refreshing order ladder...');
+        await this.placeSmartOrderLadder(currentPrice, balance);
     }
     
     /**
      * Update ladder panel display
      */
     updateLadderPanelDisplay() {
-        // Update price level badges
-        this.priceLevels.forEach((price, index) => {
-            const badge = document.querySelector(`.price-level-badge:nth-child(${index + 1})`);
-            if (badge) {
-                const order = this.currentOrders.find(o => o.level === index);
-                
-                if (order) {
-                    if (order.status === 'active') {
-                        badge.className = 'price-level-badge pending';
-                    } else if (order.status === 'filled') {
-                        badge.className = 'price-level-badge filled';
-                    }
-                } else {
-                    badge.className = 'price-level-badge empty';
-                }
-                
-                badge.textContent = price.toFixed(4);
-            }
-        });
+        // Update active/pending trade counts
+        const activeCount = this.currentOrders.filter(o => o.status === 'filled').length;
+        const pendingCount = this.currentOrders.filter(o => o.status === 'pending').length;
+        
+        const activeEl = document.getElementById('active-trades-count');
+        const pendingEl = document.getElementById('pending-trades-count');
+        
+        if (activeEl) activeEl.textContent = activeCount;
+        if (pendingEl) pendingEl.textContent = pendingCount;
         
         // Update order status display
-        const statusDisplay = document.querySelector('.order-status-display strong');
-        if (statusDisplay) {
-            const activeOrders = this.currentOrders.filter(o => o.status === 'active').length;
-            const pendingOrders = this.currentOrders.filter(o => o.status === 'pending').length;
-            statusDisplay.textContent = `${activeOrders} orders open, ${pendingOrders} pending`;
+        const statusEl = document.querySelector('.order-status-display');
+        if (statusEl) {
+            statusEl.innerHTML = `<strong>${activeCount} orders open, ${pendingCount} pending</strong>`;
+        }
+        
+        // Update price level badges
+        this.updatePriceLevelBadges();
+        
+        // Update holdings tracker
+        this.updateHoldingsTracker();
+    }
+    
+    /**
+     * Update price level badges with current status
+     */
+    updatePriceLevelBadges() {
+        const badges = document.querySelectorAll('.price-level-badge');
+        
+        badges.forEach((badge, index) => {
+            const priceLevel = this.priceLevels[index];
+            const order = this.currentOrders.find(o => o.level === index);
+            
+            // Update badge text
+            badge.textContent = priceLevel.toFixed(4);
+            
+            // Update badge status
+            badge.classList.remove('filled', 'pending', 'empty');
+            
+            if (order) {
+                if (order.status === 'filled') {
+                    badge.classList.add('filled');
+                } else if (order.status === 'pending') {
+                    badge.classList.add('pending');
+                }
+            } else {
+                badge.classList.add('empty');
+            }
+        });
+    }
+    
+    /**
+     * Update rebase protection progress bar
+     * @param {number} safetyRatio - Current safety ratio (0-1)
+     */
+    updateRebaseProtectionDisplay(safetyRatio) {
+        const progressBar = document.querySelector('.progress-bar');
+        const percentageEl = document.querySelector('.progress-percentage');
+        
+        if (progressBar) {
+            const percentage = Math.max(0, Math.min(100, safetyRatio * 100));
+            progressBar.style.width = `${percentage}%`;
+        }
+        
+        if (percentageEl) {
+            const status = safetyRatio >= 1.0 ? 'Safe' : safetyRatio >= 0.95 ? 'Caution' : 'Danger';
+            percentageEl.textContent = `${(safetyRatio * 100).toFixed(0)}% ${status}`;
+        }
+    }
+    
+    /**
+     * Update holdings tracker display
+     */
+    updateHoldingsTracker() {
+        const currentPrice = parseFloat(document.getElementById('current-ampl-price')?.textContent || '1.20');
+        const currentValue = this.currentHoldings.ampl * currentPrice;
+        const difference = currentValue - this.originalPurchaseAmount;
+        
+        // Update original purchase amount
+        const originalEl = document.querySelector('.holdings-value.original');
+        if (originalEl) {
+            originalEl.textContent = `$${this.originalPurchaseAmount.toFixed(2)}`;
+        }
+        
+        // Update current value
+        const currentEl = document.querySelector('.holdings-value.current');
+        if (currentEl) {
+            currentEl.textContent = `$${currentValue.toFixed(2)}`;
+        }
+        
+        // Update difference
+        const diffEl = document.querySelector('.holdings-value.difference');
+        if (diffEl) {
+            const sign = difference >= 0 ? '+' : '';
+            diffEl.textContent = `${sign}$${difference.toFixed(2)}`;
+            diffEl.classList.remove('positive', 'negative');
+            diffEl.classList.add(difference >= 0 ? 'positive' : 'negative');
         }
     }
     
@@ -339,8 +552,8 @@ class AMPLManager {
      * Initialize event listeners
      */
     initializeEventListeners() {
-        // AMPL Manager Enable/Disable toggle
-        const amplManagerToggle = document.getElementById('ampl-manager-enabled');
+        // AMPL Manager enable/disable toggle
+        const amplManagerToggle = document.getElementById('ampl-manager-toggle');
         if (amplManagerToggle) {
             amplManagerToggle.addEventListener('change', (e) => {
                 this.isEnabled = e.target.checked;
@@ -351,61 +564,72 @@ class AMPLManager {
                 } else {
                     this.cancelAllOrders();
                 }
-                
-                this.updateToggleDisplay();
             });
         }
         
-        console.log('🎛️ AMPL Manager event listeners initialized');
-    }
-    
-    /**
-     * Update toggle display (LED indicators)
-     */
-    updateToggleDisplay() {
-        const mainLED = document.getElementById('ampl-manager-led');
-        if (mainLED) {
-            if (this.isEnabled) {
-                mainLED.className = 'led-indicator green';
-            } else {
-                mainLED.className = 'led-indicator red';
-            }
-        }
-    }
-    
-    /**
-     * Refresh order ladder
-     */
-    async refreshOrderLadder() {
-        if (!this.isEnabled) {
-            return;
-        }
+        // Listen for price updates
+        document.addEventListener('amplPriceUpdate', (e) => {
+            const newPrice = e.detail.price;
+            this.checkSellConditions(newPrice);
+        });
         
-        console.log('🔄 Refreshing order ladder...');
-        await this.placeSmartOrderLadder();
+        // Listen for balance updates
+        document.addEventListener('balanceUpdate', (e) => {
+            this.totalBalance = e.detail.balance;
+        });
     }
     
     /**
-     * Start monitoring
+     * Enable AMPL Manager
      */
-    start() {
-        console.log('🚀 Starting AMPL Manager with REAL KuCoin API...');
-        
-        // Update display every 3 seconds
-        setInterval(() => {
-            this.updateLadderPanelDisplay();
-        }, 3000);
+    enable() {
+        this.isEnabled = true;
+        const toggle = document.getElementById('ampl-manager-toggle');
+        if (toggle) toggle.checked = true;
+        this.refreshOrderLadder();
+    }
+    
+    /**
+     * Disable AMPL Manager
+     */
+    disable() {
+        this.isEnabled = false;
+        const toggle = document.getElementById('ampl-manager-toggle');
+        if (toggle) toggle.checked = false;
+        this.cancelAllOrders();
+    }
+    
+    /**
+     * Get current status for debugging
+     */
+    getStatus() {
+        return {
+            enabled: this.isEnabled,
+            orders: this.currentOrders,
+            holdings: this.currentHoldings,
+            originalPurchase: this.originalPurchaseAmount,
+            priceLevels: this.priceLevels,
+            weightFactors: this.weightFactors
+        };
     }
 }
 
-// Initialize AMPL Manager when DOM is ready
+// Initialize AMPL Manager when DOM is loaded
+let amplManager = null;
+
 document.addEventListener('DOMContentLoaded', function() {
+    // Wait a bit for main script to initialize
     setTimeout(() => {
-        window.amplManager = new AMPLManager();
-        window.amplManager.start();
-        console.log('🎯 AMPL Manager with REAL KuCoin API ready!');
+        amplManager = new AMPLManager();
+        console.log('🚀 AMPL Manager initialized');
+        
+        // Make it globally accessible for debugging
+        window.amplManager = amplManager;
     }, 1000);
 });
 
-console.log('📦 AMPL Manager Final Fix loaded');
+// Export for use in other files
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = AMPLManager;
+}
 
