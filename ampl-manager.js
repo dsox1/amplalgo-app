@@ -304,14 +304,13 @@ class AMPLManager {
                 };
                 
                 // Call Supabase Edge Function to place order on KuCoin
-                const response = await fetch(`${window.SUPABASE_URL || 'https://fbkcdirkshubectuvxzi.supabase.co'}/functions/v1/place-kucoin-order`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${window.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZia2NkaXJrc2h1YmVjdHV2eHppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY0NDc0ODAsImV4cCI6MjA2MjAyMzQ4MH0.yhy1JL-V9zQVK1iIdSVK1261qD8gmHmo2vB-qe7Kit8'}`
-                    },
-                    body: JSON.stringify(kucoinOrderData)
-                });
+		// Direct API call to your existing endpoint
+		const response = await fetch('/api/kucoin/place-order', {
+    		    method: 'POST',
+    		    headers: { 'Content-Type': 'application/json' },
+    		    body: JSON.stringify(kucoinOrderData )
+		});
+
                 
                 const result = await response.json();
                 
