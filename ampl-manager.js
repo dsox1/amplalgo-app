@@ -304,20 +304,20 @@ class AMPLManager {
                 };
                 
                 // Call Supabase Edge Function to place order on KuCoin
-		// Use existing order placement function
-		if (typeof window.placeLimitBuyOrder === 'function') {
-    		    console.log('🔄 Using existing order placement function...');
-    		    window.placeLimitBuyOrder({
-        		price: order.price,
-        		size: order.amount,
-        		level: order.level
-    		    });
-    
-    		    const result = {
-        	    	success: true,
-        	    	orderId: order.id
-    		    };
+		// Use REAL KuCoin API
+		if (window.KuCoinOrderAPI && this.kucoinCredentials) {
+    		    console.log('🔄 Using REAL KuCoin API...');
+    		    const result = await window.KuCoinOrderAPI.placeKuCoinLimitOrder({
+        		symbol: 'AMPL-USDT',
+        		price: order.price.toString(),
+        		size: order.amount.toString(),
+        		clientOid: order.id
+    		    }, this.kucoinCredentials);
 		} else {
+    		    console.log('❌ No KuCoin API or credentials - using fallback');
+    		    const result = { success: false, error: 'No API available' };
+		}
+ else {
     		    const result = {
         		success: false,
         		error: 'No order placement function available'
