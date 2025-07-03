@@ -255,7 +255,7 @@ class AMPLManager {
      */
     async placeKuCoinOrder(order) {
         try {
-            console.log(`📤 Placing KuCoin order via Supabase: ${order.quantity.toFixed(4)} AMPL at $${order.price.toFixed(4)}`);
+            console.log(`📤 Placing REAL KuCoin limit order: ${order.quantity.toFixed(4)} AMPL at $${order.price.toFixed(4)}`);
             
             // Prepare order data as JSON (matching your existing table structure)
             const orderData = {
@@ -272,7 +272,7 @@ class AMPLManager {
                 amount: order.amount
             };
             
-            // Save order to Supabase orders table (using content field like existing orders)
+            // Save order to Supabase orders table first
             const { data, error } = await supabase
                 .from('orders')
                 .insert([{
@@ -291,22 +291,107 @@ class AMPLManager {
             
             console.log('✅ Order saved to Supabase:', data);
             
-            // For now, we'll simulate successful order placement
-            // In a real implementation, you would call KuCoin API here
-            // and update the order status based on the response
-            
-            // Simulate API call delay
-            await new Promise(resolve => setTimeout(resolve, 200));
-            
-            // Mark order as successfully placed in our internal tracking
-            order.status = 'pending';
-            order.supabaseId = data[0]?.id;
-            
-            return {
-                success: true,
-                orderId: data[0]?.id || order.id,
-                message: 'Order placed successfully via Supabase'
-            };
+            // Now place REAL order on KuCoin via Supabase Edge Function
+            try {
+                const kucoinOrderData = {
+                    clientOid: order.id,
+                    side: 'buy',
+                    symbol: 'AMPL-USDT',
+                    type: 'limit',
+                    price: order.price.toString(),
+                    size: order.quantity.toString(),
+                    timeInForce: 'GTC' // Good Till Canceled
+                };
+                
+                // Call Supabase Edge Function to place order on KuCoin
+                const response = await fetch(`${window.SUPABASE_URL || 'https://fbkcdirkshubectuvxzi.supabase.co'}/functions/v1/place-kucoin-order`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${window.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZia2NkaXJrc2h1YmVjdHV2eHppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY0NDc0ODAsImV4cCI6MjA2MjAyMzQ4MH0.yhy1JL-V9zQVK1iIdSVK1261qD8gmHmo2vB-qe7Kit8'}`
+                    },
+                    body: JSON.stringify(kucoinOrderData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success && result.orderId) {
+                    console.log(`✅ REAL KuCoin order placed! Order ID: ${result.orderId}`);
+                    
+                    // Update order status in Supabase with real KuCoin order ID
+                    const updatedOrderData = {
+                        ...orderData,
+                        status: 'active',
+                        kucoinOrderId: result.orderId,
+                        placedAt: new Date().toISOString()
+                    };
+                    
+                    await supabase
+                        .from('orders')
+                        .update({ content: JSON.stringify(updatedOrderData) })
+                        .eq('id', data[0].id);
+                    
+                    // Mark order as successfully placed in our internal tracking
+                    order.status = 'active';
+                    order.kucoinOrderId = result.orderId;
+                    order.supabaseId = data[0]?.id;
+                    
+                    return {
+                        success: true,
+                        orderId: result.orderId,
+                        message: 'REAL KuCoin limit order placed successfully!'
+                    };
+                } else {
+                    console.error('❌ KuCoin API error:', result.error);
+                    
+                    // Update order status to failed
+                    const failedOrderData = {
+                        ...orderData,
+                        status: 'failed',
+                        error: result.error,
+                        failedAt: new Date().toISOString()
+                    };
+                    
+                    await supabase
+                        .from('orders')
+                        .update({ content: JSON.stringify(failedOrderData) })
+                        .eq('id', data[0].id);
+                    
+                    return {
+                        success: false,
+                        error: `KuCoin API error: ${result.error}`
+                    };
+                }
+            } catch (apiError) {
+                console.error('❌ Error calling KuCoin API:', apiError);
+                
+                // Fallback: Use existing placeLimitBuyOrder function if available
+                if (typeof window.placeLimitBuyOrder === 'function') {
+                    console.log('🔄 Falling back to existing order placement function...');
+                    
+                    const fallbackOrder = {
+                        price: order.price,
+                        size: order.amount, // Use USDT amount
+                        level: order.level
+                    };
+                    
+                    window.placeLimitBuyOrder(fallbackOrder);
+                    
+                    order.status = 'active';
+                    order.supabaseId = data[0]?.id;
+                    
+                    return {
+                        success: true,
+                        orderId: order.id,
+                        message: 'Order placed via fallback method'
+                    };
+                }
+                
+                return {
+                    success: false,
+                    error: `API call failed: ${apiError.message}`
+                };
+            }
             
         } catch (error) {
             console.error('❌ Error placing KuCoin order:', error);
