@@ -6,6 +6,20 @@
 
 class AMPLManager {
     constructor() {
+	
+	// Add this in the constructor after other property initializations
+	this.tradingState = {
+    	    active_trades: 0,
+            pending_trades: 0,
+            total_trades: 0,
+            last_update: new Date().toISOString()
+	};
+	// After successful order placement, add:
+	this.tradingState.active_trades++;
+	this.tradingState.total_trades++;
+
+
+	
         // 8-level price ladder (3.34% spacing from 1.16 down to 0.85)
         this.priceLevels = [
             1.1600, 1.1212, 1.0838, 1.0126, 
