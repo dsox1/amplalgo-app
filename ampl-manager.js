@@ -304,15 +304,26 @@ class AMPLManager {
                 };
                 
                 // Call Supabase Edge Function to place order on KuCoin
-		// Direct API call to your existing endpoint
-		const response = await fetch('/api/kucoin/place-order', {
-    		    method: 'POST',
-    		    headers: { 'Content-Type': 'application/json' },
-    		    body: JSON.stringify(kucoinOrderData )
-		});
+		// Use existing order placement function
+		if (typeof window.placeLimitBuyOrder === 'function') {
+    		    console.log('🔄 Using existing order placement function...');
+    		    window.placeLimitBuyOrder({
+        		price: order.price,
+        		size: order.amount,
+        		level: order.level
+    		    });
+    
+    		    const result = {
+        	    	success: true,
+        	    	orderId: order.id
+    		    };
+		} else {
+    		    const result = {
+        		success: false,
+        		error: 'No order placement function available'
+    		    };
+		}
 
-                
-                const result = await response.json();
                 
                 if (result.success && result.orderId) {
                     console.log(`✅ REAL KuCoin order placed! Order ID: ${result.orderId}`);
