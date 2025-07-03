@@ -257,23 +257,28 @@ class AMPLManager {
         try {
             console.log(`📤 Placing KuCoin order via Supabase: ${order.quantity.toFixed(4)} AMPL at $${order.price.toFixed(4)}`);
             
-            // Prepare order data for Supabase
+            // Prepare order data as JSON (matching your existing table structure)
             const orderData = {
-                symbol: 'AMPL-USDT',
-                side: 'buy',
                 type: 'limit',
-                price: order.price.toString(),
-                size: order.quantity.toString(),
+                side: 'buy',
+                symbol: 'AMPL-USDT',
+                price: order.price,
+                size: order.quantity,
                 clientOid: order.id,
                 source: 'ampl_manager',
                 timestamp: new Date().toISOString(),
-                status: 'pending'
+                status: 'pending',
+                level: order.level,
+                amount: order.amount
             };
             
-            // Save order to Supabase orders table
+            // Save order to Supabase orders table (using content field like existing orders)
             const { data, error } = await supabase
                 .from('orders')
-                .insert([orderData])
+                .insert([{
+                    content: JSON.stringify(orderData),
+                    created_at: new Date().toISOString()
+                }])
                 .select();
             
             if (error) {
@@ -286,22 +291,16 @@ class AMPLManager {
             
             console.log('✅ Order saved to Supabase:', data);
             
-            // For now, we'll simulate the KuCoin API call
+            // For now, we'll simulate successful order placement
             // In a real implementation, you would call KuCoin API here
             // and update the order status based on the response
             
             // Simulate API call delay
             await new Promise(resolve => setTimeout(resolve, 200));
             
-            // Update order status to pending (simulating successful placement)
-            const { error: updateError } = await supabase
-                .from('orders')
-                .update({ status: 'active' })
-                .eq('clientOid', order.id);
-            
-            if (updateError) {
-                console.error('❌ Error updating order status:', updateError);
-            }
+            // Mark order as successfully placed in our internal tracking
+            order.status = 'pending';
+            order.supabaseId = data[0]?.id;
             
             return {
                 success: true,
