@@ -14,6 +14,7 @@
     <!-- Supabase JS Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="simple-panel-backing.css">
+    
 
 </head>
 <body>
@@ -316,8 +317,8 @@
                     <code id="current-ampl-price">Loading...</code>
                 </div>
             </div>
-            <button class="simulate-btn" onclick="simulateWebhook()">
-                Simulate Webhook
+            <button class="simulate-btn" onclick="testSingleOrder()">
+                🧪 Test Single Order
             </button>
         </div>
     </footer>
@@ -327,8 +328,10 @@
     <script src="supabase.js"></script>
     <script src="dynamic-transparency.js"></script>
     <script src="script.js"></script>
+    <script src="kucoin-order-api.js"></script>
     <script src="ampl-manager.js"></script>
     <script src="functions/simple-order-test.js"></script>
+
 </body>
 </html>
 
