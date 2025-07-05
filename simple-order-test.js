@@ -1,50 +1,79 @@
-// Test file for separate order placement function
-// This calls the completely independent place-order-test function
-// Safe to use - won't affect your existing price/balance system!
+// Test file for KuCoin order placement - Simple Footer Integration
+// Direct approach to replace footer button functionality
 
-console.log('🧪 Loading separate order test...');
+console.log('🧪 Loading KuCoin order test for footer...');
 
-// Wait for page to load, then add test button
+// Wait for page to load, then replace footer button
 setTimeout(() => {
-    console.log('🎯 Adding independent test button...');
+    console.log('🎯 Setting up footer test button...');
     
-    // Create test button
-    const testButton = document.createElement('button');
-    testButton.textContent = '🧪 Test Order (Safe)';
-    testButton.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 9999;
-        background: #22c55e;
-        color: white;
-        border: none;
-        padding: 12px 20px;
-        border-radius: 8px;
-        font-weight: bold;
-        cursor: pointer;
-        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
-        transition: all 0.2s;
-    `;
+    // First, try to find the button by common patterns
+    let footerButton = null;
     
-    // Hover effect
-    testButton.onmouseover = () => {
-        testButton.style.background = '#16a34a';
-        testButton.style.transform = 'translateY(-2px)';
-    };
-    testButton.onmouseout = () => {
-        testButton.style.background = '#22c55e';
-        testButton.style.transform = 'translateY(0)';
-    };
+    // Method 1: Find by text content
+    const allButtons = document.querySelectorAll('button');
+    for (let btn of allButtons) {
+        if (btn.textContent.includes('Test') && btn.textContent.includes('Order')) {
+            footerButton = btn;
+            console.log('✅ Found button by text content:', btn.textContent);
+            break;
+        }
+    }
     
-    // Click handler
-    testButton.onclick = async () => {
-        console.log('🧪 Testing separate order function...');
-        testButton.textContent = '⏳ Testing...';
-        testButton.disabled = true;
+    // Method 2: If not found, look for buttons in bottom area of page
+    if (!footerButton) {
+        const buttons = Array.from(allButtons);
+        // Get buttons in the bottom 20% of the page
+        footerButton = buttons.find(btn => {
+            const rect = btn.getBoundingClientRect();
+            const windowHeight = window.innerHeight;
+            return rect.top > windowHeight * 0.8; // Bottom 20% of screen
+        });
+        if (footerButton) {
+            console.log('✅ Found button in footer area:', footerButton.textContent);
+        }
+    }
+    
+    // Method 3: Create new button if none found
+    if (!footerButton) {
+        console.log('⚠️ No existing button found, creating new one...');
+        footerButton = document.createElement('button');
+        footerButton.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 1000;
+            transition: all 0.2s;
+        `;
+        document.body.appendChild(footerButton);
+    }
+    
+    // Update button text and clear any existing handlers
+    footerButton.textContent = '🧪 Test KuCoin Order';
+    footerButton.onclick = null; // Clear existing handler
+    footerButton.removeAttribute('onclick'); // Remove inline onclick
+    
+    // Add our working click handler
+    footerButton.addEventListener('click', async function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        console.log('🧪 Testing KuCoin order placement...');
+        const originalText = this.textContent;
+        const originalBg = this.style.backgroundColor || '#3b82f6';
+        
+        this.textContent = '⏳ Placing Order...';
+        this.disabled = true;
         
         try {
-            // Call the completely separate test function
+            // Use the working Supabase Edge Function
             const response = await fetch(`${window.SUPABASE_URL || 'https://fbkcdirkshubectuvxzi.supabase.co'}/functions/v1/index`, {
                 method: 'POST',
                 headers: {
@@ -54,7 +83,6 @@ setTimeout(() => {
             });
             
             console.log('📡 Response status:', response.status);
-            console.log('📡 Response headers:', Object.fromEntries(response.headers.entries()));
             
             const responseText = await response.text();
             console.log('📡 Raw response:', responseText);
@@ -70,33 +98,40 @@ setTimeout(() => {
             console.log('✅ Parsed response:', data);
             
             if (data.success) {
-                testButton.textContent = '✅ Order Placed!';
-                testButton.style.background = '#059669';
-                alert(`🎉 Test order placed successfully!\n\nOrder ID: ${data.orderId}\nClient ID: ${data.clientOid}\n\nCheck your KuCoin account!`);
+                this.textContent = '✅ Order Placed!';
+                this.style.backgroundColor = '#059669'; // Success green
+                alert(`🎉 KuCoin order placed successfully!\n\nOrder ID: ${data.orderId}\nClient ID: ${data.clientOid}\n\nCheck your KuCoin account!`);
             } else {
-                testButton.textContent = '❌ Failed';
-                testButton.style.background = '#dc2626';
-                alert(`❌ Test order failed: ${data.error}\n\nDetails: ${data.details || 'No additional details'}`);
+                this.textContent = '❌ Order Failed';
+                this.style.backgroundColor = '#dc2626'; // Error red
+                alert(`❌ Order failed: ${data.error}\n\nDetails: ${data.details || 'No additional details'}`);
             }
             
         } catch (error) {
             console.error('❌ Test error:', error);
-            testButton.textContent = '❌ Error';
-            testButton.style.background = '#dc2626';
+            this.textContent = '❌ Error';
+            this.style.backgroundColor = '#dc2626'; // Error red
             alert(`❌ Test failed: ${error.message}`);
         }
         
-        // Reset button after 5 seconds
+        // Reset button after 3 seconds
         setTimeout(() => {
-            testButton.textContent = '🧪 Test Order (Safe)';
-            testButton.style.background = '#22c55e';
-            testButton.disabled = false;
-        }, 5000);
-    };
+            this.textContent = originalText;
+            this.style.backgroundColor = originalBg;
+            this.disabled = false;
+        }, 3000);
+    });
     
-    // Add button to page
-    document.body.appendChild(testButton);
-    console.log('✅ Independent test button added to page');
+    console.log('✅ Footer button functionality set up successfully');
     
 }, 2000);
+
+// Also define the old function to prevent errors
+window.testSingleOrder = function() {
+    console.log('🔄 Old testSingleOrder called, redirecting to new handler...');
+    const button = document.querySelector('button[onclick*="testSingleOrder"]');
+    if (button && button.click) {
+        button.click();
+    }
+};
 
