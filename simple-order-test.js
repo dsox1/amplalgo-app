@@ -1,107 +1,102 @@
-/**
- * Simple Order Test - Standalone File
- * No changes needed to script.js
- * Creates green test button and handles single order placement
- */
+// Test file for separate order placement function
+// This calls the completely independent place-order-test function
+// Safe to use - won't affect your existing price/balance system!
 
-// Test function that calls the Supabase Edge Function
-async function testSingleOrder() {
-    try {
-        console.log('🧪 Testing single order placement...');
-        
-        // Use same pattern as your working price/balance functions
-	const response = await fetch(`${window.SUPABASE_URL || 'https://fbkcdirkshubectuvxzi.supabase.co'}/functions/v1/place-single-order`, {
+console.log('🧪 Loading separate order test...');
 
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${window.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZia2NkaXJrc2h1YmVjdHV2eHppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY0NDc0ODAsImV4cCI6MjA2MjAyMzQ4MH0.yhy1JL-V9zQVK1iIdSVK1261qD8gmHmo2vB-qe7Kit8'}`,
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            console.log('✅ REAL ORDER PLACED SUCCESSFULLY!');
-            console.log('📋 Order Details:', {
-                orderId: data.orderId,
-                clientOid: data.clientOid,
-                price: data.price,
-                size: data.size,
-                symbol: data.symbol
-            });
-            
-            // Update UI to show success
-            alert(`✅ Real order placed!\nOrder ID: ${data.orderId}\nPrice: $${data.price}\nSize: ${data.size} AMPL\n\nCheck your KuCoin account!`);
-            
-        } else {
-            console.error('❌ Order placement failed:', data.error);
-            alert(`❌ Order failed: ${data.error}`);
-        }
-        
-    } catch (error) {
-        console.error('❌ Error testing single order:', error);
-        alert(`❌ Error: ${error.message}`);
-    }
-}
-
-// Create and add the green test button
-function createTestButton() {
-    // Check if button already exists
-    if (document.getElementById('single-order-test-btn')) {
-        return;
-    }
+// Wait for page to load, then add test button
+setTimeout(() => {
+    console.log('🎯 Adding independent test button...');
     
+    // Create test button
     const testButton = document.createElement('button');
-    testButton.id = 'single-order-test-btn';
-    testButton.textContent = '🧪 Test Single Order ($0.99)';
+    testButton.textContent = '🧪 Test Order (Safe)';
     testButton.style.cssText = `
         position: fixed;
-        top: 10px;
-        right: 10px;
+        top: 20px;
+        right: 20px;
         z-index: 9999;
-        padding: 12px 16px;
-        background: linear-gradient(45deg, #00ff00, #00cc00);
-        color: black;
+        background: #22c55e;
+        color: white;
         border: none;
+        padding: 12px 20px;
         border-radius: 8px;
-        cursor: pointer;
         font-weight: bold;
-        font-size: 14px;
-        box-shadow: 0 4px 8px rgba(0,255,0,0.3);
-        transition: all 0.3s ease;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+        transition: all 0.2s;
     `;
     
-    // Add hover effect
-    testButton.onmouseover = function() {
-        this.style.transform = 'scale(1.05)';
-        this.style.boxShadow = '0 6px 12px rgba(0,255,0,0.4)';
+    // Hover effect
+    testButton.onmouseover = () => {
+        testButton.style.background = '#16a34a';
+        testButton.style.transform = 'translateY(-2px)';
+    };
+    testButton.onmouseout = () => {
+        testButton.style.background = '#22c55e';
+        testButton.style.transform = 'translateY(0)';
     };
     
-    testButton.onmouseout = function() {
-        this.style.transform = 'scale(1)';
-        this.style.boxShadow = '0 4px 8px rgba(0,255,0,0.3)';
+    // Click handler
+    testButton.onclick = async () => {
+        console.log('🧪 Testing separate order function...');
+        testButton.textContent = '⏳ Testing...';
+        testButton.disabled = true;
+        
+        try {
+            // Call the completely separate test function
+            const response = await fetch(`${window.SUPABASE_URL || 'https://fbkcdirkshubectuvxzi.supabase.co'}/functions/v1/place-order-test`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${window.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZia2NkaXJrc2h1YmVjdHV2eHppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY0NDc0ODAsImV4cCI6MjA2MjAyMzQ4MH0.yhy1JL-V9zQVK1iIdSVK1261qD8gmHmo2vB-qe7Kit8'}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            console.log('📡 Response status:', response.status);
+            console.log('📡 Response headers:', Object.fromEntries(response.headers.entries()));
+            
+            const responseText = await response.text();
+            console.log('📡 Raw response:', responseText);
+            
+            let data;
+            try {
+                data = JSON.parse(responseText);
+            } catch (parseError) {
+                console.error('❌ JSON parse error:', parseError);
+                throw new Error(`Invalid JSON response: ${responseText}`);
+            }
+            
+            console.log('✅ Parsed response:', data);
+            
+            if (data.success) {
+                testButton.textContent = '✅ Order Placed!';
+                testButton.style.background = '#059669';
+                alert(`🎉 Test order placed successfully!\n\nOrder ID: ${data.orderId}\nClient ID: ${data.clientOid}\n\nCheck your KuCoin account!`);
+            } else {
+                testButton.textContent = '❌ Failed';
+                testButton.style.background = '#dc2626';
+                alert(`❌ Test order failed: ${data.error}\n\nDetails: ${data.details || 'No additional details'}`);
+            }
+            
+        } catch (error) {
+            console.error('❌ Test error:', error);
+            testButton.textContent = '❌ Error';
+            testButton.style.background = '#dc2626';
+            alert(`❌ Test failed: ${error.message}`);
+        }
+        
+        // Reset button after 5 seconds
+        setTimeout(() => {
+            testButton.textContent = '🧪 Test Order (Safe)';
+            testButton.style.background = '#22c55e';
+            testButton.disabled = false;
+        }, 5000);
     };
     
-    testButton.onclick = testSingleOrder;
+    // Add button to page
     document.body.appendChild(testButton);
+    console.log('✅ Independent test button added to page');
     
-    console.log('🧪 Test button created - click to place single order at $0.99');
-}
-
-// Initialize when DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() {
-        setTimeout(createTestButton, 2000); // Add after 2 seconds
-    });
-} else {
-    // DOM already loaded
-    setTimeout(createTestButton, 2000);
-}
-
-console.log('📦 Simple order test loaded - button will appear in 2 seconds');
+}, 2000);
 
