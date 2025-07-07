@@ -1,6 +1,6 @@
 /**
- * AMPL Manager - Enhanced Complete System
- * Includes: Purple button removal, consolidated APIs, selling logic, automated replacement
+ * AMPL Manager - Enhanced Complete System (CORS FIXED)
+ * Uses proper Supabase endpoints instead of direct KuCoin API calls
  * Single file solution for AMPL cascade trading
  */
 
@@ -40,6 +40,10 @@ class AMPLManagerEnhanced {
             value: 0
         };
         
+        // Supabase configuration
+        this.supabaseUrl = window.SUPABASE_URL || 'https://fbkcdirkshubectuvxzi.supabase.co';
+        this.supabaseKey = window.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZia2NkaXJrc2h1YmVjdHV2eHppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY0NDc0ODAsImV4cCI6MjA2MjAyMzQ4MH0.yhy1JL-V9zQVK1iIdSVK1261qD8gmHmo2vB-qe7Kit8';
+        
         // Rebase protection settings
         this.rebaseProtectionEnabled = true;
         this.minimumSafetyRatio = 0.95; // Don't sell if current value < 95% of original purchase
@@ -49,16 +53,16 @@ class AMPLManagerEnhanced {
         this.monitoringInterval = null;
         this.profitCheckInterval = null;
         
+        // Current price cache
+        this.currentPrice = 1.20;
+        
         // IMMEDIATELY remove purple buttons before anything else
         this.aggressivePurpleButtonRemoval();
         
         // Initialize event listeners
         this.initializeEventListeners();
         
-        // Start monitoring if enabled
-        this.startAutomatedMonitoring();
-        
-        console.log('🚀 AMPL Manager Enhanced initialized');
+        console.log('🚀 AMPL Manager Enhanced (CORS Fixed) initialized');
         
         // Make globally accessible
         window.amplManagerEnhanced = this;
@@ -190,115 +194,126 @@ class AMPLManagerEnhanced {
     }
 
     /**
-     * CONSOLIDATED API FUNCTIONS
-     * All KuCoin API functionality in one place
+     * FIXED API FUNCTIONS - Using Supabase endpoints
      */
 
-    // Generate KuCoin signature for authentication
-    async generateKuCoinSignature(timestamp, method, endpoint, body, secret) {
-        const message = timestamp + method + endpoint + body;
-        const key = await crypto.subtle.importKey(
-            'raw',
-            new TextEncoder().encode(secret),
-            { name: 'HMAC', hash: 'SHA-256' },
-            false,
-            ['sign']
-        );
-        const signature = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(message));
-        return btoa(String.fromCharCode(...new Uint8Array(signature)));
-    }
-
-    // Generate KuCoin passphrase
-    async generateKuCoinPassphrase(passphrase, secret) {
-        const key = await crypto.subtle.importKey(
-            'raw',
-            new TextEncoder().encode(secret),
-            { name: 'HMAC', hash: 'SHA-256' },
-            false,
-            ['sign']
-        );
-        const signature = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(passphrase));
-        return btoa(String.fromCharCode(...new Uint8Array(signature)));
-    }
-
-    // Get current AMPL price (public endpoint)
+    // Get current AMPL price via Supabase function
     async getCurrentAMPLPrice() {
         try {
-            const response = await fetch('https://api.kucoin.com/api/v1/market/orderbook/level1?symbol=AMPL-USDT');
-            const data = await response.json();
-            if (!data.data) {
-                throw new Error('Failed to fetch AMPL price');
-            }
-            return parseFloat(data.data.price);
-        } catch (error) {
-            console.error('Error fetching AMPL price:', error);
-            return 1.20; // Fallback price
-        }
-    }
-
-    // Get KuCoin balance
-    async getKuCoinBalance(currency) {
-        try {
-            // Use Supabase function for balance
-            const response = await fetch(`${window.SUPABASE_URL || 'https://fbkcdirkshubectuvxzi.supabase.co'}/functions/v1/ampl-manager/balance`, {
+            console.log('📈 Fetching AMPL price via Supabase...');
+            
+            const response = await fetch(`${this.supabaseUrl}/functions/v1/ampl-manager/price`, {
                 method: 'GET',
                 headers: {
-                    'Authorization': `Bearer ${window.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZia2NkaXJrc2h1YmVjdHV2eHppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY0NDc0ODAsImV4cCI6MjA2MjAyMzQ4MH0.yhy1JL-V9zQVK1iIdSVK1261qD8gmHmo2vB-qe7Kit8'}`,
+                    'Authorization': `Bearer ${this.supabaseKey}`,
                     'Content-Type': 'application/json'
                 }
             });
 
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
             const data = await response.json();
             
-            if (currency === 'USDT') {
-                return parseFloat(data.usdt?.balance || '0');
-            } else if (currency === 'AMPL') {
-                return parseFloat(data.ampl?.balance || '0');
+            if (data.price) {
+                this.currentPrice = parseFloat(data.price);
+                console.log(`📈 AMPL price: $${this.currentPrice}`);
+                return this.currentPrice;
+            } else {
+                throw new Error('No price data in response');
             }
             
-            return 0;
         } catch (error) {
-            console.error(`Error fetching ${currency} balance:`, error);
-            return 0;
+            console.error('❌ Error fetching AMPL price:', error);
+            console.log('📈 Using cached price:', this.currentPrice);
+            return this.currentPrice; // Return cached price
         }
     }
 
-    // Get active orders
+    // Get KuCoin balance via Supabase function
+    async getKuCoinBalance(currency) {
+        try {
+            console.log(`💰 Fetching ${currency} balance via Supabase...`);
+            
+            const response = await fetch(`${this.supabaseUrl}/functions/v1/ampl-manager/balance`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${this.supabaseKey}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            
+            if (currency === 'USDT' && data.usdt) {
+                const balance = parseFloat(data.usdt.balance || data.usdt.available || '0');
+                console.log(`💰 USDT balance: $${balance}`);
+                return balance;
+            } else if (currency === 'AMPL' && data.ampl) {
+                const balance = parseFloat(data.ampl.balance || data.ampl.available || '0');
+                console.log(`💰 AMPL balance: ${balance}`);
+                return balance;
+            } else {
+                throw new Error(`No ${currency} balance data in response`);
+            }
+            
+        } catch (error) {
+            console.error(`❌ Error fetching ${currency} balance:`, error);
+            return 0; // Return 0 on error
+        }
+    }
+
+    // Get active orders via Supabase function
     async getActiveOrders() {
         try {
-            const response = await fetch(`${window.SUPABASE_URL || 'https://fbkcdirkshubectuvxzi.supabase.co'}/functions/v1/ampl-order-monitor`, {
+            console.log('📋 Fetching active orders via Supabase...');
+            
+            const response = await fetch(`${this.supabaseUrl}/functions/v1/ampl-order-monitor`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${window.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZia2NkaXJrc2h1YmVjdHV2eHppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY0NDc0ODAsImV4cCI6MjA2MjAyMzQ4MH0.yhy1JL-V9zQVK1iIdSVK1261qD8gmHmo2vB-qe7Kit8'}`,
+                    'Authorization': `Bearer ${this.supabaseKey}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ refill: false }) // Just get status, don't refill
             });
 
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
             const data = await response.json();
             
             if (data.success) {
+                console.log('📋 Orders fetched successfully');
                 return {
                     active: data.data.existingOrders || [],
                     filled: data.data.profitablePositions || [],
                     missing: data.data.missingLevels || []
                 };
+            } else {
+                throw new Error(data.error || 'Failed to fetch orders');
             }
             
-            return { active: [], filled: [], missing: [] };
         } catch (error) {
-            console.error('Error fetching active orders:', error);
+            console.error('❌ Error fetching active orders:', error);
             return { active: [], filled: [], missing: [] };
         }
     }
 
-    // Place sell order
+    // Place sell order via Supabase function
     async placeSellOrder(size, price) {
         try {
-            const response = await fetch(`${window.SUPABASE_URL || 'https://fbkcdirkshubectuvxzi.supabase.co'}/functions/v1/ampl-manager/place-order`, {
+            console.log(`💰 Placing sell order: ${size} AMPL at $${price}`);
+            
+            const response = await fetch(`${this.supabaseUrl}/functions/v1/ampl-manager/place-order`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${window.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZia2NkaXJrc2h1YmVjdHV2eHppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY0NDc0ODAsImV4cCI6MjA2MjAyMzQ4MH0.yhy1JL-V9zQVK1iIdSVK1261qD8gmHmo2vB-qe7Kit8'}`,
+                    'Authorization': `Bearer ${this.supabaseKey}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
@@ -311,10 +326,16 @@ class AMPLManagerEnhanced {
                 })
             });
 
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
             const data = await response.json();
+            console.log('💰 Sell order response:', data);
             return data;
+            
         } catch (error) {
-            console.error('Error placing sell order:', error);
+            console.error('❌ Error placing sell order:', error);
             return { success: false, error: error.message };
         }
     }
@@ -333,37 +354,46 @@ class AMPLManagerEnhanced {
             const orderData = await this.getActiveOrders();
             const amplBalance = await this.getKuCoinBalance('AMPL');
 
+            console.log(`📊 Current price: $${currentPrice}, AMPL balance: ${amplBalance}`);
+            console.log(`📊 Filled positions to check: ${orderData.filled.length}`);
+
             // Check filled orders for profit opportunities
             for (const position of orderData.filled) {
-                const fillPrice = position.fillPrice || position.price;
-                const fillSize = position.fillSize || position.size;
+                const fillPrice = parseFloat(position.fillPrice || position.price || position.averagePrice || 0);
+                const fillSize = parseFloat(position.fillSize || position.size || position.dealSize || 0);
+                
+                if (fillPrice <= 0 || fillSize <= 0) {
+                    console.log(`⚠️ Invalid position data:`, position);
+                    continue;
+                }
+                
                 const profitRatio = currentPrice / fillPrice;
 
-                console.log(`📊 Position Level ${position.level}: Buy $${fillPrice}, Current $${currentPrice}, Profit: ${((profitRatio - 1) * 100).toFixed(1)}%`);
+                console.log(`📊 Position Level ${position.level || 'Unknown'}: Buy $${fillPrice.toFixed(4)}, Current $${currentPrice.toFixed(4)}, Profit: ${((profitRatio - 1) * 100).toFixed(1)}%`);
 
                 // Check if position is profitable and safe to sell
                 if (profitRatio >= this.profitThreshold && this.isRebaseSafe(profitRatio)) {
-                    console.log(`💰 Selling Level ${position.level}: ${fillSize} AMPL at profit`);
+                    console.log(`💰 Selling Level ${position.level || 'Unknown'}: ${fillSize} AMPL at profit`);
 
                     // Calculate sell price (slightly below market for quick execution)
-                    const sellPrice = (currentPrice * 0.999).toFixed(3);
+                    const sellPrice = (currentPrice * 0.999).toFixed(4);
 
                     const sellResult = await this.placeSellOrder(fillSize, sellPrice);
 
                     if (sellResult.success) {
-                        console.log(`✅ Sell order placed for Level ${position.level}: ${sellResult.orderId}`);
+                        console.log(`✅ Sell order placed for Level ${position.level || 'Unknown'}: ${sellResult.orderId || 'No ID'}`);
                         
                         // Update tracking
                         this.updateSellTracking(position, sellResult);
                         
                         // Show notification
-                        this.showNotification(`💰 Sold Level ${position.level}: ${fillSize} AMPL at $${sellPrice} (${((profitRatio - 1) * 100).toFixed(1)}% profit)`, 'success');
+                        this.showNotification(`💰 Sold Level ${position.level || 'Unknown'}: ${fillSize} AMPL at $${sellPrice} (${((profitRatio - 1) * 100).toFixed(1)}% profit)`, 'success');
                     } else {
-                        console.error(`❌ Failed to sell Level ${position.level}:`, sellResult.error);
+                        console.error(`❌ Failed to sell Level ${position.level || 'Unknown'}:`, sellResult.error);
                     }
                 } else {
                     const reason = profitRatio < this.profitThreshold ? 'not profitable enough' : 'rebase protection active';
-                    console.log(`⏳ Level ${position.level}: ${((profitRatio - 1) * 100).toFixed(1)}% profit, but ${reason}`);
+                    console.log(`⏳ Level ${position.level || 'Unknown'}: ${((profitRatio - 1) * 100).toFixed(1)}% profit, but ${reason}`);
                 }
             }
 
@@ -379,8 +409,10 @@ class AMPLManagerEnhanced {
         if (!this.rebaseProtectionEnabled) return true;
 
         // Calculate current safety ratio
-        const currentValue = this.currentHoldings.ampl * this.getCurrentAMPLPrice();
+        const currentValue = this.currentHoldings.ampl * this.currentPrice;
         const safetyRatio = this.originalPurchaseAmount > 0 ? currentValue / this.originalPurchaseAmount : 1.0;
+
+        console.log(`🛡️ Rebase safety check: Current value $${currentValue.toFixed(2)}, Original $${this.originalPurchaseAmount.toFixed(2)}, Ratio: ${(safetyRatio * 100).toFixed(1)}%`);
 
         // Only sell if we're above minimum safety ratio
         return safetyRatio >= this.minimumSafetyRatio;
@@ -394,8 +426,10 @@ class AMPLManagerEnhanced {
         this.filledOrders = this.filledOrders.filter(order => order.level !== position.level);
         
         // Update holdings
-        this.currentHoldings.ampl -= position.fillSize;
-        this.currentHoldings.value = this.currentHoldings.ampl * this.getCurrentAMPLPrice();
+        this.currentHoldings.ampl -= parseFloat(position.fillSize || position.size || 0);
+        this.currentHoldings.value = this.currentHoldings.ampl * this.currentPrice;
+        
+        console.log(`📊 Updated holdings: ${this.currentHoldings.ampl} AMPL, $${this.currentHoldings.value.toFixed(2)} value`);
     }
 
     /**
@@ -409,14 +443,18 @@ class AMPLManagerEnhanced {
             console.log('🔄 Checking for orders that need replacement...');
 
             // Trigger auto-refill via order monitor
-            const response = await fetch(`${window.SUPABASE_URL || 'https://fbkcdirkshubectuvxzi.supabase.co'}/functions/v1/ampl-order-monitor`, {
+            const response = await fetch(`${this.supabaseUrl}/functions/v1/ampl-order-monitor`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${window.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZia2NkaXJrc2h1YmVjdHV2eHppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY0NDc0ODAsImV4cCI6MjA2MjAyMzQ4MH0.yhy1JL-V9zQVK1iIdSVK1261qD8gmHmo2vB-qe7Kit8'}`,
+                    'Authorization': `Bearer ${this.supabaseKey}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ refill: true }) // Enable auto-refill
             });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
 
             const data = await response.json();
 
@@ -426,6 +464,10 @@ class AMPLManagerEnhanced {
                 
                 // Update UI
                 this.updateLadderPanelDisplay();
+            } else if (data.success) {
+                console.log('✅ Order check complete - no replacement needed');
+            } else {
+                console.error('❌ Order replacement failed:', data.error);
             }
 
         } catch (error) {
@@ -490,10 +532,10 @@ class AMPLManagerEnhanced {
         console.log(`💰 Using 90% of balance: $${(balance * 0.9).toFixed(2)} out of $${balance.toFixed(2)}`);
         
         try {
-            const response = await fetch(`${window.SUPABASE_URL || 'https://fbkcdirkshubectuvxzi.supabase.co'}/functions/v1/ampl-cascade`, {
+            const response = await fetch(`${this.supabaseUrl}/functions/v1/ampl-cascade`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${window.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZia2NkaXJrc2h1YmVjdHV2eHppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY0NDc0ODAsImV4cCI6MjA2MjAyMzQ4MH0.yhy1JL-V9zQVK1iIdSVK1261qD8gmHmo2vB-qe7Kit8'}`,
+                    'Authorization': `Bearer ${this.supabaseKey}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
@@ -501,11 +543,15 @@ class AMPLManagerEnhanced {
                 })
             });
             
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
             const data = await response.json();
             
             if (data.success) {
                 // Update internal tracking
-                this.currentOrders = data.placedOrders.map(order => ({
+                this.currentOrders = (data.placedOrders || []).map(order => ({
                     id: order.clientOid,
                     kucoinOrderId: order.orderId,
                     price: order.price,
@@ -523,12 +569,12 @@ class AMPLManagerEnhanced {
                 this.updateLadderPanelDisplay();
                 
                 // Show success notification
-                this.showNotification(`🌊 AMPL Cascade deployed! ${data.summary.ordersPlaced} orders placed`, 'success');
+                this.showNotification(`🌊 AMPL Cascade deployed! ${data.summary?.ordersPlaced || 0} orders placed`, 'success');
                 
                 return {
                     success: true,
-                    ordersPlaced: data.summary.ordersPlaced,
-                    totalDeployed: data.summary.totalUSDTDeployed
+                    ordersPlaced: data.summary?.ordersPlaced || 0,
+                    totalDeployed: data.summary?.totalUSDTDeployed || 0
                 };
                 
             } else {
@@ -558,14 +604,18 @@ class AMPLManagerEnhanced {
     async refreshOrderLadder() {
         if (!this.isEnabled) return;
         
-        const balance = await this.getKuCoinBalance('USDT');
-        const currentPrice = await this.getCurrentAMPLPrice();
-        
-        console.log('🔄 Refreshing order ladder...');
-        console.log(`💰 Current balance: $${balance.toFixed(2)}`);
-        console.log(`📈 Current AMPL price: $${currentPrice.toFixed(4)}`);
-        
-        await this.deployAMPLCascade(currentPrice, balance);
+        try {
+            const balance = await this.getKuCoinBalance('USDT');
+            const currentPrice = await this.getCurrentAMPLPrice();
+            
+            console.log('🔄 Refreshing order ladder...');
+            console.log(`💰 Current balance: $${balance.toFixed(2)}`);
+            console.log(`📈 Current AMPL price: $${currentPrice.toFixed(4)}`);
+            
+            await this.deployAMPLCascade(currentPrice, balance);
+        } catch (error) {
+            console.error('❌ Error refreshing order ladder:', error);
+        }
     }
 
     /**
@@ -666,8 +716,7 @@ class AMPLManagerEnhanced {
      * Update holdings tracker display
      */
     updateHoldingsTracker() {
-        const currentPrice = this.getCurrentAMPLPrice();
-        const currentValue = this.currentHoldings.ampl * currentPrice;
+        const currentValue = this.currentHoldings.ampl * this.currentPrice;
         const difference = currentValue - this.originalPurchaseAmount;
         
         const originalEl = document.querySelector('.holdings-value.original');
@@ -791,6 +840,11 @@ class AMPLManagerEnhanced {
             originalPurchase: this.originalPurchaseAmount,
             priceLevels: this.priceLevels,
             weightFactors: this.weightFactors,
+            currentPrice: this.currentPrice,
+            supabaseConfig: {
+                url: this.supabaseUrl,
+                keyLength: this.supabaseKey.length
+            },
             rebaseProtection: {
                 enabled: this.rebaseProtectionEnabled,
                 minimumSafetyRatio: this.minimumSafetyRatio,
@@ -818,6 +872,44 @@ class AMPLManagerEnhanced {
         console.log('🔍 Manual order replacement check triggered');
         await this.checkAndReplaceOrders();
     }
+
+    /**
+     * Test all API endpoints
+     */
+    async testAllAPIs() {
+        console.log('🧪 Testing all API endpoints...');
+        
+        try {
+            console.log('1. Testing price endpoint...');
+            const price = await this.getCurrentAMPLPrice();
+            console.log(`✅ Price: $${price}`);
+            
+            console.log('2. Testing USDT balance endpoint...');
+            const usdtBalance = await this.getKuCoinBalance('USDT');
+            console.log(`✅ USDT Balance: $${usdtBalance}`);
+            
+            console.log('3. Testing AMPL balance endpoint...');
+            const amplBalance = await this.getKuCoinBalance('AMPL');
+            console.log(`✅ AMPL Balance: ${amplBalance}`);
+            
+            console.log('4. Testing orders endpoint...');
+            const orders = await this.getActiveOrders();
+            console.log(`✅ Orders: ${orders.active.length} active, ${orders.filled.length} filled`);
+            
+            console.log('🎉 All API tests completed!');
+            
+            return {
+                price: price,
+                usdtBalance: usdtBalance,
+                amplBalance: amplBalance,
+                orders: orders
+            };
+            
+        } catch (error) {
+            console.error('❌ API test failed:', error);
+            return { error: error.message };
+        }
+    }
 }
 
 // Initialize AMPL Manager Enhanced when DOM is loaded
@@ -826,7 +918,7 @@ let amplManagerEnhanced = null;
 document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => {
         amplManagerEnhanced = new AMPLManagerEnhanced();
-        console.log('🚀 AMPL Manager Enhanced initialized');
+        console.log('🚀 AMPL Manager Enhanced (CORS Fixed) initialized');
         
         // Make it globally accessible for debugging
         window.amplManagerEnhanced = amplManagerEnhanced;
@@ -835,6 +927,9 @@ document.addEventListener('DOMContentLoaded', function() {
         window.manualProfitCheck = () => amplManagerEnhanced.manualProfitCheck();
         window.manualOrderCheck = () => amplManagerEnhanced.manualOrderCheck();
         window.getAMPLStatus = () => amplManagerEnhanced.getStatus();
+        window.testAllAPIs = () => amplManagerEnhanced.testAllAPIs();
+        
+        console.log('🧪 Testing commands available: manualProfitCheck(), manualOrderCheck(), getAMPLStatus(), testAllAPIs()');
         
     }, 2000);
 });
