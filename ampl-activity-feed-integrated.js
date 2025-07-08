@@ -1,7 +1,6 @@
 /**
- * AMPL Live Activity Feed - Exact Structure Version
- * Works with the exact HTML/CSS structure we know exists
- * No detection needed - we know exactly where everything is
+ * AMPL Live Activity Feed - Fixed Toggle Version
+ * Moves toggle button to bottom right and fixes functionality conflicts
  */
 
 class AMPLActivityFeedIntegrated {
@@ -15,6 +14,7 @@ class AMPLActivityFeedIntegrated {
         this.isShowingActivityFeed = false;
         this.activeOrders = [];
         this.executedOrders = [];
+        this.monitoringInterval = null;
         
         // Initialize when DOM is ready
         if (document.readyState === 'loading') {
@@ -25,7 +25,7 @@ class AMPLActivityFeedIntegrated {
     }
 
     initialize() {
-        console.log('🎬 Initializing AMPL Activity Feed (Exact Structure)...');
+        console.log('🎬 Initializing AMPL Activity Feed (Fixed Toggle)...');
         
         // Find the EXACT Smart Order Ladder panel we know exists
         this.findSmartOrderLadderPanel();
@@ -315,37 +315,53 @@ class AMPLActivityFeedIntegrated {
                 opacity: 0.7;
             }
 
-            /* Toggle button for Smart Order Ladder */
+            /* Smart Order Ladder Enhanced Container */
             .smart-order-ladder-enhanced {
                 position: relative;
+                height: 100%;
             }
 
+            /* Toggle button positioned at BOTTOM RIGHT of price panels */
             .toggle-activity-feed-btn {
                 position: absolute;
-                top: 8px;
+                bottom: 8px;
                 right: 8px;
                 background: rgba(33, 150, 243, 0.2);
                 border: 2px solid rgba(33, 150, 243, 0.4);
                 color: #2196F3;
-                padding: 6px;
+                padding: 8px;
                 border-radius: 50%;
                 cursor: pointer;
-                font-size: 12px;
+                font-size: 14px;
                 transition: all 0.3s ease;
-                z-index: 10;
-                width: 28px;
-                height: 28px;
+                z-index: 100;
+                width: 32px;
+                height: 32px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                box-shadow: 0 0 8px rgba(33, 150, 243, 0.3);
+                box-shadow: 0 0 10px rgba(33, 150, 243, 0.4);
+                pointer-events: auto;
             }
 
             .toggle-activity-feed-btn:hover {
-                background: rgba(33, 150, 243, 0.3);
-                border-color: rgba(33, 150, 243, 0.6);
-                box-shadow: 0 0 15px rgba(33, 150, 243, 0.5);
+                background: rgba(33, 150, 243, 0.4);
+                border-color: rgba(33, 150, 243, 0.7);
+                box-shadow: 0 0 20px rgba(33, 150, 243, 0.6);
                 transform: scale(1.1);
+            }
+
+            .toggle-activity-feed-btn:active {
+                transform: scale(0.95);
+                background: rgba(33, 150, 243, 0.6);
+            }
+
+            /* Ensure the button stays on top and clickable */
+            .toggle-activity-feed-btn {
+                user-select: none;
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
             }
         `;
         document.head.appendChild(style);
@@ -404,22 +420,30 @@ class AMPLActivityFeedIntegrated {
     }
 
     restoreOriginal() {
+        console.log('🔄 Restoring Smart Order Ladder...');
+        
         if (this.targetPanel && this.originalContent) {
+            // Stop monitoring to prevent conflicts
+            this.stopOrderMonitoring();
+            
             // Restore the EXACT original content with toggle button
             const enhancedContent = this.addToggleButtonToOriginal(this.originalContent);
             this.targetPanel.innerHTML = enhancedContent;
             this.isShowingActivityFeed = false;
             
-            // Replace static prices with level numbers
-            this.setPriceLevelNumbers();
-            
-            // Bind the toggle button
-            this.bindToggleButton();
-            
-            // Start monitoring for order updates using EXACT structure
-            this.startOrderMonitoring();
-            
-            console.log('↩️ Smart Order Ladder restored with exact structure');
+            // Wait for DOM to settle, then set up everything
+            setTimeout(() => {
+                // Replace static prices with level numbers
+                this.setPriceLevelNumbers();
+                
+                // Bind the toggle button with debugging
+                this.bindToggleButtonWithDebugging();
+                
+                // Start monitoring for order updates
+                this.startOrderMonitoring();
+                
+                console.log('✅ Smart Order Ladder restored with bottom-right toggle');
+            }, 100);
         }
     }
 
@@ -432,99 +456,151 @@ class AMPLActivityFeedIntegrated {
         
         return `
             <div class="smart-order-ladder-enhanced">
-                ${toggleButton}
                 ${originalContent}
+                ${toggleButton}
             </div>
         `;
     }
 
     setPriceLevelNumbers() {
-        setTimeout(() => {
-            // We KNOW the exact structure: .order-ladder-grid .price-level-badge
-            const priceBadges = document.querySelectorAll('.order-ladder-grid .price-level-badge');
+        // We KNOW the exact structure: .order-ladder-grid .price-level-badge
+        const priceBadges = document.querySelectorAll('.order-ladder-grid .price-level-badge');
+        
+        console.log(`💡 Found ${priceBadges.length} price badges for level numbering`);
+        
+        if (priceBadges.length === 0) {
+            console.log('❌ No price badges found with exact selector');
+            return;
+        }
+        
+        // Set level numbers on each badge
+        priceBadges.forEach((badge, index) => {
+            const levelNumber = index + 1;
+            const levelText = `Limit Order ${levelNumber}`;
             
-            console.log(`💡 Found ${priceBadges.length} price badges using exact known selector`);
+            // Store original price for reference
+            const originalPrice = badge.textContent.trim();
+            badge.setAttribute('data-original-price', originalPrice);
+            badge.setAttribute('data-level', levelNumber);
             
-            if (priceBadges.length === 0) {
-                console.log('❌ No price badges found with exact selector');
-                return;
-            }
+            // Replace the text content directly
+            badge.textContent = levelText;
             
-            // Set level numbers on each badge
-            priceBadges.forEach((badge, index) => {
-                const levelNumber = index + 1;
-                const levelText = `Limit Order ${levelNumber}`;
-                
-                // Store original price for reference
-                const originalPrice = badge.textContent.trim();
-                badge.setAttribute('data-original-price', originalPrice);
-                badge.setAttribute('data-level', levelNumber);
-                
-                // Replace the text content directly
-                badge.textContent = levelText;
-                
-                console.log(`🏷️ Set badge ${index + 1} to "${levelText}" (was "${originalPrice}")`);
-            });
-            
-            console.log(`✅ Successfully set level numbers on ${priceBadges.length} price badges`);
-        }, 200);
+            console.log(`🏷️ Set badge ${index + 1} to "${levelText}" (was "${originalPrice}")`);
+        });
+        
+        console.log(`✅ Successfully set level numbers on ${priceBadges.length} price badges`);
     }
 
-    bindToggleButton() {
+    bindToggleButtonWithDebugging() {
         const toggleBtn = document.getElementById('toggle-activity-feed');
-        if (toggleBtn) {
-            toggleBtn.addEventListener('click', () => {
-                this.showActivityFeed();
-            });
+        
+        if (!toggleBtn) {
+            console.log('❌ Toggle button not found in DOM');
+            return;
         }
+        
+        console.log('🔘 Toggle button found, binding click event...');
+        
+        // Remove any existing listeners
+        const newToggleBtn = toggleBtn.cloneNode(true);
+        toggleBtn.parentNode.replaceChild(newToggleBtn, toggleBtn);
+        
+        // Add click event with debugging
+        newToggleBtn.addEventListener('click', (event) => {
+            console.log('🔘 Toggle button clicked!');
+            event.preventDefault();
+            event.stopPropagation();
+            
+            try {
+                this.showActivityFeed();
+                console.log('✅ showActivityFeed() called successfully');
+            } catch (error) {
+                console.log('❌ Error in showActivityFeed():', error);
+            }
+        });
+        
+        // Add visual feedback for debugging
+        newToggleBtn.addEventListener('mousedown', () => {
+            console.log('🔘 Toggle button mousedown');
+        });
+        
+        newToggleBtn.addEventListener('mouseup', () => {
+            console.log('🔘 Toggle button mouseup');
+        });
+        
+        console.log('✅ Toggle button event listeners bound with debugging');
     }
 
     showActivityFeed() {
+        console.log('🎬 Switching to Live Activity Feed...');
+        
+        // Stop monitoring to prevent conflicts
+        this.stopOrderMonitoring();
+        
+        // Replace content
         this.replaceContent();
         this.isShowingActivityFeed = true;
-        console.log('🎬 Switched back to Live Activity Feed');
+        
+        console.log('✅ Switched to Live Activity Feed successfully');
     }
 
-    // ORDER MONITORING using EXACT structure and methods
+    // ORDER MONITORING with conflict prevention
     startOrderMonitoring() {
-        console.log('🔍 Starting order monitoring with exact structure...');
+        console.log('🔍 Starting order monitoring...');
+        
+        // Clear any existing interval
+        this.stopOrderMonitoring();
         
         // Immediate check
         this.checkOrdersAndHighlight();
         
         // Regular monitoring every 5 seconds
-        setInterval(() => {
+        this.monitoringInterval = setInterval(() => {
             if (!this.isShowingActivityFeed) {
                 this.checkOrdersAndHighlight();
             }
         }, 5000);
+        
+        console.log('✅ Order monitoring started');
+    }
+
+    stopOrderMonitoring() {
+        if (this.monitoringInterval) {
+            clearInterval(this.monitoringInterval);
+            this.monitoringInterval = null;
+            console.log('🛑 Order monitoring stopped');
+        }
     }
 
     async checkOrdersAndHighlight() {
         try {
+            // Protect toggle button from being overwritten
+            const toggleBtn = document.getElementById('toggle-activity-feed');
+            const toggleBtnExists = !!toggleBtn;
+            
             // Use the EXACT method we know exists: amplManagerEnhanced.getActiveOrders()
             if (typeof amplManagerEnhanced !== 'undefined' && amplManagerEnhanced.getActiveOrders) {
-                console.log('📊 Calling amplManagerEnhanced.getActiveOrders()...');
-                
                 const orderData = await amplManagerEnhanced.getActiveOrders();
-                console.log('📊 Order data received:', orderData);
                 
                 if (orderData && (orderData.active || orderData.filled)) {
                     const activeOrders = orderData.active || [];
                     const filledOrders = orderData.filled || [];
                     
-                    console.log(`📊 Found ${activeOrders.length} active orders, ${filledOrders.length} filled orders`);
+                    console.log(`📊 Highlighting: ${activeOrders.length} active, ${filledOrders.length} filled`);
                     
                     // Update the price level badges using EXACT CSS classes
                     this.updatePriceLevelBadges(activeOrders, filledOrders);
-                } else {
-                    console.log('📊 No order data returned');
+                    
+                    // Ensure toggle button still exists and is functional
+                    if (toggleBtnExists && !document.getElementById('toggle-activity-feed')) {
+                        console.log('⚠️ Toggle button was removed during monitoring, restoring...');
+                        this.bindToggleButtonWithDebugging();
+                    }
                 }
-            } else {
-                console.log('📊 amplManagerEnhanced.getActiveOrders not available');
             }
         } catch (error) {
-            console.log('📊 Error checking orders:', error.message);
+            console.log('📊 Error in order monitoring:', error.message);
         }
     }
 
@@ -533,11 +609,8 @@ class AMPLActivityFeedIntegrated {
         const priceBadges = document.querySelectorAll('.order-ladder-grid .price-level-badge');
         
         if (priceBadges.length === 0) {
-            console.log('❌ No price badges found for highlighting');
             return;
         }
-        
-        console.log(`💡 Updating ${priceBadges.length} price badges...`);
         
         // Reset all badges to empty state (using EXACT CSS classes from style.css)
         priceBadges.forEach(badge => {
@@ -548,7 +621,6 @@ class AMPLActivityFeedIntegrated {
         activeOrders.forEach((order, index) => {
             if (index < priceBadges.length) {
                 priceBadges[index].className = 'price-level-badge pending';
-                console.log(`🟠 Set badge ${index + 1} to PENDING (active order)`);
             }
         });
         
@@ -556,13 +628,8 @@ class AMPLActivityFeedIntegrated {
         filledOrders.forEach((order, index) => {
             if (index < priceBadges.length) {
                 priceBadges[index].className = 'price-level-badge filled';
-                console.log(`🟢 Set badge ${index + 1} to FILLED (executed order)`);
             }
         });
-        
-        const pendingCount = document.querySelectorAll('.price-level-badge.pending').length;
-        const filledCount = document.querySelectorAll('.price-level-badge.filled').length;
-        console.log(`💡 Result: ${pendingCount} pending (orange), ${filledCount} filled (green)`);
     }
 
     addMessage(text, type = 'system', icon = '📊') {
@@ -726,7 +793,7 @@ class AMPLActivityFeedIntegrated {
         this.addMessage(message, 'error', '❌');
     }
 
-    // Public method to manually update order indicators (using EXACT CSS classes)
+    // Public method to manually update order indicators
     updateOrderIndicators(activeOrders, executedOrders) {
         this.activeOrders = activeOrders || [];
         this.executedOrders = executedOrders || [];
@@ -763,10 +830,10 @@ function logError(message) {
     if (amplActivityFeed) amplActivityFeed.logError(message);
 }
 
-// Global function to update order indicators (using EXACT structure)
+// Global function to update order indicators
 function updateOrderIndicators(activeOrders, executedOrders) {
     if (amplActivityFeed) amplActivityFeed.updateOrderIndicators(activeOrders, executedOrders);
 }
 
-console.log('🎬 AMPL Activity Feed (Exact Structure) loaded successfully');
+console.log('🎬 AMPL Activity Feed (Fixed Toggle) loaded successfully');
 
