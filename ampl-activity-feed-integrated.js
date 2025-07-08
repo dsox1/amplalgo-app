@@ -1,7 +1,6 @@
 /**
- * AMPL Live Activity Feed - CRITICAL FIX
- * Fixed to prevent targeting AMPL Rebase Protection Monitor
- * Enhanced KuCoin order detection for live environment
+ * AMPL Live Activity Feed - Restored Working Detection
+ * Combines Rebase Monitor protection with original working KuCoin detection
  */
 
 class AMPLActivityFeedIntegrated {
@@ -26,7 +25,7 @@ class AMPLActivityFeedIntegrated {
     }
 
     initialize() {
-        console.log('🎬 Initializing AMPL Activity Feed (Critical Fix)...');
+        console.log('🎬 Initializing AMPL Activity Feed (Restored Detection)...');
         
         // Find the Order Board panel
         this.findSmartOrderLadderPanel();
@@ -523,7 +522,7 @@ class AMPLActivityFeedIntegrated {
             // Bind the toggle button
             this.bindToggleButton();
             
-            // Start monitoring for order updates
+            // Start monitoring for order updates (RESTORED SIMPLE VERSION)
             this.startOrderMonitoring();
             
             console.log('↩️ Smart Order Ladder restored with toggle functionality');
@@ -659,105 +658,17 @@ class AMPLActivityFeedIntegrated {
         console.log('🎬 Switched back to Live Activity Feed');
     }
 
+    // RESTORED SIMPLE ORDER MONITORING (What was working before)
     startOrderMonitoring() {
-        // Monitor for active orders and update price level indicators
-        this.updatePriceLevelIndicators();
-        
-        // Set up periodic monitoring
+        // Simple monitoring that was working before
         setInterval(() => {
             if (!this.isShowingActivityFeed) {
-                this.updatePriceLevelIndicators();
+                this.highlightActivePriceLevels();
             }
         }, 5000); // Check every 5 seconds
     }
 
-    async updatePriceLevelIndicators() {
-        try {
-            // Enhanced KuCoin order detection for live environment
-            let activeOrders = [];
-            let executedOrders = [];
-            
-            // Method 1: Try AMPL Manager Enhanced
-            if (typeof amplManagerEnhanced !== 'undefined') {
-                if (amplManagerEnhanced.getActiveOrders) {
-                    activeOrders = await amplManagerEnhanced.getActiveOrders() || [];
-                }
-                
-                if (amplManagerEnhanced.getOrderStatus) {
-                    const status = await amplManagerEnhanced.getOrderStatus();
-                    if (status && status.orders) {
-                        activeOrders = status.orders.filter(order => order.status === 'active' || order.status === 'pending');
-                        executedOrders = status.orders.filter(order => order.status === 'filled' || order.status === 'executed');
-                    }
-                }
-            }
-            
-            // Method 2: Try global AMPL status function
-            if (typeof getAMPLStatus === 'function') {
-                const status = await getAMPLStatus();
-                if (status && status.orders) {
-                    activeOrders = status.orders.filter(order => order.status === 'active' || order.status === 'pending');
-                    executedOrders = status.orders.filter(order => order.status === 'filled' || order.status === 'executed');
-                }
-            }
-            
-            // Method 3: Try KuCoin API directly
-            if (typeof kucoinAPI !== 'undefined' && kucoinAPI.getActiveOrders) {
-                try {
-                    const kucoinOrders = await kucoinAPI.getActiveOrders('AMPL-USDT');
-                    if (kucoinOrders && kucoinOrders.length > 0) {
-                        activeOrders = kucoinOrders.filter(order => order.side === 'buy' && order.type === 'limit');
-                        console.log(`🔗 Found ${activeOrders.length} active KuCoin orders`);
-                    }
-                } catch (error) {
-                    console.log('📊 KuCoin API error:', error.message);
-                }
-            }
-            
-            // Method 4: Parse from console/DOM for order information
-            this.parseOrdersFromDOM();
-            
-            this.activeOrders = activeOrders;
-            this.executedOrders = executedOrders;
-            
-            console.log(`📊 Live Environment: ${activeOrders.length} active orders, ${executedOrders.length} executed orders`);
-            
-            // Update the visual indicators
-            this.highlightActivePriceLevels();
-            
-        } catch (error) {
-            console.log('📊 Order monitoring error: ', error.message);
-        }
-    }
-
-    parseOrdersFromDOM() {
-        // Look for order information in the Limit Orders panel
-        const limitOrdersPanel = document.querySelector('.limit-orders-section');
-        if (limitOrdersPanel) {
-            const pendingElement = limitOrdersPanel.querySelector('.pending-trades');
-            if (pendingElement) {
-                const pendingText = pendingElement.textContent;
-                const pendingCount = parseInt(pendingText) || 0;
-                
-                if (pendingCount > 0) {
-                    console.log(`📊 Found ${pendingCount} pending orders from Limit Orders panel`);
-                    
-                    // Generate expected orders based on pending count
-                    const expectedOrders = [];
-                    for (let i = 0; i < pendingCount; i++) {
-                        expectedOrders.push({
-                            level: i + 1,
-                            price: `1.${1000 + (i * 100)}`, // Placeholder prices
-                            status: 'active'
-                        });
-                    }
-                    
-                    this.activeOrders = expectedOrders;
-                }
-            }
-        }
-    }
-
+    // RESTORED SIMPLE HIGHLIGHTING (What was working before)
     highlightActivePriceLevels() {
         // CRITICAL: Only find price badges within the Smart Order Ladder container
         if (!this.smartOrderLadderContainer) {
@@ -772,64 +683,36 @@ class AMPLActivityFeedIntegrated {
             return;
         }
         
-        // Log all found badges for debugging
-        console.log('🔍 Found Smart Order Ladder price badges:');
-        priceBadges.forEach((badge, index) => {
-            const levelText = badge.getAttribute('data-level') || badge.textContent.trim();
-            console.log(`  ${index + 1}: "${levelText}" (${badge.className})`);
-        });
-        
         // Reset all badges to default state
         priceBadges.forEach(badge => {
             badge.classList.remove('has-order', 'executed-order');
         });
         
-        // Only highlight if we have real order data
-        if (!this.activeOrders || this.activeOrders.length === 0) {
-            console.log('📊 No active orders - keeping price levels grey');
-            return;
-        }
-        
-        // Highlight badges that have active orders (blue)
-        if (this.activeOrders && this.activeOrders.length > 0) {
-            console.log(`💙 Processing ${this.activeOrders.length} active orders:`);
-            
-            this.activeOrders.forEach((order, orderIndex) => {
-                const orderLevel = order.level || (orderIndex + 1);
-                console.log(`  Order ${orderIndex + 1}: Level ${orderLevel}`);
-                
-                // Match by level number
-                if (orderLevel <= priceBadges.length) {
-                    const badge = priceBadges[orderLevel - 1]; // Convert to 0-based index
-                    badge.classList.add('has-order');
-                    console.log(`    ✅ Highlighted Level ${orderLevel} badge`);
+        // RESTORED: Simple approach - try to get orders from AMPL Manager
+        if (typeof amplManagerEnhanced !== 'undefined' && amplManagerEnhanced.getActiveOrders) {
+            amplManagerEnhanced.getActiveOrders().then(orders => {
+                if (orders && orders.length > 0) {
+                    console.log(`💙 Found ${orders.length} active orders from AMPL Manager`);
+                    
+                    // Simple level-based highlighting
+                    orders.forEach((order, index) => {
+                        if (index < priceBadges.length) {
+                            priceBadges[index].classList.add('has-order');
+                            console.log(`✅ Highlighted Level ${index + 1} badge`);
+                        }
+                    });
+                    
+                    const blueCount = this.smartOrderLadderContainer.querySelectorAll('.price-level-badge.has-order').length;
+                    console.log(`💡 Highlighted ${blueCount} price levels`);
                 } else {
-                    console.log(`    ❌ Level ${orderLevel} exceeds available badges (${priceBadges.length})`);
+                    console.log('📊 No active orders found');
                 }
+            }).catch(error => {
+                console.log('📊 Error getting orders:', error.message);
             });
+        } else {
+            console.log('📊 AMPL Manager not available');
         }
-        
-        // Highlight badges that have executed orders (green)
-        if (this.executedOrders && this.executedOrders.length > 0) {
-            console.log(`💚 Processing ${this.executedOrders.length} executed orders:`);
-            
-            this.executedOrders.forEach((order, orderIndex) => {
-                const orderLevel = order.level || (orderIndex + 1);
-                console.log(`  Executed Order ${orderIndex + 1}: Level ${orderLevel}`);
-                
-                // Match by level number
-                if (orderLevel <= priceBadges.length) {
-                    const badge = priceBadges[orderLevel - 1]; // Convert to 0-based index
-                    badge.classList.remove('has-order'); // Remove blue if it was there
-                    badge.classList.add('executed-order');
-                    console.log(`    ✅ Highlighted executed Level ${orderLevel} badge`);
-                }
-            });
-        }
-        
-        const blueCount = this.smartOrderLadderContainer.querySelectorAll('.price-level-badge.has-order').length;
-        const greenCount = this.smartOrderLadderContainer.querySelectorAll('.price-level-badge.executed-order').length;
-        console.log(`💡 Smart Order Ladder result: ${blueCount} blue levels, ${greenCount} green levels`);
     }
 
     addMessage(text, type = 'system', icon = '📊') {
@@ -976,27 +859,11 @@ class AMPLActivityFeedIntegrated {
         if (typeof amplManagerEnhanced !== 'undefined') {
             console.log('🔗 Connected to AMPL Manager Enhanced');
             this.addMessage('Connected to AMPL Manager Enhanced', 'system', '🔗');
-            
-            // Hook into AMPL manager events if available
-            this.hookIntoAMPLEvents();
         } else {
             console.log('⏳ Waiting for AMPL Manager Enhanced...');
             // Try again in 2 seconds
             setTimeout(() => this.connectToAMPLManager(), 2000);
         }
-    }
-
-    hookIntoAMPLEvents() {
-        // Add periodic status updates
-        setInterval(() => {
-            if (!this.isPaused && typeof amplManagerEnhanced !== 'undefined') {
-                // Add a subtle status update every 30 seconds
-                const now = new Date();
-                if (now.getSeconds() === 0 || now.getSeconds() === 30) {
-                    this.addMessage('System monitoring active', 'system', '🔍');
-                }
-            }
-        }, 30000);
     }
 
     // Public methods for external use
@@ -1020,12 +887,35 @@ class AMPLActivityFeedIntegrated {
         this.addMessage(message, 'error', '❌');
     }
 
-    // Public method to manually update order indicators
+    // Public method to manually update order indicators (RESTORED SIMPLE VERSION)
     updateOrderIndicators(activeOrders, executedOrders) {
         this.activeOrders = activeOrders || [];
         this.executedOrders = executedOrders || [];
-        if (!this.isShowingActivityFeed) {
-            this.highlightActivePriceLevels();
+        
+        if (!this.isShowingActivityFeed && this.smartOrderLadderContainer) {
+            const priceBadges = this.smartOrderLadderContainer.querySelectorAll('.price-level-badge');
+            
+            // Reset all badges
+            priceBadges.forEach(badge => {
+                badge.classList.remove('has-order', 'executed-order');
+            });
+            
+            // Highlight active orders (blue)
+            this.activeOrders.forEach((order, index) => {
+                if (index < priceBadges.length) {
+                    priceBadges[index].classList.add('has-order');
+                }
+            });
+            
+            // Highlight executed orders (green)
+            this.executedOrders.forEach((order, index) => {
+                if (index < priceBadges.length) {
+                    priceBadges[index].classList.remove('has-order');
+                    priceBadges[index].classList.add('executed-order');
+                }
+            });
+            
+            console.log(`💡 Updated indicators: ${this.activeOrders.length} active, ${this.executedOrders.length} executed`);
         }
     }
 }
@@ -1054,10 +944,10 @@ function logError(message) {
     if (amplActivityFeed) amplActivityFeed.logError(message);
 }
 
-// Global function to update order indicators
+// Global function to update order indicators (RESTORED SIMPLE VERSION)
 function updateOrderIndicators(activeOrders, executedOrders) {
     if (amplActivityFeed) amplActivityFeed.updateOrderIndicators(activeOrders, executedOrders);
 }
 
-console.log('🎬 AMPL Activity Feed (Critical Fix) loaded successfully');
+console.log('🎬 AMPL Activity Feed (Restored Detection) loaded successfully');
 
