@@ -1,6 +1,7 @@
 /**
- * AMPL Live Activity Feed - Restored Working Detection
- * Combines Rebase Monitor protection with original working KuCoin detection
+ * AMPL Live Activity Feed - Exact Structure Version
+ * Works with the exact HTML/CSS structure we know exists
+ * No detection needed - we know exactly where everything is
  */
 
 class AMPLActivityFeedIntegrated {
@@ -14,7 +15,6 @@ class AMPLActivityFeedIntegrated {
         this.isShowingActivityFeed = false;
         this.activeOrders = [];
         this.executedOrders = [];
-        this.smartOrderLadderContainer = null; // Store reference to prevent cross-contamination
         
         // Initialize when DOM is ready
         if (document.readyState === 'loading') {
@@ -25,9 +25,9 @@ class AMPLActivityFeedIntegrated {
     }
 
     initialize() {
-        console.log('🎬 Initializing AMPL Activity Feed (Restored Detection)...');
+        console.log('🎬 Initializing AMPL Activity Feed (Exact Structure)...');
         
-        // Find the Order Board panel
+        // Find the EXACT Smart Order Ladder panel we know exists
         this.findSmartOrderLadderPanel();
         
         if (this.targetPanel) {
@@ -38,40 +38,20 @@ class AMPLActivityFeedIntegrated {
             this.isShowingActivityFeed = true;
             console.log('✅ AMPL Activity Feed integrated successfully');
         } else {
-            console.log('❌ Order Board panel not found');
+            console.log('❌ Smart Order Ladder panel not found');
         }
     }
 
     findSmartOrderLadderPanel() {
-        // Strategy 1: Look for the ladder section specifically with SMART ORDER LADDER title
-        const sections = document.querySelectorAll('.ladder-section');
-        for (const section of sections) {
-            const header = section.querySelector('.section-header h3');
-            if (header && header.textContent.includes('SMART ORDER LADDER')) {
-                this.targetPanel = section.querySelector('.section-content');
-                this.smartOrderLadderContainer = section; // Store container reference
-                console.log('✅ Found Smart Order Ladder via section header');
-                return;
-            }
+        // We KNOW the exact structure: .ladder-section.order-ladder-section
+        const smartOrderLadder = document.querySelector('.ladder-section.order-ladder-section');
+        if (smartOrderLadder) {
+            this.targetPanel = smartOrderLadder.querySelector('.section-content');
+            console.log('✅ Found Smart Order Ladder using exact known selector');
+            return;
         }
-
-        // Strategy 2: Look for order-ladder-grid within a section
-        const ladderGrids = document.querySelectorAll('.order-ladder-grid');
-        for (const grid of ladderGrids) {
-            const section = grid.closest('.ladder-section');
-            if (section) {
-                const header = section.querySelector('.section-header h3');
-                // Make sure it's not the rebase protection monitor
-                if (header && !header.textContent.includes('REBASE PROTECTION')) {
-                    this.targetPanel = section.querySelector('.section-content');
-                    this.smartOrderLadderContainer = section;
-                    console.log('✅ Found Smart Order Ladder via grid');
-                    return;
-                }
-            }
-        }
-
-        console.log('❌ Smart Order Ladder panel not found');
+        
+        console.log('❌ Smart Order Ladder not found with known selector');
     }
 
     replaceContent() {
@@ -335,13 +315,8 @@ class AMPLActivityFeedIntegrated {
                 opacity: 0.7;
             }
 
-            /* Enhanced Smart Order Ladder with toggle button */
+            /* Toggle button for Smart Order Ladder */
             .smart-order-ladder-enhanced {
-                position: relative;
-            }
-
-            /* Position toggle button in the outer Smart Order Ladder header */
-            .ladder-section .section-header {
                 position: relative;
             }
 
@@ -372,97 +347,21 @@ class AMPLActivityFeedIntegrated {
                 box-shadow: 0 0 15px rgba(33, 150, 243, 0.5);
                 transform: scale(1.1);
             }
-
-            /* CRITICAL: Only target price badges within Smart Order Ladder */
-            .smart-order-ladder-enhanced .price-level-badge,
-            .ladder-section[data-ladder-type="smart-order"] .price-level-badge {
-                transition: all 0.3s ease;
-                position: relative;
-                overflow: hidden;
-            }
-
-            /* Blue state: Active limit orders waiting to be filled */
-            .smart-order-ladder-enhanced .price-level-badge.has-order,
-            .ladder-section[data-ladder-type="smart-order"] .price-level-badge.has-order {
-                background: rgba(33, 150, 243, 0.2) !important;
-                border: 2px solid #2196F3 !important;
-                color: #2196F3 !important;
-                box-shadow: 0 0 10px rgba(33, 150, 243, 0.3);
-                animation: pulseBlue 2s infinite;
-            }
-
-            /* Green state: Executed/filled orders */
-            .smart-order-ladder-enhanced .price-level-badge.executed-order,
-            .ladder-section[data-ladder-type="smart-order"] .price-level-badge.executed-order {
-                background: rgba(76, 175, 80, 0.2) !important;
-                border: 2px solid #4CAF50 !important;
-                color: #4CAF50 !important;
-                box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
-                animation: pulseGreen 2s infinite;
-            }
-
-            @keyframes pulseBlue {
-                0%, 100% {
-                    box-shadow: 0 0 10px rgba(33, 150, 243, 0.3);
-                }
-                50% {
-                    box-shadow: 0 0 20px rgba(33, 150, 243, 0.6);
-                }
-            }
-
-            @keyframes pulseGreen {
-                0%, 100% {
-                    box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
-                }
-                50% {
-                    box-shadow: 0 0 20px rgba(76, 175, 80, 0.6);
-                }
-            }
-
-            .smart-order-ladder-enhanced .price-level-badge.has-order::before,
-            .ladder-section[data-ladder-type="smart-order"] .price-level-badge.has-order::before {
-                content: '●';
-                position: absolute;
-                top: 2px;
-                right: 4px;
-                color: #2196F3;
-                font-size: 8px;
-                animation: blink 1s infinite;
-            }
-
-            .smart-order-ladder-enhanced .price-level-badge.executed-order::before,
-            .ladder-section[data-ladder-type="smart-order"] .price-level-badge.executed-order::before {
-                content: '●';
-                position: absolute;
-                top: 2px;
-                right: 4px;
-                color: #4CAF50;
-                font-size: 8px;
-                animation: blink 1s infinite;
-            }
-
-            @keyframes blink {
-                0%, 50% { opacity: 1; }
-                51%, 100% { opacity: 0.3; }
-            }
         `;
         document.head.appendChild(style);
     }
 
     bindEventListeners() {
-        // Pause/Resume button
         const pauseBtn = document.getElementById('pause-feed');
         if (pauseBtn) {
             pauseBtn.addEventListener('click', () => this.togglePause());
         }
 
-        // Clear button
         const clearBtn = document.getElementById('clear-feed');
         if (clearBtn) {
             clearBtn.addEventListener('click', () => this.clearMessages());
         }
 
-        // Restore button
         const restoreBtn = document.getElementById('restore-ladder');
         if (restoreBtn) {
             restoreBtn.addEventListener('click', () => this.restoreOriginal());
@@ -506,60 +405,25 @@ class AMPLActivityFeedIntegrated {
 
     restoreOriginal() {
         if (this.targetPanel && this.originalContent) {
-            // Add the enhanced content with toggle button
+            // Restore the EXACT original content with toggle button
             const enhancedContent = this.addToggleButtonToOriginal(this.originalContent);
             this.targetPanel.innerHTML = enhancedContent;
             this.isShowingActivityFeed = false;
             
-            // Mark the container to prevent cross-contamination
-            if (this.smartOrderLadderContainer) {
-                this.smartOrderLadderContainer.setAttribute('data-ladder-type', 'smart-order');
-            }
-            
-            // Set level numbers on price badges
+            // Replace static prices with level numbers
             this.setPriceLevelNumbers();
             
             // Bind the toggle button
             this.bindToggleButton();
             
-            // Start monitoring for order updates (RESTORED SIMPLE VERSION)
+            // Start monitoring for order updates using EXACT structure
             this.startOrderMonitoring();
             
-            console.log('↩️ Smart Order Ladder restored with toggle functionality');
+            console.log('↩️ Smart Order Ladder restored with exact structure');
         }
     }
 
     addToggleButtonToOriginal(originalContent) {
-        // Find the Smart Order Ladder section and add toggle button to its header
-        const sectionPattern = /<div[^>]*class="[^"]*ladder-section[^"]*"[^>]*>([\s\S]*?)<\/div>/;
-        const sectionMatch = originalContent.match(sectionPattern);
-        
-        if (sectionMatch) {
-            // Find the header within the section
-            const headerPattern = /<div[^>]*class="[^"]*section-header[^"]*"[^>]*>([\s\S]*?)<\/div>/;
-            const headerMatch = sectionMatch[1].match(headerPattern);
-            
-            if (headerMatch) {
-                // Add toggle button to the header
-                const enhancedHeader = headerMatch[0].replace(
-                    /<\/div>$/,
-                    `<button class="toggle-activity-feed-btn" id="toggle-activity-feed" title="Show Live Activity Feed">
-                        <i class="fas fa-chart-line"></i>
-                    </button></div>`
-                );
-                
-                // Replace the header in the section
-                const enhancedSection = sectionMatch[0].replace(headerPattern, enhancedHeader);
-                
-                // Replace the section in the original content
-                const enhancedContent = originalContent.replace(sectionPattern, enhancedSection);
-                
-                console.log('✅ Toggle button added to Smart Order Ladder header');
-                return enhancedContent;
-            }
-        }
-        
-        // Fallback: wrap content and add button (original method)
         const toggleButton = `
             <button class="toggle-activity-feed-btn" id="toggle-activity-feed" title="Show Live Activity Feed">
                 <i class="fas fa-chart-line"></i>
@@ -575,46 +439,14 @@ class AMPLActivityFeedIntegrated {
     }
 
     setPriceLevelNumbers() {
-        // Wait a moment for DOM to settle
         setTimeout(() => {
-            // CRITICAL: Only target elements within the Smart Order Ladder container
-            if (!this.smartOrderLadderContainer) {
-                console.log('❌ No Smart Order Ladder container reference - skipping labeling');
-                return;
-            }
-
-            // Find price elements ONLY within the Smart Order Ladder
-            const selectors = [
-                '.order-ladder-grid div',
-                '[class*="price"]',
-                '.price-level-badge',
-                '.ladder-price',
-                '.price-badge'
-            ];
+            // We KNOW the exact structure: .order-ladder-grid .price-level-badge
+            const priceBadges = document.querySelectorAll('.order-ladder-grid .price-level-badge');
             
-            let priceBadges = [];
-            
-            // Try each selector within the Smart Order Ladder container only
-            for (const selector of selectors) {
-                const elements = this.smartOrderLadderContainer.querySelectorAll(selector);
-                // Filter to only elements that look like price badges
-                priceBadges = Array.from(elements).filter(badge => {
-                    const text = badge.textContent.trim();
-                    const hasPrice = text && (text.includes('.') && text.match(/\d+\.\d+/));
-                    const isVisible = badge.offsetWidth > 0 && badge.offsetHeight > 0;
-                    const notButton = !badge.classList.contains('toggle-activity-feed-btn');
-                    const notInRebaseMonitor = !badge.closest('[class*="rebase"]') && !badge.closest('[class*="protection"]');
-                    return hasPrice && isVisible && notButton && notInRebaseMonitor;
-                });
-                
-                if (priceBadges.length > 0) {
-                    console.log(`💡 Setting level numbers on ${priceBadges.length} badges using selector: ${selector}`);
-                    break;
-                }
-            }
+            console.log(`💡 Found ${priceBadges.length} price badges using exact known selector`);
             
             if (priceBadges.length === 0) {
-                console.log('❌ No price badges found in Smart Order Ladder to set level numbers');
+                console.log('❌ No price badges found with exact selector');
                 return;
             }
             
@@ -626,20 +458,15 @@ class AMPLActivityFeedIntegrated {
                 // Store original price for reference
                 const originalPrice = badge.textContent.trim();
                 badge.setAttribute('data-original-price', originalPrice);
-                
-                // Set data attribute
-                badge.setAttribute('data-level', levelText);
+                badge.setAttribute('data-level', levelNumber);
                 
                 // Replace the text content directly
                 badge.textContent = levelText;
                 
-                // Add class for styling
-                badge.classList.add('price-level-badge');
-                
-                console.log(`🏷️ Set Smart Order Ladder badge ${index + 1} to "${levelText}" (was "${originalPrice}")`);
+                console.log(`🏷️ Set badge ${index + 1} to "${levelText}" (was "${originalPrice}")`);
             });
             
-            console.log(`✅ Successfully set level numbers on ${priceBadges.length} Smart Order Ladder price badges`);
+            console.log(`✅ Successfully set level numbers on ${priceBadges.length} price badges`);
         }, 200);
     }
 
@@ -658,61 +485,84 @@ class AMPLActivityFeedIntegrated {
         console.log('🎬 Switched back to Live Activity Feed');
     }
 
-    // RESTORED SIMPLE ORDER MONITORING (What was working before)
+    // ORDER MONITORING using EXACT structure and methods
     startOrderMonitoring() {
-        // Simple monitoring that was working before
+        console.log('🔍 Starting order monitoring with exact structure...');
+        
+        // Immediate check
+        this.checkOrdersAndHighlight();
+        
+        // Regular monitoring every 5 seconds
         setInterval(() => {
             if (!this.isShowingActivityFeed) {
-                this.highlightActivePriceLevels();
+                this.checkOrdersAndHighlight();
             }
-        }, 5000); // Check every 5 seconds
+        }, 5000);
     }
 
-    // RESTORED SIMPLE HIGHLIGHTING (What was working before)
-    highlightActivePriceLevels() {
-        // CRITICAL: Only find price badges within the Smart Order Ladder container
-        if (!this.smartOrderLadderContainer) {
-            console.log('❌ No Smart Order Ladder container - cannot highlight levels');
-            return;
+    async checkOrdersAndHighlight() {
+        try {
+            // Use the EXACT method we know exists: amplManagerEnhanced.getActiveOrders()
+            if (typeof amplManagerEnhanced !== 'undefined' && amplManagerEnhanced.getActiveOrders) {
+                console.log('📊 Calling amplManagerEnhanced.getActiveOrders()...');
+                
+                const orderData = await amplManagerEnhanced.getActiveOrders();
+                console.log('📊 Order data received:', orderData);
+                
+                if (orderData && (orderData.active || orderData.filled)) {
+                    const activeOrders = orderData.active || [];
+                    const filledOrders = orderData.filled || [];
+                    
+                    console.log(`📊 Found ${activeOrders.length} active orders, ${filledOrders.length} filled orders`);
+                    
+                    // Update the price level badges using EXACT CSS classes
+                    this.updatePriceLevelBadges(activeOrders, filledOrders);
+                } else {
+                    console.log('📊 No order data returned');
+                }
+            } else {
+                console.log('📊 amplManagerEnhanced.getActiveOrders not available');
+            }
+        } catch (error) {
+            console.log('📊 Error checking orders:', error.message);
         }
+    }
 
-        const priceBadges = this.smartOrderLadderContainer.querySelectorAll('.price-level-badge');
+    updatePriceLevelBadges(activeOrders, filledOrders) {
+        // We KNOW the exact structure: .order-ladder-grid .price-level-badge
+        const priceBadges = document.querySelectorAll('.order-ladder-grid .price-level-badge');
         
         if (priceBadges.length === 0) {
-            console.log('❌ No price level badges found in Smart Order Ladder for highlighting');
+            console.log('❌ No price badges found for highlighting');
             return;
         }
         
-        // Reset all badges to default state
+        console.log(`💡 Updating ${priceBadges.length} price badges...`);
+        
+        // Reset all badges to empty state (using EXACT CSS classes from style.css)
         priceBadges.forEach(badge => {
-            badge.classList.remove('has-order', 'executed-order');
+            badge.className = 'price-level-badge empty';
         });
         
-        // RESTORED: Simple approach - try to get orders from AMPL Manager
-        if (typeof amplManagerEnhanced !== 'undefined' && amplManagerEnhanced.getActiveOrders) {
-            amplManagerEnhanced.getActiveOrders().then(orders => {
-                if (orders && orders.length > 0) {
-                    console.log(`💙 Found ${orders.length} active orders from AMPL Manager`);
-                    
-                    // Simple level-based highlighting
-                    orders.forEach((order, index) => {
-                        if (index < priceBadges.length) {
-                            priceBadges[index].classList.add('has-order');
-                            console.log(`✅ Highlighted Level ${index + 1} badge`);
-                        }
-                    });
-                    
-                    const blueCount = this.smartOrderLadderContainer.querySelectorAll('.price-level-badge.has-order').length;
-                    console.log(`💡 Highlighted ${blueCount} price levels`);
-                } else {
-                    console.log('📊 No active orders found');
-                }
-            }).catch(error => {
-                console.log('📊 Error getting orders:', error.message);
-            });
-        } else {
-            console.log('📊 AMPL Manager not available');
-        }
+        // Highlight active orders as PENDING (orange) - using EXACT CSS class
+        activeOrders.forEach((order, index) => {
+            if (index < priceBadges.length) {
+                priceBadges[index].className = 'price-level-badge pending';
+                console.log(`🟠 Set badge ${index + 1} to PENDING (active order)`);
+            }
+        });
+        
+        // Highlight filled orders as FILLED (green) - using EXACT CSS class
+        filledOrders.forEach((order, index) => {
+            if (index < priceBadges.length) {
+                priceBadges[index].className = 'price-level-badge filled';
+                console.log(`🟢 Set badge ${index + 1} to FILLED (executed order)`);
+            }
+        });
+        
+        const pendingCount = document.querySelectorAll('.price-level-badge.pending').length;
+        const filledCount = document.querySelectorAll('.price-level-badge.filled').length;
+        console.log(`💡 Result: ${pendingCount} pending (orange), ${filledCount} filled (green)`);
     }
 
     addMessage(text, type = 'system', icon = '📊') {
@@ -727,9 +577,8 @@ class AMPLActivityFeedIntegrated {
             id: Date.now()
         };
 
-        this.messages.unshift(message); // Add to beginning
+        this.messages.unshift(message);
 
-        // Limit messages
         if (this.messages.length > this.maxMessages) {
             this.messages = this.messages.slice(0, this.maxMessages);
         }
@@ -764,8 +613,6 @@ class AMPLActivityFeedIntegrated {
         `).join('');
 
         messagesContainer.innerHTML = messagesHTML;
-        
-        // Auto-scroll to top (newest messages)
         messagesContainer.scrollTop = 0;
     }
 
@@ -777,12 +624,10 @@ class AMPLActivityFeedIntegrated {
     }
 
     interceptConsoleMessages() {
-        // Store original console methods
         const originalLog = console.log;
         const originalWarn = console.warn;
         const originalError = console.error;
 
-        // Override console.log to capture AMPL messages
         console.log = (...args) => {
             originalLog.apply(console, args);
             
@@ -792,7 +637,6 @@ class AMPLActivityFeedIntegrated {
             }
         };
 
-        // Override console.warn
         console.warn = (...args) => {
             originalWarn.apply(console, args);
             
@@ -802,7 +646,6 @@ class AMPLActivityFeedIntegrated {
             }
         };
 
-        // Override console.error
         console.error = (...args) => {
             originalError.apply(console, args);
             
@@ -827,7 +670,6 @@ class AMPLActivityFeedIntegrated {
         let type = 'system';
         let icon = '📊';
 
-        // Determine message type and icon
         if (message.includes('profit') || message.includes('Profit')) {
             type = 'profit';
             icon = '💰';
@@ -845,23 +687,20 @@ class AMPLActivityFeedIntegrated {
             icon = '📈';
         }
 
-        // Clean up the message
         const cleanMessage = message
-            .replace(/^[🎉✅❌⚠️💰📊🔄🎯📈💸]+\s*/, '') // Remove leading emojis
-            .replace(/^\w+:\s*/, '') // Remove log level prefixes
+            .replace(/^[🎉✅❌⚠️💰📊🔄🎯📈💸]+\s*/, '')
+            .replace(/^\w+:\s*/, '')
             .trim();
 
         this.addMessage(cleanMessage, type, icon);
     }
 
     connectToAMPLManager() {
-        // Try to connect to the AMPL Manager Enhanced
         if (typeof amplManagerEnhanced !== 'undefined') {
             console.log('🔗 Connected to AMPL Manager Enhanced');
             this.addMessage('Connected to AMPL Manager Enhanced', 'system', '🔗');
         } else {
             console.log('⏳ Waiting for AMPL Manager Enhanced...');
-            // Try again in 2 seconds
             setTimeout(() => this.connectToAMPLManager(), 2000);
         }
     }
@@ -887,36 +726,16 @@ class AMPLActivityFeedIntegrated {
         this.addMessage(message, 'error', '❌');
     }
 
-    // Public method to manually update order indicators (RESTORED SIMPLE VERSION)
+    // Public method to manually update order indicators (using EXACT CSS classes)
     updateOrderIndicators(activeOrders, executedOrders) {
         this.activeOrders = activeOrders || [];
         this.executedOrders = executedOrders || [];
         
-        if (!this.isShowingActivityFeed && this.smartOrderLadderContainer) {
-            const priceBadges = this.smartOrderLadderContainer.querySelectorAll('.price-level-badge');
-            
-            // Reset all badges
-            priceBadges.forEach(badge => {
-                badge.classList.remove('has-order', 'executed-order');
-            });
-            
-            // Highlight active orders (blue)
-            this.activeOrders.forEach((order, index) => {
-                if (index < priceBadges.length) {
-                    priceBadges[index].classList.add('has-order');
-                }
-            });
-            
-            // Highlight executed orders (green)
-            this.executedOrders.forEach((order, index) => {
-                if (index < priceBadges.length) {
-                    priceBadges[index].classList.remove('has-order');
-                    priceBadges[index].classList.add('executed-order');
-                }
-            });
-            
-            console.log(`💡 Updated indicators: ${this.activeOrders.length} active, ${this.executedOrders.length} executed`);
+        if (!this.isShowingActivityFeed) {
+            this.updatePriceLevelBadges(this.activeOrders, this.executedOrders);
         }
+        
+        console.log(`💡 Manual update: ${this.activeOrders.length} active, ${this.executedOrders.length} executed`);
     }
 }
 
@@ -944,10 +763,10 @@ function logError(message) {
     if (amplActivityFeed) amplActivityFeed.logError(message);
 }
 
-// Global function to update order indicators (RESTORED SIMPLE VERSION)
+// Global function to update order indicators (using EXACT structure)
 function updateOrderIndicators(activeOrders, executedOrders) {
     if (amplActivityFeed) amplActivityFeed.updateOrderIndicators(activeOrders, executedOrders);
 }
 
-console.log('🎬 AMPL Activity Feed (Restored Detection) loaded successfully');
+console.log('🎬 AMPL Activity Feed (Exact Structure) loaded successfully');
 
