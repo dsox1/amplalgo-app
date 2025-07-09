@@ -1,6 +1,6 @@
 /**
- * AMPL Live Activity Feed - Architectural Fix
- * Uses show/hide pattern instead of DOM replacement to preserve event listeners
+ * AMPL Live Activity Feed - Safe Version
+ * Architectural fix with safe message integration (NO console interception)
  */
 
 class AMPLActivityFeedArchitectural {
@@ -10,7 +10,7 @@ class AMPLActivityFeedArchitectural {
         this.isPaused = false;
         this.targetPanel = null;
         this.isInitialized = false;
-        this.currentView = 'activity'; // 'activity' or 'ladder'
+        this.currentView = 'activity'; // Default to activity feed
         this.monitoringInterval = null;
         
         // Initialize when DOM is ready
@@ -22,7 +22,7 @@ class AMPLActivityFeedArchitectural {
     }
 
     initialize() {
-        console.log('🎬 Initializing AMPL Activity Feed (Architectural Fix)...');
+        console.log('🎬 Initializing AMPL Activity Feed (Safe Version)...');
         
         // Find the Smart Order Ladder panel
         this.findSmartOrderLadderPanel();
@@ -31,9 +31,11 @@ class AMPLActivityFeedArchitectural {
             this.createDualViewStructure();
             this.applyStyles();
             this.bindAllEventListeners();
+            this.setDefaultView(); // Ensure Activity Feed shows first
+            this.connectToAMPLManager(); // Safe connection only
             this.startOrderMonitoring();
             this.isInitialized = true;
-            console.log('✅ AMPL Activity Feed integrated with architectural fix');
+            console.log('✅ AMPL Activity Feed integrated safely');
         } else {
             console.log('❌ Smart Order Ladder panel not found');
         }
@@ -59,7 +61,7 @@ class AMPLActivityFeedArchitectural {
 
         // Create the dual-view structure
         const dualViewHTML = `
-            <!-- Activity Feed View -->
+            <!-- Activity Feed View (DEFAULT) -->
             <div class="ampl-view ampl-activity-view" id="ampl-activity-view">
                 <div class="ampl-activity-feed-container">
                     <!-- Header with controls -->
@@ -92,18 +94,27 @@ class AMPLActivityFeedArchitectural {
                         <div class="welcome-message">
                             <i class="fas fa-rocket"></i>
                             <span>AMPL Activity Feed Ready</span>
-                            <small>Monitoring system activity...</small>
+                            <small>Use logProfit(), logSell(), logSystem() to add messages</small>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Smart Order Ladder View -->
+            <!-- Smart Order Ladder View (HIDDEN BY DEFAULT) -->
             <div class="ampl-view ampl-ladder-view" id="ampl-ladder-view" style="display: none;">
                 <div class="smart-order-ladder-enhanced">
+                    <!-- Add switch button to header -->
+                    <div class="ladder-header-controls">
+                        <button class="ladder-switch-btn" id="switch-to-activity" title="Show Live Activity Feed">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Activity Feed</span>
+                        </button>
+                    </div>
+                    
                     ${originalContent}
-                    <!-- Toggle button positioned at bottom right -->
-                    <button class="toggle-activity-feed-btn" id="switch-to-activity" title="Show Live Activity Feed">
+                    
+                    <!-- Also keep the bottom-right toggle button -->
+                    <button class="toggle-activity-feed-btn" id="switch-to-activity-alt" title="Show Live Activity Feed">
                         <i class="fas fa-chart-line"></i>
                     </button>
                 </div>
@@ -115,6 +126,44 @@ class AMPLActivityFeedArchitectural {
 
         // Set up price level numbers immediately
         this.setPriceLevelNumbers();
+    }
+
+    setDefaultView() {
+        console.log('🎯 Setting default view to Activity Feed...');
+        
+        // Ensure Activity Feed is visible by default
+        const activityView = document.getElementById('ampl-activity-view');
+        const ladderView = document.getElementById('ampl-ladder-view');
+        
+        if (activityView && ladderView) {
+            activityView.style.display = 'block';
+            ladderView.style.display = 'none';
+            this.currentView = 'activity';
+            console.log('✅ Default view set to Activity Feed');
+        }
+    }
+
+    connectToAMPLManager() {
+        console.log('🔗 Connecting to AMPL Manager (Safe Mode)...');
+        
+        if (typeof amplManagerEnhanced !== 'undefined') {
+            console.log('✅ Connected to AMPL Manager Enhanced');
+            this.addMessage('Connected to AMPL Manager Enhanced', 'system', '🔗');
+            
+            // Add sample messages to show functionality
+            setTimeout(() => {
+                this.addMessage('AMPL system monitoring active', 'system', '🟢');
+                this.addMessage('Use logProfit("message") to log profit activities', 'system', '💡');
+                this.addMessage('Use logSell("message") to log sell activities', 'system', '💡');
+                this.addMessage('Use logSystem("message") to log system events', 'system', '💡');
+            }, 1000);
+        } else {
+            console.log('⏳ Waiting for AMPL Manager Enhanced...');
+            this.addMessage('Waiting for AMPL Manager connection...', 'system', '⏳');
+            
+            // Retry connection
+            setTimeout(() => this.connectToAMPLManager(), 3000);
+        }
     }
 
     applyStyles() {
@@ -337,7 +386,35 @@ class AMPLActivityFeedArchitectural {
                 height: 100%;
             }
 
-            /* Toggle button positioned at bottom right */
+            /* Header controls for ladder view */
+            .ladder-header-controls {
+                position: absolute;
+                top: -40px;
+                right: 0;
+                z-index: 50;
+            }
+
+            .ladder-switch-btn {
+                background: rgba(33, 150, 243, 0.2);
+                border: 1px solid rgba(33, 150, 243, 0.4);
+                color: #2196F3;
+                padding: 6px 12px;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 12px;
+                transition: all 0.3s ease;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+            .ladder-switch-btn:hover {
+                background: rgba(33, 150, 243, 0.4);
+                border-color: rgba(33, 150, 243, 0.7);
+                transform: translateY(-1px);
+            }
+
+            /* Bottom-right toggle button */
             .toggle-activity-feed-btn {
                 position: absolute;
                 bottom: 8px;
@@ -403,6 +480,7 @@ class AMPLActivityFeedArchitectural {
                     this.showLadderView();
                     break;
                 case 'switch-to-activity':
+                case 'switch-to-activity-alt':
                     this.showActivityView();
                     break;
             }
@@ -604,7 +682,7 @@ class AMPLActivityFeedArchitectural {
                 <div class="welcome-message">
                     <i class="fas fa-chart-line"></i>
                     <span>AMPL Activity Feed Ready</span>
-                    <small>Monitoring system activity...</small>
+                    <small>Use logProfit(), logSell(), logSystem() to add messages</small>
                 </div>
             `;
             return;
@@ -691,5 +769,5 @@ function updateOrderIndicators(activeOrders, executedOrders) {
     if (amplActivityFeed) amplActivityFeed.updateOrderIndicators(activeOrders, executedOrders);
 }
 
-console.log('🎬 AMPL Activity Feed (Architectural Fix) loaded successfully');
+console.log('🎬 AMPL Activity Feed (Safe Version) loaded successfully');
 
