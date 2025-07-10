@@ -1,17 +1,17 @@
 /**
- * AMPL Rebalancing System - Refined with Click-to-Expand & Mechanical Sounds
- * Features: Click-to-expand modal, mechanical zoom sounds, persistent settings, 7% threshold
+ * AMPL Rebalancing System - Final Version
+ * Features: No rebalancing sounds, fixed page load zoom sounds, corrected persistence
  */
 
-class AMPLRebalancingSystemRefined {
+class AMPLRebalancingSystemFinal {
     constructor() {
         this.targetPanel = null;
         this.isInitialized = false;
         this.monitoringInterval = null;
-        this.soundEnabled = true;
         this.audioContext = null;
         this.isExpanded = false;
         this.expandedModal = null;
+        this.pageLoadSoundsAdded = false;
         
         // Rebalancing system data
         this.coins = {
@@ -39,11 +39,14 @@ class AMPLRebalancingSystemRefined {
             coinbase: 'https://api.coinbase.com/v2/exchange-rates'
         };
         
-        // Initialize audio context and sounds
+        // Initialize audio context for page load sounds only
         this.initializeAudio();
         
-        // Load persistent settings
+        // Load persistent settings using corrected theme-style persistence
         this.loadPersistentSettings();
+        
+        // Add page load zoom sounds immediately
+        this.addPageLoadZoomSounds();
         
         // Initialize when DOM is ready
         if (document.readyState === 'loading') {
@@ -56,16 +59,61 @@ class AMPLRebalancingSystemRefined {
     initializeAudio() {
         try {
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            console.log('🔊 Audio context initialized for mechanical sound effects');
+            console.log('🔊 Audio context initialized for page load zoom sounds only');
         } catch (error) {
             console.log('🔇 Audio not available:', error.message);
-            this.soundEnabled = false;
         }
     }
 
-    // Enhanced mechanical sound effects
-    playSound(type) {
-        if (!this.soundEnabled || !this.audioContext) return;
+    // Enhanced page load zoom sounds - FIXED VERSION
+    createSoberZoomSound(oscillator, gainNode, filterNode) {
+        // More sober mechanical sound with longer duration
+        oscillator.type = 'sawtooth';
+        filterNode.type = 'lowpass';
+        filterNode.frequency.setValueAtTime(1500, this.audioContext.currentTime);
+        filterNode.frequency.exponentialRampToValueAtTime(400, this.audioContext.currentTime + 1.2);
+        
+        oscillator.frequency.setValueAtTime(150, this.audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(120, this.audioContext.currentTime + 0.6);
+        oscillator.frequency.exponentialRampToValueAtTime(80, this.audioContext.currentTime + 1.2);
+        
+        gainNode.gain.setValueAtTime(0.08, this.audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.05, this.audioContext.currentTime + 0.6);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 1.2);
+        
+        oscillator.start();
+        oscillator.stop(this.audioContext.currentTime + 1.2);
+    }
+
+    createSoberBeepSound(oscillator, gainNode, filterNode) {
+        // Sober beeping with longer delays
+        oscillator.type = 'sine';
+        filterNode.type = 'bandpass';
+        filterNode.frequency.setValueAtTime(600, this.audioContext.currentTime);
+        
+        // Create beeping pattern with longer delays
+        const beepDuration = 0.3;
+        const pauseDuration = 0.8; // Much longer pause
+        const totalBeeps = 3;
+        
+        for (let i = 0; i < totalBeeps; i++) {
+            const startTime = this.audioContext.currentTime + (i * (beepDuration + pauseDuration));
+            const endTime = startTime + beepDuration;
+            
+            oscillator.frequency.setValueAtTime(600, startTime);
+            gainNode.gain.setValueAtTime(0.06, startTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, endTime);
+            
+            if (i === 0) {
+                oscillator.start(startTime);
+            }
+        }
+        
+        oscillator.stop(this.audioContext.currentTime + (totalBeeps * (beepDuration + pauseDuration)));
+    }
+
+    playPageLoadSound(type) {
+        if (!this.audioContext) return;
         
         try {
             const oscillator = this.audioContext.createOscillator();
@@ -77,132 +125,116 @@ class AMPLRebalancingSystemRefined {
             gainNode.connect(this.audioContext.destination);
             
             switch (type) {
-                case 'mechanical_zoom':
-                    // Mechanical hinge/swoosh sound for main page zoom
-                    this.createMechanicalZoomSound(oscillator, gainNode, filterNode);
+                case 'sober_zoom':
+                    this.createSoberZoomSound(oscillator, gainNode, filterNode);
                     break;
-                    
-                case 'truck_beep':
-                    // Truck backing up beeping sound
-                    this.createTruckBeepSound(oscillator, gainNode, filterNode);
-                    break;
-                    
-                case 'profit':
-                    // Profit notification sound (unchanged)
-                    oscillator.frequency.setValueAtTime(600, this.audioContext.currentTime);
-                    oscillator.frequency.setValueAtTime(800, this.audioContext.currentTime + 0.1);
-                    oscillator.frequency.setValueAtTime(1000, this.audioContext.currentTime + 0.2);
-                    gainNode.gain.setValueAtTime(0.2, this.audioContext.currentTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3);
-                    oscillator.start();
-                    oscillator.stop(this.audioContext.currentTime + 0.3);
-                    break;
-                    
-                case 'click':
-                    // Button click sound
-                    oscillator.frequency.setValueAtTime(1000, this.audioContext.currentTime);
-                    gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.05);
-                    oscillator.start();
-                    oscillator.stop(this.audioContext.currentTime + 0.05);
+                case 'sober_beep':
+                    this.createSoberBeepSound(oscillator, gainNode, filterNode);
                     break;
             }
         } catch (error) {
-            console.log('🔇 Sound playback error:', error.message);
+            console.log('🔇 Page load sound error:', error.message);
         }
     }
 
-    createMechanicalZoomSound(oscillator, gainNode, filterNode) {
-        // Mechanical hinge/swoosh sound
-        oscillator.type = 'sawtooth';
-        filterNode.type = 'lowpass';
-        filterNode.frequency.setValueAtTime(2000, this.audioContext.currentTime);
-        filterNode.frequency.exponentialRampToValueAtTime(500, this.audioContext.currentTime + 0.6);
+    // Fixed page load zoom sounds - NO MOUSEOVER DEPENDENCY
+    addPageLoadZoomSounds() {
+        if (this.pageLoadSoundsAdded) return;
         
-        oscillator.frequency.setValueAtTime(200, this.audioContext.currentTime);
-        oscillator.frequency.exponentialRampToValueAtTime(150, this.audioContext.currentTime + 0.3);
-        oscillator.frequency.exponentialRampToValueAtTime(100, this.audioContext.currentTime + 0.6);
+        console.log('🔊 Adding page load zoom sounds (no mouseover dependency)...');
         
-        gainNode.gain.setValueAtTime(0.15, this.audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.08, this.audioContext.currentTime + 0.3);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.6);
-        
-        oscillator.start();
-        oscillator.stop(this.audioContext.currentTime + 0.6);
-    }
-
-    createTruckBeepSound(oscillator, gainNode, filterNode) {
-        // Truck backing up beeping sound
-        oscillator.type = 'square';
-        filterNode.type = 'bandpass';
-        filterNode.frequency.setValueAtTime(800, this.audioContext.currentTime);
-        
-        // Create beeping pattern
-        const beepDuration = 0.15;
-        const pauseDuration = 0.1;
-        const totalBeeps = 3;
-        
-        for (let i = 0; i < totalBeeps; i++) {
-            const startTime = this.audioContext.currentTime + (i * (beepDuration + pauseDuration));
-            const endTime = startTime + beepDuration;
+        // Wait for page elements to be ready
+        setTimeout(() => {
+            // Target the main zoom animation that happens on page load
+            const mainContainer = document.querySelector('.main-container');
             
-            oscillator.frequency.setValueAtTime(800, startTime);
-            gainNode.gain.setValueAtTime(0.12, startTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, endTime);
-            
-            if (i === 0) {
-                oscillator.start(startTime);
-            }
-        }
-        
-        oscillator.stop(this.audioContext.currentTime + (totalBeeps * (beepDuration + pauseDuration)));
-    }
-
-    // Add mechanical zoom sound to main page elements
-    addMainPageZoomSounds() {
-        // Target main page zoom elements
-        const zoomElements = [
-            '.incoming-webhooks-panel',
-            '.chart-container',
-            '.kucoin-order-log',
-            '#integrated-ladder-panel'
-        ];
-        
-        zoomElements.forEach(selector => {
-            const elements = document.querySelectorAll(selector);
-            elements.forEach(element => {
-                if (element && !element.hasAttribute('data-zoom-sound-added')) {
-                    element.setAttribute('data-zoom-sound-added', 'true');
-                    
-                    // Add zoom sound on CSS animation/transition start
-                    element.addEventListener('transitionstart', (e) => {
-                        if (e.propertyName === 'transform' || e.propertyName === 'scale') {
-                            this.playSound('mechanical_zoom');
+            if (mainContainer) {
+                // Watch for the zoom animation that starts at page load
+                const zoomDisplay = document.getElementById('current-zoom');
+                if (zoomDisplay) {
+                    // Create observer to watch zoom changes
+                    let lastZoomValue = '30%';
+                    const zoomObserver = new MutationObserver(() => {
+                        const currentZoom = zoomDisplay.textContent;
+                        if (currentZoom !== lastZoomValue && currentZoom !== '30%') {
+                            console.log(`🔊 Zoom changed from ${lastZoomValue} to ${currentZoom} - playing sober zoom sound`);
+                            this.playPageLoadSound('sober_zoom');
+                            lastZoomValue = currentZoom;
                         }
                     });
                     
-                    // Also add on hover for immediate feedback
-                    element.addEventListener('mouseenter', () => {
-                        this.playSound('truck_beep');
+                    zoomObserver.observe(zoomDisplay, {
+                        childList: true,
+                        characterData: true,
+                        subtree: true
                     });
                 }
-            });
-        });
+                
+                // Also trigger sound based on timing (matches your zoom animation)
+                setTimeout(() => {
+                    console.log('🔊 Triggering initial page load zoom sound');
+                    this.playPageLoadSound('sober_zoom');
+                }, 2000); // Match your 2-second delay
+                
+                // Add sober beep sounds to individual panels (not mouseover dependent)
+                const panels = [
+                    '.webhook-display-section',
+                    '.tradingview-chart-section', 
+                    '.order-log-section'
+                ];
+                
+                panels.forEach((selector, index) => {
+                    const panel = document.querySelector(selector);
+                    if (panel) {
+                        // Trigger beep sounds at staggered intervals after page load
+                        setTimeout(() => {
+                            console.log(`🔊 Triggering panel beep sound for ${selector}`);
+                            this.playPageLoadSound('sober_beep');
+                        }, 3000 + (index * 1000)); // Staggered timing
+                        
+                        // Also add CSS transition listener for when panels animate
+                        panel.addEventListener('transitionstart', (e) => {
+                            if (e.propertyName === 'transform' || e.propertyName === 'scale') {
+                                this.playPageLoadSound('sober_beep');
+                                console.log(`🔊 Panel transition sound triggered for ${selector}`);
+                            }
+                        });
+                    }
+                });
+            }
+            
+        }, 1000);
         
-        console.log('🔊 Mechanical zoom sounds added to main page elements');
+        this.pageLoadSoundsAdded = true;
+        console.log('✅ Page load zoom sounds added (no mouseover dependency)');
     }
 
+    // Corrected theme-style persistence methods
     loadPersistentSettings() {
         try {
-            const saved = localStorage.getItem('ampl-rebalancing-settings');
-            if (saved) {
-                const settings = JSON.parse(saved);
-                this.settings.profitThreshold = settings.profitThreshold || 7;
-                this.settings.selectedExchange = settings.selectedExchange || 'kucoin';
-                this.settings.rebalanceThreshold = settings.rebalanceThreshold || 7;
-                this.soundEnabled = settings.soundEnabled !== undefined ? settings.soundEnabled : true;
-                console.log('✅ Persistent settings loaded');
+            console.log('📖 Loading persistent settings using corrected theme-style method...');
+            
+            // Load each setting individually (exactly like theme persistence)
+            const savedProfitThreshold = localStorage.getItem('amplRebalancingProfitThreshold');
+            const savedExchange = localStorage.getItem('amplRebalancingExchange');
+            const savedRebalanceThreshold = localStorage.getItem('amplRebalancingRebalanceThreshold');
+            
+            if (savedProfitThreshold !== null) {
+                this.settings.profitThreshold = parseFloat(savedProfitThreshold);
+                console.log(`✅ Loaded profit threshold: ${this.settings.profitThreshold}%`);
             }
+            
+            if (savedExchange !== null) {
+                this.settings.selectedExchange = savedExchange;
+                console.log(`✅ Loaded exchange: ${this.settings.selectedExchange}`);
+            }
+            
+            if (savedRebalanceThreshold !== null) {
+                this.settings.rebalanceThreshold = parseFloat(savedRebalanceThreshold);
+                console.log(`✅ Loaded rebalance threshold: ${this.settings.rebalanceThreshold}%`);
+            }
+            
+            console.log('✅ Persistent settings loaded successfully using theme-style persistence');
         } catch (error) {
             console.log('⚠️ Error loading persistent settings:', error.message);
         }
@@ -210,24 +242,25 @@ class AMPLRebalancingSystemRefined {
 
     savePersistentSettings() {
         try {
-            const settings = {
-                profitThreshold: this.settings.profitThreshold,
-                selectedExchange: this.settings.selectedExchange,
-                rebalanceThreshold: this.settings.rebalanceThreshold,
-                soundEnabled: this.soundEnabled
-            };
-            localStorage.setItem('ampl-rebalancing-settings', JSON.stringify(settings));
-            console.log('💾 Persistent settings saved');
+            console.log('💾 Saving persistent settings using corrected theme-style method...');
+            
+            // Save each setting individually (exactly like theme persistence)
+            localStorage.setItem('amplRebalancingProfitThreshold', this.settings.profitThreshold.toString());
+            localStorage.setItem('amplRebalancingExchange', this.settings.selectedExchange);
+            localStorage.setItem('amplRebalancingRebalanceThreshold', this.settings.rebalanceThreshold.toString());
+            
+            console.log(`💾 Saved profit threshold: ${this.settings.profitThreshold}%`);
+            console.log(`💾 Saved exchange: ${this.settings.selectedExchange}`);
+            console.log(`💾 Saved rebalance threshold: ${this.settings.rebalanceThreshold}%`);
+            
+            console.log('✅ Persistent settings saved successfully using theme-style persistence');
         } catch (error) {
             console.log('⚠️ Error saving persistent settings:', error.message);
         }
     }
 
     initialize() {
-        console.log('🎬 Initializing AMPL Rebalancing System (Refined)...');
-        
-        // Add mechanical zoom sounds to main page elements
-        this.addMainPageZoomSounds();
+        console.log('🎬 Initializing AMPL Rebalancing System (Final)...');
         
         // Find the Limit Orders panel
         this.findLimitOrdersPanel();
@@ -239,7 +272,7 @@ class AMPLRebalancingSystemRefined {
             this.startLivePriceMonitoring();
             this.loadRealPositions();
             this.isInitialized = true;
-            console.log('✅ AMPL Rebalancing System (Refined) initialized successfully');
+            console.log('✅ AMPL Rebalancing System (Final) initialized successfully');
         } else {
             console.log('❌ Limit Orders panel not found - watching for ladder panel...');
             this.watchForLadderPanel();
@@ -257,7 +290,7 @@ class AMPLRebalancingSystemRefined {
                     this.startLivePriceMonitoring();
                     this.loadRealPositions();
                     this.isInitialized = true;
-                    console.log('✅ AMPL Rebalancing System (Refined) initialized after ladder panel activation');
+                    console.log('✅ AMPL Rebalancing System (Final) initialized after ladder panel activation');
                     observer.disconnect();
                 }
             }
@@ -305,7 +338,7 @@ class AMPLRebalancingSystemRefined {
     replaceWithRebalancingSystem() {
         if (!this.targetPanel) return;
 
-        console.log('🔄 Replacing Limit Orders content with Refined Rebalancing System...');
+        console.log('🔄 Replacing Limit Orders content with Final Rebalancing System...');
         this.originalContent = this.targetPanel.innerHTML;
 
         const rebalancingHTML = `
@@ -320,9 +353,6 @@ class AMPLRebalancingSystemRefined {
                     <div class="rebalancing-controls">
                         <button class="rebalancing-btn expand-btn" id="expand-panel" title="Expand Panel">
                             <i class="fas fa-expand"></i>
-                        </button>
-                        <button class="rebalancing-btn sound-btn" id="toggle-sound" title="Toggle Sound">
-                            <i class="fas fa-volume-up" id="sound-icon"></i>
                         </button>
                         <button class="rebalancing-btn settings-btn" id="show-settings" title="Settings">
                             <i class="fas fa-cog"></i>
@@ -532,7 +562,7 @@ class AMPLRebalancingSystemRefined {
                     <div class="log-messages" id="log-messages">
                         <div class="log-message">
                             <span class="log-time">Ready</span>
-                            <span class="log-text">Refined rebalancing system initialized</span>
+                            <span class="log-text">Final rebalancing system initialized</span>
                         </div>
                     </div>
                 </div>
@@ -541,41 +571,34 @@ class AMPLRebalancingSystemRefined {
 
         this.targetPanel.innerHTML = rebalancingHTML;
         
-        // Apply persistent settings to UI
+        // Apply persistent settings to UI using corrected theme-style pattern
         this.applyPersistentSettingsToUI();
         
-        console.log('✅ Limit Orders panel content replaced with Refined Rebalancing System');
+        console.log('✅ Limit Orders panel content replaced with Final Rebalancing System');
     }
 
     applyPersistentSettingsToUI() {
-        // Apply saved settings to UI elements
-        const profitThresholdSelect = document.getElementById('profit-threshold');
-        const rebalanceThresholdSelect = document.getElementById('rebalance-threshold');
-        const exchangeSelect = document.getElementById('exchange-select');
-        const soundIcon = document.getElementById('sound-icon');
-        const soundBtn = document.getElementById('toggle-sound');
-        
-        if (profitThresholdSelect) {
-            profitThresholdSelect.value = this.settings.profitThreshold;
-        }
-        
-        if (rebalanceThresholdSelect) {
-            rebalanceThresholdSelect.value = this.settings.rebalanceThreshold;
-        }
-        
-        if (exchangeSelect) {
-            exchangeSelect.value = this.settings.selectedExchange;
-        }
-        
-        if (soundIcon && soundBtn) {
-            if (this.soundEnabled) {
-                soundIcon.className = 'fas fa-volume-up';
-                soundBtn.classList.remove('sound-disabled');
-            } else {
-                soundIcon.className = 'fas fa-volume-mute';
-                soundBtn.classList.add('sound-disabled');
+        // Apply saved settings to UI elements using corrected theme-style pattern
+        setTimeout(() => {
+            const profitThresholdSelect = document.getElementById('profit-threshold');
+            const rebalanceThresholdSelect = document.getElementById('rebalance-threshold');
+            const exchangeSelect = document.getElementById('exchange-select');
+            
+            if (profitThresholdSelect) {
+                profitThresholdSelect.value = this.settings.profitThreshold.toString();
+                console.log(`✅ Applied profit threshold to UI: ${this.settings.profitThreshold}%`);
             }
-        }
+            
+            if (rebalanceThresholdSelect) {
+                rebalanceThresholdSelect.value = this.settings.rebalanceThreshold.toString();
+                console.log(`✅ Applied rebalance threshold to UI: ${this.settings.rebalanceThreshold}%`);
+            }
+            
+            if (exchangeSelect) {
+                exchangeSelect.value = this.settings.selectedExchange;
+                console.log(`✅ Applied exchange to UI: ${this.settings.selectedExchange}`);
+            }
+        }, 100); // Small delay to ensure elements are ready
     }
 
     createExpandedModal() {
@@ -779,7 +802,6 @@ class AMPLRebalancingSystemRefined {
             expandBtn.title = 'Collapse Panel';
         }
         
-        this.playSound('click');
         this.logAction('Panel expanded to full view');
     }
 
@@ -797,7 +819,6 @@ class AMPLRebalancingSystemRefined {
             expandBtn.title = 'Expand Panel';
         }
         
-        this.playSound('click');
         this.logAction('Panel collapsed to normal view');
     }
 
@@ -863,9 +884,9 @@ class AMPLRebalancingSystemRefined {
 
     applyStyles() {
         const style = document.createElement('style');
-        style.id = 'ampl-rebalancing-refined-styles';
+        style.id = 'ampl-rebalancing-final-styles';
         style.textContent = `
-            /* Refined Rebalancing System Styles with Click-to-Expand */
+            /* Final Rebalancing System Styles - No Sound Effects */
             .rebalancing-container {
                 width: 100%;
                 height: 100%;
@@ -885,7 +906,6 @@ class AMPLRebalancingSystemRefined {
                 cursor: pointer;
             }
 
-            /* Removed hover zoom effect - now click-to-expand only */
             .rebalancing-container:hover {
                 border: 1px solid rgba(76, 175, 80, 0.2);
             }
@@ -969,12 +989,6 @@ class AMPLRebalancingSystemRefined {
                 border-color: rgba(255, 255, 255, 0.4);
                 transform: translateY(-2px);
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-            }
-
-            .sound-btn.sound-disabled {
-                background: rgba(244, 67, 54, 0.2);
-                border-color: rgba(244, 67, 54, 0.4);
-                color: #F44336;
             }
 
             .expand-btn {
@@ -1131,7 +1145,6 @@ class AMPLRebalancingSystemRefined {
                 cursor: help;
             }
 
-            /* Removed individual hover sounds and effects */
             .coin-card:hover {
                 border-color: rgba(255, 255, 255, 0.2);
                 background: rgba(255, 255, 255, 0.06);
@@ -1590,7 +1603,7 @@ class AMPLRebalancingSystemRefined {
     }
 
     bindEventListeners() {
-        console.log('🔗 Binding refined rebalancing system event listeners...');
+        console.log('🔗 Binding final rebalancing system event listeners (no sound effects)...');
         
         // Main container click for expand
         const container = document.getElementById('rebalancing-container');
@@ -1617,9 +1630,8 @@ class AMPLRebalancingSystemRefined {
             // Prevent event bubbling for button clicks
             event.stopPropagation();
             
-            this.playSound('click');
             const buttonId = target.id;
-            console.log(`🔘 Refined rebalancing button clicked: ${buttonId}`);
+            console.log(`🔘 Final rebalancing button clicked: ${buttonId}`);
             
             switch (buttonId) {
                 case 'expand-panel':
@@ -1628,9 +1640,6 @@ class AMPLRebalancingSystemRefined {
                     } else {
                         this.showExpandedModal();
                     }
-                    break;
-                case 'toggle-sound':
-                    this.toggleSound();
                     break;
                 case 'show-settings':
                     this.toggleSettings();
@@ -1648,7 +1657,7 @@ class AMPLRebalancingSystemRefined {
             }
         });
 
-        // Settings change listeners with persistence
+        // Settings change listeners with corrected theme-style persistence
         this.targetPanel.addEventListener('change', (event) => {
             const target = event.target;
             
@@ -1657,40 +1666,24 @@ class AMPLRebalancingSystemRefined {
                     this.settings.profitThreshold = parseFloat(target.value);
                     this.savePersistentSettings();
                     this.logAction(`Profit threshold set to ${target.value}%`);
+                    console.log(`✅ Profit threshold changed to: ${target.value}%`);
                     break;
                 case 'rebalance-threshold':
                     this.settings.rebalanceThreshold = parseFloat(target.value);
                     this.savePersistentSettings();
                     this.logAction(`Rebalance threshold set to ${target.value}%`);
+                    console.log(`✅ Rebalance threshold changed to: ${target.value}%`);
                     break;
                 case 'exchange-select':
                     this.settings.selectedExchange = target.value;
                     this.savePersistentSettings();
                     this.logAction(`Exchange set to ${target.value}`);
+                    console.log(`✅ Exchange changed to: ${target.value}`);
                     break;
             }
         });
         
-        console.log('✅ Refined rebalancing event listeners bound with click-to-expand');
-    }
-
-    toggleSound() {
-        this.soundEnabled = !this.soundEnabled;
-        const soundIcon = document.getElementById('sound-icon');
-        const soundBtn = document.getElementById('toggle-sound');
-        
-        if (this.soundEnabled) {
-            soundIcon.className = 'fas fa-volume-up';
-            soundBtn.classList.remove('sound-disabled');
-            this.logAction('Sound effects enabled');
-            this.playSound('click');
-        } else {
-            soundIcon.className = 'fas fa-volume-mute';
-            soundBtn.classList.add('sound-disabled');
-            this.logAction('Sound effects disabled');
-        }
-        
-        this.savePersistentSettings();
+        console.log('✅ Final rebalancing event listeners bound (no sound effects, corrected persistence)');
     }
 
     toggleSettings() {
@@ -1891,7 +1884,6 @@ class AMPLRebalancingSystemRefined {
         });
         
         if (opportunities.length > 0) {
-            this.playSound('profit');
             opportunities.forEach(opp => {
                 this.logAction(`${opp.action} opportunity: ${opp.coin} (${opp.profitPercent.toFixed(2)}%)`);
             });
@@ -2107,28 +2099,28 @@ class AMPLRebalancingSystemRefined {
     }
 }
 
-// Initialize the refined rebalancing system
-const amplRebalancingSystemRefined = new AMPLRebalancingSystemRefined();
+// Initialize the final rebalancing system
+const amplRebalancingSystemFinal = new AMPLRebalancingSystemFinal();
 
 // Global functions for external use
 function updateRebalancingCoin(coinSymbol, quantity, purchasePrice) {
-    if (amplRebalancingSystemRefined) {
-        amplRebalancingSystemRefined.updateCoinData(coinSymbol, quantity, purchasePrice);
+    if (amplRebalancingSystemFinal) {
+        amplRebalancingSystemFinal.updateCoinData(coinSymbol, quantity, purchasePrice);
     }
 }
 
 function getRebalancingStatus() {
-    if (amplRebalancingSystemRefined) {
+    if (amplRebalancingSystemFinal) {
         return {
-            shouldBuy: amplRebalancingSystemRefined.shouldBuy(),
-            coinsReadyToSell: amplRebalancingSystemRefined.getCoinsReadyToSell(),
-            rebalanceOpportunities: amplRebalancingSystemRefined.getRebalanceOpportunities(),
-            currentAMPLPrice: amplRebalancingSystemRefined.getCurrentAMPLPrice(),
-            totalProfit: amplRebalancingSystemRefined.settings.totalProfit
+            shouldBuy: amplRebalancingSystemFinal.shouldBuy(),
+            coinsReadyToSell: amplRebalancingSystemFinal.getCoinsReadyToSell(),
+            rebalanceOpportunities: amplRebalancingSystemFinal.getRebalanceOpportunities(),
+            currentAMPLPrice: amplRebalancingSystemFinal.getCurrentAMPLPrice(),
+            totalProfit: amplRebalancingSystemFinal.settings.totalProfit
         };
     }
     return null;
 }
 
-console.log('🎬 AMPL Rebalancing System (Refined with Click-to-Expand & Mechanical Sounds) loaded successfully');
+console.log('🎬 AMPL Rebalancing System (Final - No Sounds, Fixed Page Load Sounds, Corrected Persistence) loaded successfully');
 
