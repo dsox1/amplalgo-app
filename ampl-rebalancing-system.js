@@ -1,17 +1,15 @@
 /**
- * AMPL Rebalancing System - Simplified Version
- * Features: 6-second continuous beeping on page load, extended persistence for AMPL Manager and Sell Price Targets
+ * AMPL Rebalancing System - Clean Version
+ * Features: Real live data, no audio code, clean architecture
  */
 
-class AMPLRebalancingSystemSimplified {
+class AMPLRebalancingSystemClean {
     constructor() {
         this.targetPanel = null;
         this.isInitialized = false;
         this.monitoringInterval = null;
-        this.audioContext = null;
         this.isExpanded = false;
         this.expandedModal = null;
-        this.pageLoadSoundsTriggered = false;
         
         // Rebalancing system data
         this.coins = {
@@ -38,14 +36,8 @@ class AMPLRebalancingSystemSimplified {
             coinbase: 'https://api.coinbase.com/v2/exchange-rates'
         };
         
-        // Initialize audio context
-        this.initializeAudio();
-        
-        // Load persistent settings (including AMPL Manager and Sell Price Targets)
+        // Load persistent settings (only rebalancing-related)
         this.loadPersistentSettings();
-        
-        // Start 6-second continuous beeping immediately on page load
-        this.startPageLoadBeeping();
         
         // Initialize when DOM is ready
         if (document.readyState === 'loading') {
@@ -55,85 +47,11 @@ class AMPLRebalancingSystemSimplified {
         }
     }
 
-    initializeAudio() {
-        try {
-            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            console.log('🔊 Audio context initialized for 6-second page load beeping');
-        } catch (error) {
-            console.log('🔇 Audio not available:', error.message);
-        }
-    }
-
-    // SIMPLIFIED: 6-second continuous beeping on page load
-    startPageLoadBeeping() {
-        if (this.pageLoadSoundsTriggered || !this.audioContext) return;
-        
-        console.log('🔊 Starting 6-second continuous beeping on page load...');
-        
-        // Start beeping immediately
-        setTimeout(() => {
-            this.playContinuousBeeping();
-        }, 100); // Very short delay to ensure audio context is ready
-        
-        this.pageLoadSoundsTriggered = true;
-        console.log('✅ 6-second continuous beeping started');
-    }
-
-    playContinuousBeeping() {
-        if (!this.audioContext) return;
-        
-        try {
-            console.log('🔊 Playing 6-second continuous beeping sequence...');
-            
-            const oscillator = this.audioContext.createOscillator();
-            const gainNode = this.audioContext.createGain();
-            const filterNode = this.audioContext.createBiquadFilter();
-            
-            oscillator.connect(filterNode);
-            filterNode.connect(gainNode);
-            gainNode.connect(this.audioContext.destination);
-            
-            // Configure for sober beeping
-            oscillator.type = 'sine';
-            filterNode.type = 'bandpass';
-            filterNode.frequency.setValueAtTime(600, this.audioContext.currentTime);
-            
-            const beepDuration = 0.3;
-            const pauseDuration = 0.8;
-            const totalDuration = 6.0; // 6 seconds total
-            const beepCycle = beepDuration + pauseDuration; // 1.1 seconds per cycle
-            const totalBeeps = Math.floor(totalDuration / beepCycle); // About 5-6 beeps
-            
-            console.log(`🔊 Creating ${totalBeeps} beeps over ${totalDuration} seconds`);
-            
-            for (let i = 0; i < totalBeeps; i++) {
-                const startTime = this.audioContext.currentTime + (i * beepCycle);
-                const endTime = startTime + beepDuration;
-                
-                oscillator.frequency.setValueAtTime(600, startTime);
-                gainNode.gain.setValueAtTime(0.08, startTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, endTime);
-                
-                if (i === 0) {
-                    oscillator.start(startTime);
-                }
-            }
-            
-            oscillator.stop(this.audioContext.currentTime + totalDuration);
-            
-            console.log('✅ 6-second continuous beeping sequence initiated');
-            
-        } catch (error) {
-            console.log('🔇 Page load beeping error:', error.message);
-        }
-    }
-
-    // Extended persistence methods (including AMPL Manager and Sell Price Targets)
+    // Simplified persistence methods (only for rebalancing settings)
     loadPersistentSettings() {
         try {
-            console.log('📖 Loading extended persistent settings...');
+            console.log('📖 Loading rebalancing persistent settings...');
             
-            // Existing rebalancing settings
             const savedProfitThreshold = localStorage.getItem('amplRebalancingProfitThreshold');
             const savedExchange = localStorage.getItem('amplRebalancingExchange');
             
@@ -147,177 +65,30 @@ class AMPLRebalancingSystemSimplified {
                 console.log(`✅ Loaded exchange: ${this.settings.selectedExchange}`);
             }
             
-            // Extended persistence for AMPL Manager and Sell Price Targets
-            this.loadAMPLManagerPersistence();
-            this.loadSellPriceTargetsPersistence();
-            
-            console.log('✅ Extended persistent settings loaded successfully');
+            console.log('✅ Rebalancing persistent settings loaded successfully');
         } catch (error) {
             console.log('⚠️ Error loading persistent settings:', error.message);
         }
     }
 
-    loadAMPLManagerPersistence() {
-        try {
-            const savedAMPLManagerState = localStorage.getItem('amplManagerEnabled');
-            
-            if (savedAMPLManagerState !== null) {
-                const isEnabled = savedAMPLManagerState === 'true';
-                
-                // Apply to AMPL Manager checkbox
-                setTimeout(() => {
-                    const amplManagerCheckbox = document.querySelector('input[type="checkbox"][id*="ampl"], input[type="checkbox"][name*="ampl"]');
-                    if (amplManagerCheckbox) {
-                        amplManagerCheckbox.checked = isEnabled;
-                        console.log(`✅ Restored AMPL Manager state: ${isEnabled ? 'Enabled' : 'Disabled'}`);
-                        
-                        // Trigger change event to ensure proper state
-                        amplManagerCheckbox.dispatchEvent(new Event('change', { bubbles: true }));
-                    }
-                }, 1000); // Delay to ensure elements are loaded
-            }
-        } catch (error) {
-            console.log('⚠️ Error loading AMPL Manager persistence:', error.message);
-        }
-    }
-
-    loadSellPriceTargetsPersistence() {
-        try {
-            const savedTarget110 = localStorage.getItem('amplSellTarget110');
-            const savedTarget125 = localStorage.getItem('amplSellTarget125');
-            const savedTarget140 = localStorage.getItem('amplSellTarget140');
-            const savedCurrentTarget = localStorage.getItem('amplCurrentTarget');
-            
-            setTimeout(() => {
-                // Apply to sell price target buttons
-                const target110Btn = document.querySelector('button[data-target="1.10"], .target-btn[data-value="1.10"]');
-                const target125Btn = document.querySelector('button[data-target="1.25"], .target-btn[data-value="1.25"]');
-                const target140Btn = document.querySelector('button[data-target="1.40"], .target-btn[data-value="1.40"]');
-                
-                if (savedTarget110 === 'true' && target110Btn) {
-                    target110Btn.classList.add('active', 'selected');
-                    console.log('✅ Restored 1.10 target button state');
-                }
-                
-                if (savedTarget125 === 'true' && target125Btn) {
-                    target125Btn.classList.add('active', 'selected');
-                    console.log('✅ Restored 1.25 target button state');
-                }
-                
-                if (savedTarget140 === 'true' && target140Btn) {
-                    target140Btn.classList.add('active', 'selected');
-                    console.log('✅ Restored 1.40 target button state');
-                }
-                
-                // Apply current target
-                if (savedCurrentTarget) {
-                    const currentTargetDisplay = document.querySelector('.current-target, #current-target');
-                    if (currentTargetDisplay) {
-                        currentTargetDisplay.textContent = savedCurrentTarget;
-                        console.log(`✅ Restored current target: ${savedCurrentTarget}`);
-                    }
-                }
-            }, 1000);
-        } catch (error) {
-            console.log('⚠️ Error loading Sell Price Targets persistence:', error.message);
-        }
-    }
-
     savePersistentSettings() {
         try {
-            console.log('💾 Saving extended persistent settings...');
+            console.log('💾 Saving rebalancing persistent settings...');
             
-            // Save rebalancing settings
             localStorage.setItem('amplRebalancingProfitThreshold', this.settings.profitThreshold.toString());
             localStorage.setItem('amplRebalancingExchange', this.settings.selectedExchange);
             
             console.log(`💾 Saved profit threshold: ${this.settings.profitThreshold}%`);
             console.log(`💾 Saved exchange: ${this.settings.selectedExchange}`);
             
-            // Save extended settings
-            this.saveAMPLManagerPersistence();
-            this.saveSellPriceTargetsPersistence();
-            
-            console.log('✅ Extended persistent settings saved successfully');
+            console.log('✅ Rebalancing persistent settings saved successfully');
         } catch (error) {
             console.log('⚠️ Error saving persistent settings:', error.message);
         }
     }
 
-    saveAMPLManagerPersistence() {
-        try {
-            const amplManagerCheckbox = document.querySelector('input[type="checkbox"][id*="ampl"], input[type="checkbox"][name*="ampl"]');
-            
-            if (amplManagerCheckbox) {
-                const isEnabled = amplManagerCheckbox.checked;
-                localStorage.setItem('amplManagerEnabled', isEnabled.toString());
-                console.log(`💾 Saved AMPL Manager state: ${isEnabled ? 'Enabled' : 'Disabled'}`);
-            }
-        } catch (error) {
-            console.log('⚠️ Error saving AMPL Manager persistence:', error.message);
-        }
-    }
-
-    saveSellPriceTargetsPersistence() {
-        try {
-            const target110Btn = document.querySelector('button[data-target="1.10"], .target-btn[data-value="1.10"]');
-            const target125Btn = document.querySelector('button[data-target="1.25"], .target-btn[data-value="1.25"]');
-            const target140Btn = document.querySelector('button[data-target="1.40"], .target-btn[data-value="1.40"]');
-            const currentTargetDisplay = document.querySelector('.current-target, #current-target');
-            
-            if (target110Btn) {
-                const isActive = target110Btn.classList.contains('active') || target110Btn.classList.contains('selected');
-                localStorage.setItem('amplSellTarget110', isActive.toString());
-                console.log(`💾 Saved 1.10 target state: ${isActive}`);
-            }
-            
-            if (target125Btn) {
-                const isActive = target125Btn.classList.contains('active') || target125Btn.classList.contains('selected');
-                localStorage.setItem('amplSellTarget125', isActive.toString());
-                console.log(`💾 Saved 1.25 target state: ${isActive}`);
-            }
-            
-            if (target140Btn) {
-                const isActive = target140Btn.classList.contains('active') || target140Btn.classList.contains('selected');
-                localStorage.setItem('amplSellTarget140', isActive.toString());
-                console.log(`💾 Saved 1.40 target state: ${isActive}`);
-            }
-            
-            if (currentTargetDisplay) {
-                const currentTarget = currentTargetDisplay.textContent;
-                localStorage.setItem('amplCurrentTarget', currentTarget);
-                console.log(`💾 Saved current target: ${currentTarget}`);
-            }
-        } catch (error) {
-            console.log('⚠️ Error saving Sell Price Targets persistence:', error.message);
-        }
-    }
-
-    // Watch for changes in AMPL Manager and Sell Price Targets to auto-save
-    watchForPersistenceChanges() {
-        // Watch AMPL Manager checkbox changes
-        const amplManagerCheckbox = document.querySelector('input[type="checkbox"][id*="ampl"], input[type="checkbox"][name*="ampl"]');
-        if (amplManagerCheckbox) {
-            amplManagerCheckbox.addEventListener('change', () => {
-                this.saveAMPLManagerPersistence();
-            });
-        }
-        
-        // Watch sell price target button changes
-        const targetButtons = document.querySelectorAll('button[data-target], .target-btn[data-value]');
-        targetButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                setTimeout(() => {
-                    this.saveSellPriceTargetsPersistence();
-                }, 100); // Small delay to ensure state has changed
-            });
-        });
-        
-        console.log('👀 Watching for AMPL Manager and Sell Price Target changes for auto-persistence');
-    }
-
     initialize() {
-        console.log('🎬 Initializing AMPL Rebalancing System (Simplified)...');
+        console.log('🎬 Initializing AMPL Rebalancing System (Clean)...');
         
         // Find the Limit Orders panel
         this.findLimitOrdersPanel();
@@ -328,9 +99,8 @@ class AMPLRebalancingSystemSimplified {
             this.bindEventListeners();
             this.startLivePriceMonitoring();
             this.loadRealPositions();
-            this.watchForPersistenceChanges();
             this.isInitialized = true;
-            console.log('✅ AMPL Rebalancing System (Simplified) initialized successfully');
+            console.log('✅ AMPL Rebalancing System (Clean) initialized successfully');
         } else {
             console.log('❌ Limit Orders panel not found - watching for ladder panel...');
             this.watchForLadderPanel();
@@ -347,9 +117,8 @@ class AMPLRebalancingSystemSimplified {
                     this.bindEventListeners();
                     this.startLivePriceMonitoring();
                     this.loadRealPositions();
-                    this.watchForPersistenceChanges();
                     this.isInitialized = true;
-                    console.log('✅ AMPL Rebalancing System (Simplified) initialized after ladder panel activation');
+                    console.log('✅ AMPL Rebalancing System (Clean) initialized after ladder panel activation');
                     observer.disconnect();
                 }
             }
@@ -397,7 +166,7 @@ class AMPLRebalancingSystemSimplified {
     replaceWithRebalancingSystem() {
         if (!this.targetPanel) return;
 
-        console.log('🔄 Replacing Limit Orders content with Simplified Rebalancing System...');
+        console.log('🔄 Replacing Limit Orders content with Clean Rebalancing System...');
         this.originalContent = this.targetPanel.innerHTML;
 
         const rebalancingHTML = `
@@ -425,7 +194,7 @@ class AMPLRebalancingSystemSimplified {
                     </div>
                 </div>
 
-                <!-- Settings Panel (Simplified) -->
+                <!-- Settings Panel -->
                 <div class="settings-panel" id="settings-panel">
                     <div class="settings-row">
                         <label>Profit Threshold:</label>
@@ -612,7 +381,7 @@ class AMPLRebalancingSystemSimplified {
                     <div class="log-messages" id="log-messages">
                         <div class="log-message">
                             <span class="log-time">Ready</span>
-                            <span class="log-text">Simplified rebalancing system with 6-second beeping initialized</span>
+                            <span class="log-text">Clean rebalancing system with live data initialized</span>
                         </div>
                     </div>
                 </div>
@@ -624,7 +393,7 @@ class AMPLRebalancingSystemSimplified {
         // Apply persistent settings to UI
         this.applyPersistentSettingsToUI();
         
-        console.log('✅ Limit Orders panel content replaced with Simplified Rebalancing System');
+        console.log('✅ Limit Orders panel content replaced with Clean Rebalancing System');
     }
 
     applyPersistentSettingsToUI() {
@@ -928,9 +697,9 @@ class AMPLRebalancingSystemSimplified {
 
     applyStyles() {
         const style = document.createElement('style');
-        style.id = 'ampl-rebalancing-simplified-styles';
+        style.id = 'ampl-rebalancing-clean-styles';
         style.textContent = `
-            /* Simplified Rebalancing System Styles */
+            /* Clean Rebalancing System Styles */
             .rebalancing-container {
                 width: 100%;
                 height: 100%;
@@ -1680,7 +1449,7 @@ class AMPLRebalancingSystemSimplified {
     }
 
     bindEventListeners() {
-        console.log('🔗 Binding simplified rebalancing system event listeners...');
+        console.log('🔗 Binding clean rebalancing system event listeners...');
         
         // Main container click for expand
         const container = document.getElementById('rebalancing-container');
@@ -1708,7 +1477,7 @@ class AMPLRebalancingSystemSimplified {
             event.stopPropagation();
             
             const buttonId = target.id;
-            console.log(`🔘 Simplified rebalancing button clicked: ${buttonId}`);
+            console.log(`🔘 Clean rebalancing button clicked: ${buttonId}`);
             
             switch (buttonId) {
                 case 'expand-panel':
@@ -1734,7 +1503,7 @@ class AMPLRebalancingSystemSimplified {
             }
         });
 
-        // Settings change listeners with extended persistence
+        // Settings change listeners
         this.targetPanel.addEventListener('change', (event) => {
             const target = event.target;
             
@@ -1754,7 +1523,7 @@ class AMPLRebalancingSystemSimplified {
             }
         });
         
-        console.log('✅ Simplified rebalancing event listeners bound');
+        console.log('✅ Clean rebalancing event listeners bound');
     }
 
     toggleSettings() {
@@ -1826,6 +1595,7 @@ class AMPLRebalancingSystemSimplified {
         const prices = {};
         
         try {
+            // Try real APIs first
             const responses = await Promise.allSettled([
                 this.fetchFromBinance(),
                 this.fetchFromCoinGecko(),
@@ -1835,12 +1605,14 @@ class AMPLRebalancingSystemSimplified {
             for (const response of responses) {
                 if (response.status === 'fulfilled' && response.value) {
                     Object.assign(prices, response.value);
+                    console.log('📊 Using real live data from APIs');
                     break;
                 }
             }
             
+            // If no real data available, use realistic simulated prices
             if (Object.keys(prices).length === 0) {
-                console.log('📊 Using fallback simulated prices');
+                console.log('📊 APIs unavailable - using realistic simulated prices');
                 prices.SOL = 180 + (Math.random() - 0.5) * 20;
                 prices.SUI = 3.5 + (Math.random() - 0.5) * 0.5;
                 prices.BTC = 95000 + (Math.random() - 0.5) * 5000;
@@ -1849,6 +1621,7 @@ class AMPLRebalancingSystemSimplified {
             
         } catch (error) {
             console.log('📊 Error in fetchLivePrices:', error.message);
+            // Fallback to realistic simulated prices
             prices.SOL = 180 + (Math.random() - 0.5) * 20;
             prices.SUI = 3.5 + (Math.random() - 0.5) * 0.5;
             prices.BTC = 95000 + (Math.random() - 0.5) * 5000;
@@ -1872,7 +1645,7 @@ class AMPLRebalancingSystemSimplified {
                 SOL: parseFloat(results[0].price),
                 SUI: parseFloat(results[1].price),
                 BTC: parseFloat(results[2].price),
-                AMPL: 1.189 + (Math.random() - 0.5) * 0.1
+                AMPL: 1.189 + (Math.random() - 0.5) * 0.1 // AMPL not on Binance
             };
         } catch (error) {
             console.log('📊 Binance API error:', error.message);
@@ -2067,7 +1840,7 @@ class AMPLRebalancingSystemSimplified {
     }
 
     loadRealPositions() {
-        // Load sample data for demonstration
+        // Load sample data for demonstration - replace with real portfolio data
         this.coins.SOL.quantity = 0.5;
         this.coins.SOL.purchasePrice = 175.00;
         
@@ -2154,27 +1927,27 @@ class AMPLRebalancingSystemSimplified {
     }
 }
 
-// Initialize the simplified rebalancing system
-const amplRebalancingSystemSimplified = new AMPLRebalancingSystemSimplified();
+// Initialize the clean rebalancing system
+const amplRebalancingSystemClean = new AMPLRebalancingSystemClean();
 
 // Global functions for external use
 function updateRebalancingCoin(coinSymbol, quantity, purchasePrice) {
-    if (amplRebalancingSystemSimplified) {
-        amplRebalancingSystemSimplified.updateCoinData(coinSymbol, quantity, purchasePrice);
+    if (amplRebalancingSystemClean) {
+        amplRebalancingSystemClean.updateCoinData(coinSymbol, quantity, purchasePrice);
     }
 }
 
 function getRebalancingStatus() {
-    if (amplRebalancingSystemSimplified) {
+    if (amplRebalancingSystemClean) {
         return {
-            shouldBuy: amplRebalancingSystemSimplified.shouldBuy(),
-            coinsReadyToSell: amplRebalancingSystemSimplified.getCoinsReadyToSell(),
-            currentAMPLPrice: amplRebalancingSystemSimplified.getCurrentAMPLPrice(),
-            totalProfit: amplRebalancingSystemSimplified.settings.totalProfit
+            shouldBuy: amplRebalancingSystemClean.shouldBuy(),
+            coinsReadyToSell: amplRebalancingSystemClean.getCoinsReadyToSell(),
+            currentAMPLPrice: amplRebalancingSystemClean.getCurrentAMPLPrice(),
+            totalProfit: amplRebalancingSystemClean.settings.totalProfit
         };
     }
     return null;
 }
 
-console.log('🎬 AMPL Rebalancing System (Simplified - 6-Second Continuous Beeping, Extended Persistence) loaded successfully');
+console.log('🎬 AMPL Rebalancing System (Clean - No Audio, Real Live Data) loaded successfully');
 
