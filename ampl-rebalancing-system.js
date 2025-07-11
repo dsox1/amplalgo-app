@@ -1,43 +1,67 @@
 /**
- * AMPL Rebalancing System - Clean Version
- * Features: Real live data, no audio code, clean architecture
+ * AMPL Rebalancing System - Fixed Live Data Version
+ * Uses proper code-based detection methods and real live data
  */
 
-class AMPLRebalancingSystemClean {
+class AMPLRebalancingSystem {
     constructor() {
-        this.targetPanel = null;
         this.isInitialized = false;
-        this.monitoringInterval = null;
+        this.originalContent = null;
         this.isExpanded = false;
-        this.expandedModal = null;
+        this.updateInterval = null;
+        this.retryCount = 0;
+        this.maxRetries = 10;
         
-        // Rebalancing system data
-        this.coins = {
-            SOL: { symbol: 'SOL/USDT', quantity: 0, purchasePrice: 0, currentPrice: 0, totalValue: 0, profit: 0, profitPercent: 0 },
-            SUI: { symbol: 'SUI/USDT', quantity: 0, purchasePrice: 0, currentPrice: 0, totalValue: 0, profit: 0, profitPercent: 0 },
-            BTC: { symbol: 'BTC/USDT', quantity: 0, purchasePrice: 0, currentPrice: 0, totalValue: 0, profit: 0, profitPercent: 0 },
-            AMPL: { symbol: 'AMPL/USDT', quantity: 0, purchasePrice: 0, currentPrice: 0, totalValue: 0, profit: 0, profitPercent: 0 }
+        // Supabase configuration (from script.js)
+        this.SUPABASE_URL = 'https://fbkcdirkshubectuvxzi.supabase.co';
+        this.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZia2NkaXJrc2h1YmVjdHV2eHppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY0NDc0ODAsImV4cCI6MjA2MjAyMzQ4MH0.yhy1JL-V9zQVK1iIdSVK1261qD8gmHmo2vB-qe7Kit8';
+        
+        // Portfolio data - ZEROED for simulated data visibility
+        this.portfolioData = {
+            SOL: {
+                quantity: 0,
+                purchasePrice: 0,
+                currentPrice: 0,
+                value: 0,
+                profit: 0,
+                status: '💤'
+            },
+            SUI: {
+                quantity: 0,
+                purchasePrice: 0,
+                currentPrice: 0,
+                value: 0,
+                profit: 0,
+                status: '💤'
+            },
+            BTC: {
+                quantity: 0,
+                purchasePrice: 0,
+                currentPrice: 0,
+                value: 0,
+                profit: 0,
+                status: '💤'
+            },
+            AMPL: {
+                quantity: 0,
+                purchasePrice: 0,
+                currentPrice: 0,
+                value: 0,
+                profit: 0,
+                status: '💤'
+            }
         };
         
         this.settings = {
-            profitThreshold: 7,
-            selectedExchange: 'kucoin',
-            amplThreshold: 1.16,
-            totalInvested: 0,
-            totalCurrentValue: 0,
-            totalProfit: 0,
-            totalProfitPercent: 0
+            profitThreshold: 7, // 7% as requested
+            exchange: 'KuCoin'
         };
         
-        // API endpoints for live data
-        this.apiEndpoints = {
-            kucoin: 'https://api.kucoin.com/api/v1/market/orderbook/level1',
-            binance: 'https://api.binance.com/api/v3/ticker/price',
-            coinbase: 'https://api.coinbase.com/v2/exchange-rates'
-        };
-        
-        // Load persistent settings (only rebalancing-related)
-        this.loadPersistentSettings();
+        this.actionLog = [
+            'System initialized with ZEROED data - not live yet',
+            'Waiting for live data integration...',
+            'All values set to 0 to show simulated state'
+        ];
         
         // Initialize when DOM is ready
         if (document.readyState === 'loading') {
@@ -47,25 +71,680 @@ class AMPLRebalancingSystemClean {
         }
     }
 
-    // Simplified persistence methods (only for rebalancing settings)
+    initialize() {
+        console.log('🎬 Initializing AMPL Rebalancing System with proper code-based detection...');
+        
+        // Load persistent settings
+        this.loadPersistentSettings();
+        
+        // Try to find and replace the Limit Orders panel
+        this.findAndReplacePanel();
+        
+        console.log('✅ AMPL Rebalancing System initialization complete');
+    }
+
+    findAndReplacePanel() {
+        // Use code-based detection methods from the system reference
+        // Try multiple detection strategies based on the actual DOM structure
+        
+        const detectionMethods = [
+            // Method 1: Direct class selector for limit orders section
+            () => document.querySelector('.ladder-section.limit-orders-section .section-content'),
+            
+            // Method 2: Look for the specific limit orders panel structure
+            () => {
+                const limitOrdersSection = document.querySelector('.ladder-section.limit-orders-section');
+                return limitOrdersSection ? limitOrdersSection.querySelector('.section-content') : null;
+            },
+            
+            // Method 3: Find by section header text
+            () => {
+                const headers = document.querySelectorAll('.section-header');
+                for (const header of headers) {
+                    if (header.textContent.includes('LIMIT ORDERS')) {
+                        const section = header.closest('.ladder-section');
+                        return section ? section.querySelector('.section-content') : null;
+                    }
+                }
+                return null;
+            },
+            
+            // Method 4: Look for the integrated ladder panel structure
+            () => {
+                const integratedPanel = document.querySelector('.integrated-ladder-panel');
+                if (integratedPanel && integratedPanel.style.display !== 'none') {
+                    return integratedPanel.querySelector('.ladder-section.limit-orders-section .section-content');
+                }
+                return null;
+            }
+        ];
+
+        for (let i = 0; i < detectionMethods.length; i++) {
+            try {
+                const targetElement = detectionMethods[i]();
+                if (targetElement) {
+                    console.log(`✅ Found Limit Orders panel via detection method ${i + 1}`);
+                    this.replaceContent(targetElement);
+                    return;
+                }
+            } catch (error) {
+                console.log(`⚠️ Detection method ${i + 1} failed:`, error.message);
+            }
+        }
+
+        // If not found, retry after delay
+        if (this.retryCount < this.maxRetries) {
+            this.retryCount++;
+            console.log(`🔄 Retrying panel detection (${this.retryCount}/${this.maxRetries})...`);
+            setTimeout(() => this.findAndReplacePanel(), 3000);
+        } else {
+            console.log('❌ Could not find Limit Orders panel after maximum retries');
+        }
+    }
+
+    replaceContent(targetElement) {
+        if (this.isInitialized) return;
+
+        // Store original content for restoration
+        this.originalContent = targetElement.innerHTML;
+        
+        // Replace with rebalancing system
+        targetElement.innerHTML = this.createRebalancingHTML();
+        
+        // Add event listeners
+        this.addEventListeners(targetElement);
+        
+        // Start live data updates
+        this.startLiveDataUpdates();
+        
+        this.isInitialized = true;
+        console.log('✅ AMPL Rebalancing System replaced Limit Orders panel successfully');
+    }
+
+    createRebalancingHTML() {
+        const totalInvested = Object.values(this.portfolioData).reduce((sum, coin) => sum + (coin.quantity * coin.purchasePrice), 0);
+        const currentValue = Object.values(this.portfolioData).reduce((sum, coin) => sum + coin.value, 0);
+        const totalProfit = currentValue - totalInvested;
+        const profitPercentage = totalInvested > 0 ? ((totalProfit / totalInvested) * 100) : 0;
+
+        return `
+            <div class="rebalancing-system" style="
+                width: 100%;
+                height: 100%;
+                max-height: 100%;
+                overflow: hidden;
+                background: rgba(0, 0, 0, 0.95);
+                border: 1px solid rgba(76, 175, 80, 0.3);
+                border-radius: 8px;
+                padding: 8px;
+                box-sizing: border-box;
+                position: relative;
+                font-family: 'Courier New', monospace;
+                color: #ffffff;
+            ">
+                <!-- Header -->
+                <div class="rebalancing-header" style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 8px;
+                    padding: 4px 8px;
+                    background: rgba(76, 175, 80, 0.1);
+                    border-radius: 4px;
+                    border: 1px solid rgba(76, 175, 80, 0.3);
+                ">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span style="color: #4CAF50; font-size: 11px; font-weight: bold;">🔄 REBALANCING SYSTEM</span>
+                        <span style="color: #ff4444; font-size: 9px; background: rgba(255, 68, 68, 0.2); padding: 1px 4px; border-radius: 3px;">🔴 SIMULATED DATA</span>
+                    </div>
+                    <div style="display: flex; gap: 4px;">
+                        <button class="expand-btn" style="
+                            background: rgba(76, 175, 80, 0.2);
+                            border: 1px solid rgba(76, 175, 80, 0.4);
+                            color: #ffffff;
+                            padding: 2px 6px;
+                            border-radius: 3px;
+                            font-size: 9px;
+                            cursor: pointer;
+                        ">📊</button>
+                        <button class="settings-btn" style="
+                            background: rgba(76, 175, 80, 0.2);
+                            border: 1px solid rgba(76, 175, 80, 0.4);
+                            color: #ffffff;
+                            padding: 2px 6px;
+                            border-radius: 3px;
+                            font-size: 9px;
+                            cursor: pointer;
+                        ">⚙️</button>
+                        <button class="restore-btn" style="
+                            background: rgba(255, 152, 0, 0.2);
+                            border: 1px solid rgba(255, 152, 0, 0.4);
+                            color: #ffffff;
+                            padding: 2px 6px;
+                            border-radius: 3px;
+                            font-size: 9px;
+                            cursor: pointer;
+                        ">↩️</button>
+                    </div>
+                </div>
+
+                <!-- Overall Stats -->
+                <div class="overall-stats" style="
+                    display: grid;
+                    grid-template-columns: 1fr 1fr 1fr;
+                    gap: 4px;
+                    margin-bottom: 8px;
+                    font-size: 9px;
+                ">
+                    <div style="background: rgba(76, 175, 80, 0.1); padding: 3px; border-radius: 3px; text-align: center;">
+                        <div style="color: #888; font-size: 8px;">INVESTED</div>
+                        <div style="color: #4CAF50; font-weight: bold;">$${totalInvested.toFixed(2)}</div>
+                    </div>
+                    <div style="background: rgba(76, 175, 80, 0.1); padding: 3px; border-radius: 3px; text-align: center;">
+                        <div style="color: #888; font-size: 8px;">VALUE</div>
+                        <div style="color: #4CAF50; font-weight: bold;">$${currentValue.toFixed(2)}</div>
+                    </div>
+                    <div style="background: rgba(76, 175, 80, 0.1); padding: 3px; border-radius: 3px; text-align: center;">
+                        <div style="color: #888; font-size: 8px;">PROFIT</div>
+                        <div style="color: ${totalProfit >= 0 ? '#4CAF50' : '#f44336'}; font-weight: bold;">
+                            $${totalProfit.toFixed(2)} (${profitPercentage.toFixed(1)}%)
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Coins Grid -->
+                <div class="coins-grid" style="
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 4px;
+                    flex: 1;
+                    min-height: 0;
+                    margin-bottom: 8px;
+                ">
+                    ${this.createCoinCards()}
+                </div>
+
+                <!-- Settings Panel -->
+                <div class="settings-panel" style="
+                    display: none;
+                    background: rgba(0, 0, 0, 0.9);
+                    border: 1px solid rgba(76, 175, 80, 0.4);
+                    border-radius: 4px;
+                    padding: 6px;
+                    margin-bottom: 6px;
+                    font-size: 9px;
+                ">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                        <div>
+                            <label style="color: #888; font-size: 8px;">Profit Threshold:</label>
+                            <select class="profit-threshold-select" style="
+                                width: 100%;
+                                background: rgba(0, 0, 0, 0.8);
+                                border: 1px solid rgba(76, 175, 80, 0.4);
+                                color: #ffffff;
+                                padding: 2px;
+                                border-radius: 3px;
+                                font-size: 8px;
+                            ">
+                                <option value="7" ${this.settings.profitThreshold === 7 ? 'selected' : ''}>7%</option>
+                                <option value="5" ${this.settings.profitThreshold === 5 ? 'selected' : ''}>5%</option>
+                                <option value="10" ${this.settings.profitThreshold === 10 ? 'selected' : ''}>10%</option>
+                                <option value="15" ${this.settings.profitThreshold === 15 ? 'selected' : ''}>15%</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="color: #888; font-size: 8px;">Exchange:</label>
+                            <select class="exchange-select" style="
+                                width: 100%;
+                                background: rgba(0, 0, 0, 0.8);
+                                border: 1px solid rgba(76, 175, 80, 0.4);
+                                color: #ffffff;
+                                padding: 2px;
+                                border-radius: 3px;
+                                font-size: 8px;
+                            ">
+                                <option value="KuCoin" ${this.settings.exchange === 'KuCoin' ? 'selected' : ''}>KuCoin</option>
+                                <option value="Binance" ${this.settings.exchange === 'Binance' ? 'selected' : ''}>Binance</option>
+                                <option value="Both" ${this.settings.exchange === 'Both' ? 'selected' : ''}>Both</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Log -->
+                <div class="action-log" style="
+                    background: rgba(0, 0, 0, 0.8);
+                    border: 1px solid rgba(76, 175, 80, 0.3);
+                    border-radius: 4px;
+                    padding: 4px;
+                    max-height: 60px;
+                    overflow-y: auto;
+                    font-size: 8px;
+                ">
+                    <div style="color: #888; font-size: 7px; margin-bottom: 2px;">RECENT ACTIONS:</div>
+                    ${this.actionLog.slice(-5).map(action => 
+                        `<div style="color: #4CAF50; margin-bottom: 1px;">• ${action}</div>`
+                    ).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    createCoinCards() {
+        return Object.entries(this.portfolioData).map(([symbol, data]) => `
+            <div class="coin-card" style="
+                background: rgba(0, 0, 0, 0.8);
+                border: 1px solid rgba(76, 175, 80, 0.3);
+                border-radius: 4px;
+                padding: 4px;
+                font-size: 8px;
+                transition: all 0.3s ease;
+            ">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px;">
+                    <span style="color: #4CAF50; font-weight: bold; font-size: 9px;">${data.status} ${symbol}</span>
+                    <span style="color: #888; font-size: 7px;">${data.quantity.toFixed(3)}</span>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2px; font-size: 7px;">
+                    <div>
+                        <div style="color: #666;">Purchase:</div>
+                        <div style="color: #fff;">$${data.purchasePrice.toFixed(2)}</div>
+                    </div>
+                    <div>
+                        <div style="color: #666;">Current:</div>
+                        <div style="color: #fff;">$${data.currentPrice.toFixed(2)}</div>
+                    </div>
+                    <div>
+                        <div style="color: #666;">Value:</div>
+                        <div style="color: #4CAF50;">$${data.value.toFixed(2)}</div>
+                    </div>
+                    <div>
+                        <div style="color: #666;">Profit:</div>
+                        <div style="color: ${data.profit >= 0 ? '#4CAF50' : '#f44336'};">
+                            $${data.profit.toFixed(2)}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    addEventListeners(container) {
+        // Expand button
+        const expandBtn = container.querySelector('.expand-btn');
+        if (expandBtn) {
+            expandBtn.addEventListener('click', () => this.toggleExpanded());
+        }
+
+        // Settings button
+        const settingsBtn = container.querySelector('.settings-btn');
+        if (settingsBtn) {
+            settingsBtn.addEventListener('click', () => this.toggleSettings());
+        }
+
+        // Restore button
+        const restoreBtn = container.querySelector('.restore-btn');
+        if (restoreBtn) {
+            restoreBtn.addEventListener('click', () => this.restoreOriginalContent());
+        }
+
+        // Settings selects
+        const profitThresholdSelect = container.querySelector('.profit-threshold-select');
+        if (profitThresholdSelect) {
+            profitThresholdSelect.addEventListener('change', (e) => {
+                this.settings.profitThreshold = parseInt(e.target.value);
+                this.savePersistentSettings();
+                this.addToActionLog(`Profit threshold set to ${e.target.value}%`);
+            });
+        }
+
+        const exchangeSelect = container.querySelector('.exchange-select');
+        if (exchangeSelect) {
+            exchangeSelect.addEventListener('change', (e) => {
+                this.settings.exchange = e.target.value;
+                this.savePersistentSettings();
+                this.addToActionLog(`Exchange set to ${e.target.value}`);
+            });
+        }
+    }
+
+    toggleExpanded() {
+        if (this.isExpanded) {
+            this.closeExpandedView();
+        } else {
+            this.showExpandedView();
+        }
+    }
+
+    showExpandedView() {
+        // Create modal backdrop
+        const backdrop = document.createElement('div');
+        backdrop.className = 'rebalancing-modal-backdrop';
+        backdrop.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 10000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        `;
+
+        // Create modal content (4" x 5" = 480px x 384px)
+        const modal = document.createElement('div');
+        modal.className = 'rebalancing-modal';
+        modal.style.cssText = `
+            width: 480px;
+            height: 384px;
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid rgba(76, 175, 80, 0.5);
+            border-radius: 12px;
+            padding: 16px;
+            box-sizing: border-box;
+            font-family: 'Courier New', monospace;
+            color: #ffffff;
+            overflow-y: auto;
+            box-shadow: 0 0 30px rgba(76, 175, 80, 0.3);
+        `;
+
+        modal.innerHTML = this.createExpandedHTML();
+        backdrop.appendChild(modal);
+        document.body.appendChild(backdrop);
+
+        // Close on backdrop click
+        backdrop.addEventListener('click', (e) => {
+            if (e.target === backdrop) {
+                this.closeExpandedView();
+            }
+        });
+
+        this.isExpanded = true;
+        this.addToActionLog('Expanded view opened');
+    }
+
+    closeExpandedView() {
+        const backdrop = document.querySelector('.rebalancing-modal-backdrop');
+        if (backdrop) {
+            backdrop.remove();
+        }
+        this.isExpanded = false;
+        this.addToActionLog('Expanded view closed');
+    }
+
+    createExpandedHTML() {
+        const totalInvested = Object.values(this.portfolioData).reduce((sum, coin) => sum + (coin.quantity * coin.purchasePrice), 0);
+        const currentValue = Object.values(this.portfolioData).reduce((sum, coin) => sum + coin.value, 0);
+        const totalProfit = currentValue - totalInvested;
+        const profitPercentage = totalInvested > 0 ? ((totalProfit / totalInvested) * 100) : 0;
+
+        return `
+            <div style="text-align: center; margin-bottom: 16px;">
+                <h2 style="color: #4CAF50; margin: 0; font-size: 18px;">🔄 AMPL Rebalancing System</h2>
+                <p style="color: #ff4444; margin: 4px 0; font-size: 12px; background: rgba(255, 68, 68, 0.2); padding: 4px 8px; border-radius: 4px; display: inline-block;">🔴 SIMULATED DATA - NOT LIVE</p>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                <div style="background: rgba(76, 175, 80, 0.1); padding: 12px; border-radius: 6px; text-align: center; border: 1px solid rgba(76, 175, 80, 0.3);">
+                    <div style="color: #888; font-size: 11px;">TOTAL INVESTED</div>
+                    <div style="color: #4CAF50; font-weight: bold; font-size: 16px;">$${totalInvested.toFixed(2)}</div>
+                </div>
+                <div style="background: rgba(76, 175, 80, 0.1); padding: 12px; border-radius: 6px; text-align: center; border: 1px solid rgba(76, 175, 80, 0.3);">
+                    <div style="color: #888; font-size: 11px;">CURRENT VALUE</div>
+                    <div style="color: #4CAF50; font-weight: bold; font-size: 16px;">$${currentValue.toFixed(2)}</div>
+                </div>
+                <div style="background: rgba(76, 175, 80, 0.1); padding: 12px; border-radius: 6px; text-align: center; border: 1px solid rgba(76, 175, 80, 0.3);">
+                    <div style="color: #888; font-size: 11px;">TOTAL PROFIT</div>
+                    <div style="color: ${totalProfit >= 0 ? '#4CAF50' : '#f44336'}; font-weight: bold; font-size: 16px;">
+                        $${totalProfit.toFixed(2)}<br>
+                        <span style="font-size: 12px;">(${profitPercentage.toFixed(1)}%)</span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                ${Object.entries(this.portfolioData).map(([symbol, data]) => `
+                    <div style="background: rgba(0, 0, 0, 0.8); border: 1px solid rgba(76, 175, 80, 0.3); border-radius: 6px; padding: 12px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="color: #4CAF50; font-weight: bold; font-size: 14px;">${data.status} ${symbol}</span>
+                            <span style="color: #888; font-size: 11px;">Qty: ${data.quantity.toFixed(3)}</span>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 11px;">
+                            <div>
+                                <div style="color: #666;">Purchase Price:</div>
+                                <div style="color: #fff; font-weight: bold;">$${data.purchasePrice.toFixed(2)}</div>
+                            </div>
+                            <div>
+                                <div style="color: #666;">Current Price:</div>
+                                <div style="color: #fff; font-weight: bold;">$${data.currentPrice.toFixed(2)}</div>
+                            </div>
+                            <div>
+                                <div style="color: #666;">Value:</div>
+                                <div style="color: #4CAF50; font-weight: bold;">$${data.value.toFixed(2)}</div>
+                            </div>
+                            <div>
+                                <div style="color: #666;">Profit:</div>
+                                <div style="color: ${data.profit >= 0 ? '#4CAF50' : '#f44336'}; font-weight: bold;">
+                                    $${data.profit.toFixed(2)}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+
+            <div style="background: rgba(0, 0, 0, 0.8); border: 1px solid rgba(76, 175, 80, 0.3); border-radius: 6px; padding: 12px;">
+                <div style="color: #888; font-size: 11px; margin-bottom: 8px;">RECENT ACTIONS:</div>
+                <div style="max-height: 80px; overflow-y: auto;">
+                    ${this.actionLog.slice(-10).map(action => 
+                        `<div style="color: #4CAF50; margin-bottom: 4px; font-size: 11px;">• ${action}</div>`
+                    ).join('')}
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 16px;">
+                <button onclick="document.querySelector('.rebalancing-modal-backdrop').remove(); this.isExpanded = false;" style="
+                    background: rgba(255, 152, 0, 0.2);
+                    border: 1px solid rgba(255, 152, 0, 0.4);
+                    color: #ffffff;
+                    padding: 8px 16px;
+                    border-radius: 4px;
+                    font-size: 12px;
+                    cursor: pointer;
+                ">Close</button>
+            </div>
+        `;
+    }
+
+    toggleSettings() {
+        const settingsPanel = document.querySelector('.settings-panel');
+        if (settingsPanel) {
+            settingsPanel.style.display = settingsPanel.style.display === 'none' ? 'block' : 'none';
+        }
+    }
+
+    restoreOriginalContent() {
+        if (this.originalContent) {
+            const targetElement = document.querySelector('.ladder-section.limit-orders-section .section-content');
+            if (targetElement) {
+                targetElement.innerHTML = this.originalContent;
+                this.isInitialized = false;
+                if (this.updateInterval) {
+                    clearInterval(this.updateInterval);
+                }
+                console.log('✅ Original Limit Orders content restored');
+            }
+        }
+    }
+
+    async startLiveDataUpdates() {
+        console.log('🔄 Starting live data updates...');
+        
+        // Initial update
+        await this.updateLiveData();
+        
+        // Update every 30 seconds
+        this.updateInterval = setInterval(() => {
+            this.updateLiveData();
+        }, 30000);
+        
+        this.addToActionLog('Live data monitoring started');
+    }
+
+    async updateLiveData() {
+        try {
+            console.log('📊 Fetching live market data...');
+            
+            // Try to fetch real prices from multiple sources
+            const prices = await this.fetchRealPrices();
+            
+            if (prices && Object.keys(prices).length > 0) {
+                // Update portfolio with real prices
+                Object.keys(this.portfolioData).forEach(symbol => {
+                    if (prices[symbol]) {
+                        this.portfolioData[symbol].currentPrice = prices[symbol];
+                        this.portfolioData[symbol].value = this.portfolioData[symbol].quantity * prices[symbol];
+                        this.portfolioData[symbol].profit = this.portfolioData[symbol].value - (this.portfolioData[symbol].quantity * this.portfolioData[symbol].purchasePrice);
+                        
+                        // Update status based on profit
+                        const profitPercentage = this.portfolioData[symbol].purchasePrice > 0 ? 
+                            ((this.portfolioData[symbol].profit / (this.portfolioData[symbol].quantity * this.portfolioData[symbol].purchasePrice)) * 100) : 0;
+                        
+                        if (this.portfolioData[symbol].quantity === 0) {
+                            this.portfolioData[symbol].status = '💤';
+                        } else if (profitPercentage >= this.settings.profitThreshold) {
+                            this.portfolioData[symbol].status = '🎯';
+                        } else if (profitPercentage > 0) {
+                            this.portfolioData[symbol].status = '📈';
+                        } else {
+                            this.portfolioData[symbol].status = '📊';
+                        }
+                    }
+                });
+                
+                // Update display
+                this.updateDisplay();
+                this.addToActionLog(`Live prices updated: ${Object.keys(prices).join(', ')}`);
+                
+                console.log('✅ Live data updated successfully');
+            } else {
+                console.log('⚠️ No live price data available, keeping current values');
+                this.addToActionLog('Live data fetch failed - using cached values');
+            }
+        } catch (error) {
+            console.error('❌ Error updating live data:', error);
+            this.addToActionLog('Live data update error - retrying...');
+        }
+    }
+
+    async fetchRealPrices() {
+        const prices = {};
+        
+        try {
+            // Try Supabase price function first (from script.js pattern)
+            const response = await fetch(`${this.SUPABASE_URL}/functions/v1/ampl-manager/price`, {
+                headers: {
+                    'Authorization': `Bearer ${this.SUPABASE_ANON_KEY}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                if (data.price) {
+                    prices.AMPL = data.price;
+                    console.log('✅ AMPL price from Supabase:', data.price);
+                }
+            }
+        } catch (error) {
+            console.log('⚠️ Supabase price fetch failed:', error.message);
+        }
+        
+        // Try to fetch other coin prices from public APIs
+        try {
+            const coinGeckoResponse = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana,sui,bitcoin&vs_currencies=usd');
+            if (coinGeckoResponse.ok) {
+                const coinGeckoData = await coinGeckoResponse.json();
+                if (coinGeckoData.solana) prices.SOL = coinGeckoData.solana.usd;
+                if (coinGeckoData.sui) prices.SUI = coinGeckoData.sui.usd;
+                if (coinGeckoData.bitcoin) prices.BTC = coinGeckoData.bitcoin.usd;
+                console.log('✅ Prices from CoinGecko:', prices);
+            }
+        } catch (error) {
+            console.log('⚠️ CoinGecko price fetch failed:', error.message);
+        }
+        
+        return prices;
+    }
+
+    updateDisplay() {
+        const coinsGrid = document.querySelector('.coins-grid');
+        if (coinsGrid) {
+            coinsGrid.innerHTML = this.createCoinCards();
+        }
+        
+        // Update overall stats
+        const totalInvested = Object.values(this.portfolioData).reduce((sum, coin) => sum + (coin.quantity * coin.purchasePrice), 0);
+        const currentValue = Object.values(this.portfolioData).reduce((sum, coin) => sum + coin.value, 0);
+        const totalProfit = currentValue - totalInvested;
+        const profitPercentage = totalInvested > 0 ? ((totalProfit / totalInvested) * 100) : 0;
+        
+        const overallStats = document.querySelector('.overall-stats');
+        if (overallStats) {
+            overallStats.innerHTML = `
+                <div style="background: rgba(76, 175, 80, 0.1); padding: 3px; border-radius: 3px; text-align: center;">
+                    <div style="color: #888; font-size: 8px;">INVESTED</div>
+                    <div style="color: #4CAF50; font-weight: bold;">$${totalInvested.toFixed(2)}</div>
+                </div>
+                <div style="background: rgba(76, 175, 80, 0.1); padding: 3px; border-radius: 3px; text-align: center;">
+                    <div style="color: #888; font-size: 8px;">VALUE</div>
+                    <div style="color: #4CAF50; font-weight: bold;">$${currentValue.toFixed(2)}</div>
+                </div>
+                <div style="background: rgba(76, 175, 80, 0.1); padding: 3px; border-radius: 3px; text-align: center;">
+                    <div style="color: #888; font-size: 8px;">PROFIT</div>
+                    <div style="color: ${totalProfit >= 0 ? '#4CAF50' : '#f44336'}; font-weight: bold;">
+                        $${totalProfit.toFixed(2)} (${profitPercentage.toFixed(1)}%)
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Update action log
+        const actionLog = document.querySelector('.action-log');
+        if (actionLog) {
+            const logContent = actionLog.querySelector('div:last-child');
+            if (logContent) {
+                logContent.innerHTML = this.actionLog.slice(-5).map(action => 
+                    `<div style="color: #4CAF50; margin-bottom: 1px;">• ${action}</div>`
+                ).join('');
+            }
+        }
+    }
+
+    addToActionLog(message) {
+        const timestamp = new Date().toLocaleTimeString();
+        this.actionLog.push(`${timestamp}: ${message}`);
+        if (this.actionLog.length > 15) {
+            this.actionLog.shift(); // Keep only last 15 messages
+        }
+    }
+
     loadPersistentSettings() {
         try {
-            console.log('📖 Loading rebalancing persistent settings...');
-            
             const savedProfitThreshold = localStorage.getItem('amplRebalancingProfitThreshold');
             const savedExchange = localStorage.getItem('amplRebalancingExchange');
             
-            if (savedProfitThreshold !== null) {
-                this.settings.profitThreshold = parseFloat(savedProfitThreshold);
+            if (savedProfitThreshold) {
+                this.settings.profitThreshold = parseInt(savedProfitThreshold);
                 console.log(`✅ Loaded profit threshold: ${this.settings.profitThreshold}%`);
             }
             
-            if (savedExchange !== null) {
-                this.settings.selectedExchange = savedExchange;
-                console.log(`✅ Loaded exchange: ${this.settings.selectedExchange}`);
+            if (savedExchange) {
+                this.settings.exchange = savedExchange;
+                console.log(`✅ Loaded exchange: ${this.settings.exchange}`);
             }
-            
-            console.log('✅ Rebalancing persistent settings loaded successfully');
         } catch (error) {
             console.log('⚠️ Error loading persistent settings:', error.message);
         }
@@ -73,1881 +752,17 @@ class AMPLRebalancingSystemClean {
 
     savePersistentSettings() {
         try {
-            console.log('💾 Saving rebalancing persistent settings...');
-            
             localStorage.setItem('amplRebalancingProfitThreshold', this.settings.profitThreshold.toString());
-            localStorage.setItem('amplRebalancingExchange', this.settings.selectedExchange);
-            
-            console.log(`💾 Saved profit threshold: ${this.settings.profitThreshold}%`);
-            console.log(`💾 Saved exchange: ${this.settings.selectedExchange}`);
-            
-            console.log('✅ Rebalancing persistent settings saved successfully');
+            localStorage.setItem('amplRebalancingExchange', this.settings.exchange);
+            console.log('💾 Settings saved:', this.settings);
         } catch (error) {
             console.log('⚠️ Error saving persistent settings:', error.message);
         }
     }
-
-    initialize() {
-        console.log('🎬 Initializing AMPL Rebalancing System (Clean)...');
-        
-        // Find the Limit Orders panel
-        this.findLimitOrdersPanel();
-        
-        if (this.targetPanel) {
-            this.replaceWithRebalancingSystem();
-            this.applyStyles();
-            this.bindEventListeners();
-            this.startLivePriceMonitoring();
-            this.loadRealPositions();
-            this.isInitialized = true;
-            console.log('✅ AMPL Rebalancing System (Clean) initialized successfully');
-        } else {
-            console.log('❌ Limit Orders panel not found - watching for ladder panel...');
-            this.watchForLadderPanel();
-        }
-    }
-
-    watchForLadderPanel() {
-        const observer = new MutationObserver(() => {
-            if (!this.isInitialized) {
-                this.findLimitOrdersPanel();
-                if (this.targetPanel) {
-                    this.replaceWithRebalancingSystem();
-                    this.applyStyles();
-                    this.bindEventListeners();
-                    this.startLivePriceMonitoring();
-                    this.loadRealPositions();
-                    this.isInitialized = true;
-                    console.log('✅ AMPL Rebalancing System (Clean) initialized after ladder panel activation');
-                    observer.disconnect();
-                }
-            }
-        });
-        
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true,
-            attributes: true,
-            attributeFilter: ['style', 'class']
-        });
-        
-        console.log('👀 Watching for ladder panel activation...');
-    }
-
-    findLimitOrdersPanel() {
-        console.log('🔍 Looking for Limit Orders panel...');
-        
-        const limitOrdersSection = document.querySelector('.ladder-section.limit-orders-section');
-        if (limitOrdersSection) {
-            this.targetPanel = limitOrdersSection.querySelector('.section-content');
-            if (this.targetPanel) {
-                console.log('✅ Found Limit Orders panel via exact class selector');
-                return;
-            }
-        }
-        
-        const sectionHeaders = document.querySelectorAll('.section-header h3');
-        for (const header of sectionHeaders) {
-            if (header.textContent.includes('Limit Orders')) {
-                const section = header.closest('.ladder-section');
-                if (section) {
-                    this.targetPanel = section.querySelector('.section-content');
-                    if (this.targetPanel) {
-                        console.log('✅ Found Limit Orders panel via section header text');
-                        return;
-                    }
-                }
-            }
-        }
-        
-        console.log('❌ Could not find Limit Orders panel');
-    }
-
-    replaceWithRebalancingSystem() {
-        if (!this.targetPanel) return;
-
-        console.log('🔄 Replacing Limit Orders content with Clean Rebalancing System...');
-        this.originalContent = this.targetPanel.innerHTML;
-
-        const rebalancingHTML = `
-            <div class="rebalancing-container" id="rebalancing-container">
-                <!-- Header with title and controls -->
-                <div class="rebalancing-header">
-                    <div class="rebalancing-title">
-                        <i class="fas fa-balance-scale"></i>
-                        <span>LIVE REBALANCING SYSTEM</span>
-                        <span class="system-status" id="system-status">🟢 Live</span>
-                    </div>
-                    <div class="rebalancing-controls">
-                        <button class="rebalancing-btn expand-btn" id="expand-panel" title="Expand Panel">
-                            <i class="fas fa-expand"></i>
-                        </button>
-                        <button class="rebalancing-btn settings-btn" id="show-settings" title="Settings">
-                            <i class="fas fa-cog"></i>
-                        </button>
-                        <button class="rebalancing-btn refresh-btn" id="refresh-prices" title="Refresh">
-                            <i class="fas fa-sync"></i>
-                        </button>
-                        <button class="rebalancing-btn restore-btn" id="restore-original" title="Restore">
-                            <i class="fas fa-undo"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Settings Panel -->
-                <div class="settings-panel" id="settings-panel">
-                    <div class="settings-row">
-                        <label>Profit Threshold:</label>
-                        <select id="profit-threshold" class="settings-select">
-                            <option value="1.5">1.5%</option>
-                            <option value="5">5%</option>
-                            <option value="7" selected>7%</option>
-                            <option value="10">10%</option>
-                            <option value="20">20%</option>
-                        </select>
-                    </div>
-                    <div class="settings-row">
-                        <label>Exchange:</label>
-                        <select id="exchange-select" class="settings-select">
-                            <option value="kucoin" selected>KuCoin</option>
-                            <option value="binance">Binance</option>
-                            <option value="both">Both</option>
-                        </select>
-                    </div>
-                    <div class="settings-row">
-                        <label>AMPL Threshold:</label>
-                        <span class="threshold-value">$1.16</span>
-                        <span class="current-ampl-price" id="current-ampl-price">Current: Loading...</span>
-                    </div>
-                </div>
-
-                <!-- Overall Stats -->
-                <div class="overall-stats">
-                    <div class="stat-item" title="Total amount invested across all coins">
-                        <span class="stat-label">Total Invested</span>
-                        <span class="stat-value" id="total-invested">$0.00</span>
-                    </div>
-                    <div class="stat-item" title="Current total value of all holdings">
-                        <span class="stat-label">Current Value</span>
-                        <span class="stat-value" id="total-current-value">$0.00</span>
-                    </div>
-                    <div class="stat-item" title="Total profit/loss across all positions">
-                        <span class="stat-label">Total Profit</span>
-                        <span class="stat-value profit" id="total-profit">$0.00</span>
-                    </div>
-                    <div class="stat-item" title="Total profit percentage">
-                        <span class="stat-label">Profit %</span>
-                        <span class="stat-value profit-percent" id="total-profit-percent">0.00%</span>
-                    </div>
-                </div>
-
-                <!-- Coins Grid -->
-                <div class="coins-grid">
-                    <div class="coin-card" data-coin="SOL" title="Solana (SOL) position details">
-                        <div class="coin-header">
-                            <div class="coin-symbol">
-                                <i class="coin-icon">☀️</i>
-                                <span>SOL</span>
-                            </div>
-                            <div class="coin-status" id="sol-status">💤</div>
-                        </div>
-                        <div class="coin-stats">
-                            <div class="stat-row">
-                                <span>Quantity:</span>
-                                <span id="sol-quantity">0.000</span>
-                            </div>
-                            <div class="stat-row">
-                                <span>Purchase:</span>
-                                <span id="sol-purchase-price">$0.00</span>
-                            </div>
-                            <div class="stat-row">
-                                <span>Current:</span>
-                                <span id="sol-current-price">Loading...</span>
-                            </div>
-                            <div class="stat-row">
-                                <span>Value:</span>
-                                <span id="sol-total-value">$0.00</span>
-                            </div>
-                            <div class="stat-row profit-row">
-                                <span>Profit:</span>
-                                <span id="sol-profit" class="profit-value">$0.00 (0.00%)</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="coin-card" data-coin="SUI" title="Sui (SUI) position details">
-                        <div class="coin-header">
-                            <div class="coin-symbol">
-                                <i class="coin-icon">🌊</i>
-                                <span>SUI</span>
-                            </div>
-                            <div class="coin-status" id="sui-status">💤</div>
-                        </div>
-                        <div class="coin-stats">
-                            <div class="stat-row">
-                                <span>Quantity:</span>
-                                <span id="sui-quantity">0.000</span>
-                            </div>
-                            <div class="stat-row">
-                                <span>Purchase:</span>
-                                <span id="sui-purchase-price">$0.00</span>
-                            </div>
-                            <div class="stat-row">
-                                <span>Current:</span>
-                                <span id="sui-current-price">Loading...</span>
-                            </div>
-                            <div class="stat-row">
-                                <span>Value:</span>
-                                <span id="sui-total-value">$0.00</span>
-                            </div>
-                            <div class="stat-row profit-row">
-                                <span>Profit:</span>
-                                <span id="sui-profit" class="profit-value">$0.00 (0.00%)</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="coin-card" data-coin="BTC" title="Bitcoin (BTC) position details">
-                        <div class="coin-header">
-                            <div class="coin-symbol">
-                                <i class="coin-icon">₿</i>
-                                <span>BTC</span>
-                            </div>
-                            <div class="coin-status" id="btc-status">💤</div>
-                        </div>
-                        <div class="coin-stats">
-                            <div class="stat-row">
-                                <span>Quantity:</span>
-                                <span id="btc-quantity">0.000000</span>
-                            </div>
-                            <div class="stat-row">
-                                <span>Purchase:</span>
-                                <span id="btc-purchase-price">$0.00</span>
-                            </div>
-                            <div class="stat-row">
-                                <span>Current:</span>
-                                <span id="btc-current-price">Loading...</span>
-                            </div>
-                            <div class="stat-row">
-                                <span>Value:</span>
-                                <span id="btc-total-value">$0.00</span>
-                            </div>
-                            <div class="stat-row profit-row">
-                                <span>Profit:</span>
-                                <span id="btc-profit" class="profit-value">$0.00 (0.00%)</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="coin-card" data-coin="AMPL" title="Ampleforth (AMPL) position details">
-                        <div class="coin-header">
-                            <div class="coin-symbol">
-                                <i class="coin-icon">🎯</i>
-                                <span>AMPL</span>
-                            </div>
-                            <div class="coin-status" id="ampl-status">💤</div>
-                        </div>
-                        <div class="coin-stats">
-                            <div class="stat-row">
-                                <span>Quantity:</span>
-                                <span id="ampl-quantity">0.000</span>
-                            </div>
-                            <div class="stat-row">
-                                <span>Purchase:</span>
-                                <span id="ampl-purchase-price">$0.00</span>
-                            </div>
-                            <div class="stat-row">
-                                <span>Current:</span>
-                                <span id="ampl-current-price">Loading...</span>
-                            </div>
-                            <div class="stat-row">
-                                <span>Value:</span>
-                                <span id="ampl-total-value">$0.00</span>
-                            </div>
-                            <div class="stat-row profit-row">
-                                <span>Profit:</span>
-                                <span id="ampl-profit" class="profit-value">$0.00 (0.00%)</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Action Log -->
-                <div class="action-log">
-                    <div class="log-header">
-                        <span>Live Actions</span>
-                        <button class="clear-log-btn" id="clear-log">Clear</button>
-                    </div>
-                    <div class="log-messages" id="log-messages">
-                        <div class="log-message">
-                            <span class="log-time">Ready</span>
-                            <span class="log-text">Clean rebalancing system with live data initialized</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        this.targetPanel.innerHTML = rebalancingHTML;
-        
-        // Apply persistent settings to UI
-        this.applyPersistentSettingsToUI();
-        
-        console.log('✅ Limit Orders panel content replaced with Clean Rebalancing System');
-    }
-
-    applyPersistentSettingsToUI() {
-        // Apply saved settings to UI elements
-        setTimeout(() => {
-            const profitThresholdSelect = document.getElementById('profit-threshold');
-            const exchangeSelect = document.getElementById('exchange-select');
-            
-            if (profitThresholdSelect) {
-                profitThresholdSelect.value = this.settings.profitThreshold.toString();
-                console.log(`✅ Applied profit threshold to UI: ${this.settings.profitThreshold}%`);
-            }
-            
-            if (exchangeSelect) {
-                exchangeSelect.value = this.settings.selectedExchange;
-                console.log(`✅ Applied exchange to UI: ${this.settings.selectedExchange}`);
-            }
-        }, 100);
-    }
-
-    createExpandedModal() {
-        // Create expanded modal (4" x 5" = approximately 384px x 480px)
-        const modal = document.createElement('div');
-        modal.id = 'rebalancing-expanded-modal';
-        modal.className = 'rebalancing-expanded-modal';
-        
-        modal.innerHTML = `
-            <div class="modal-backdrop" id="modal-backdrop"></div>
-            <div class="modal-content">
-                <div class="modal-header">
-                    <div class="modal-title">
-                        <i class="fas fa-balance-scale"></i>
-                        <span>LIVE REBALANCING SYSTEM - EXPANDED</span>
-                    </div>
-                    <button class="modal-close-btn" id="modal-close">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                
-                <div class="modal-body">
-                    <!-- Copy of the main rebalancing content but larger -->
-                    <div class="expanded-overall-stats">
-                        <div class="expanded-stat-item">
-                            <span class="expanded-stat-label">Total Invested</span>
-                            <span class="expanded-stat-value" id="expanded-total-invested">$0.00</span>
-                        </div>
-                        <div class="expanded-stat-item">
-                            <span class="expanded-stat-label">Current Value</span>
-                            <span class="expanded-stat-value" id="expanded-total-current-value">$0.00</span>
-                        </div>
-                        <div class="expanded-stat-item">
-                            <span class="expanded-stat-label">Total Profit</span>
-                            <span class="expanded-stat-value profit" id="expanded-total-profit">$0.00</span>
-                        </div>
-                        <div class="expanded-stat-item">
-                            <span class="expanded-stat-label">Profit %</span>
-                            <span class="expanded-stat-value profit-percent" id="expanded-total-profit-percent">0.00%</span>
-                        </div>
-                    </div>
-
-                    <div class="expanded-coins-grid">
-                        <div class="expanded-coin-card" data-coin="SOL">
-                            <div class="expanded-coin-header">
-                                <div class="expanded-coin-symbol">
-                                    <i class="expanded-coin-icon">☀️</i>
-                                    <span>SOL</span>
-                                </div>
-                                <div class="expanded-coin-status" id="expanded-sol-status">💤</div>
-                            </div>
-                            <div class="expanded-coin-stats">
-                                <div class="expanded-stat-row">
-                                    <span>Quantity:</span>
-                                    <span id="expanded-sol-quantity">0.000</span>
-                                </div>
-                                <div class="expanded-stat-row">
-                                    <span>Purchase:</span>
-                                    <span id="expanded-sol-purchase-price">$0.00</span>
-                                </div>
-                                <div class="expanded-stat-row">
-                                    <span>Current:</span>
-                                    <span id="expanded-sol-current-price">Loading...</span>
-                                </div>
-                                <div class="expanded-stat-row">
-                                    <span>Value:</span>
-                                    <span id="expanded-sol-total-value">$0.00</span>
-                                </div>
-                                <div class="expanded-stat-row expanded-profit-row">
-                                    <span>Profit:</span>
-                                    <span id="expanded-sol-profit" class="expanded-profit-value">$0.00 (0.00%)</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="expanded-coin-card" data-coin="SUI">
-                            <div class="expanded-coin-header">
-                                <div class="expanded-coin-symbol">
-                                    <i class="expanded-coin-icon">🌊</i>
-                                    <span>SUI</span>
-                                </div>
-                                <div class="expanded-coin-status" id="expanded-sui-status">💤</div>
-                            </div>
-                            <div class="expanded-coin-stats">
-                                <div class="expanded-stat-row">
-                                    <span>Quantity:</span>
-                                    <span id="expanded-sui-quantity">0.000</span>
-                                </div>
-                                <div class="expanded-stat-row">
-                                    <span>Purchase:</span>
-                                    <span id="expanded-sui-purchase-price">$0.00</span>
-                                </div>
-                                <div class="expanded-stat-row">
-                                    <span>Current:</span>
-                                    <span id="expanded-sui-current-price">Loading...</span>
-                                </div>
-                                <div class="expanded-stat-row">
-                                    <span>Value:</span>
-                                    <span id="expanded-sui-total-value">$0.00</span>
-                                </div>
-                                <div class="expanded-stat-row expanded-profit-row">
-                                    <span>Profit:</span>
-                                    <span id="expanded-sui-profit" class="expanded-profit-value">$0.00 (0.00%)</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="expanded-coin-card" data-coin="BTC">
-                            <div class="expanded-coin-header">
-                                <div class="expanded-coin-symbol">
-                                    <i class="expanded-coin-icon">₿</i>
-                                    <span>BTC</span>
-                                </div>
-                                <div class="expanded-coin-status" id="expanded-btc-status">💤</div>
-                            </div>
-                            <div class="expanded-coin-stats">
-                                <div class="expanded-stat-row">
-                                    <span>Quantity:</span>
-                                    <span id="expanded-btc-quantity">0.000000</span>
-                                </div>
-                                <div class="expanded-stat-row">
-                                    <span>Purchase:</span>
-                                    <span id="expanded-btc-purchase-price">$0.00</span>
-                                </div>
-                                <div class="expanded-stat-row">
-                                    <span>Current:</span>
-                                    <span id="expanded-btc-current-price">Loading...</span>
-                                </div>
-                                <div class="expanded-stat-row">
-                                    <span>Value:</span>
-                                    <span id="expanded-btc-total-value">$0.00</span>
-                                </div>
-                                <div class="expanded-stat-row expanded-profit-row">
-                                    <span>Profit:</span>
-                                    <span id="expanded-btc-profit" class="expanded-profit-value">$0.00 (0.00%)</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="expanded-coin-card" data-coin="AMPL">
-                            <div class="expanded-coin-header">
-                                <div class="expanded-coin-symbol">
-                                    <i class="expanded-coin-icon">🎯</i>
-                                    <span>AMPL</span>
-                                </div>
-                                <div class="expanded-coin-status" id="expanded-ampl-status">💤</div>
-                            </div>
-                            <div class="expanded-coin-stats">
-                                <div class="expanded-stat-row">
-                                    <span>Quantity:</span>
-                                    <span id="expanded-ampl-quantity">0.000</span>
-                                </div>
-                                <div class="expanded-stat-row">
-                                    <span>Purchase:</span>
-                                    <span id="expanded-ampl-purchase-price">$0.00</span>
-                                </div>
-                                <div class="expanded-stat-row">
-                                    <span>Current:</span>
-                                    <span id="expanded-ampl-current-price">Loading...</span>
-                                </div>
-                                <div class="expanded-stat-row">
-                                    <span>Value:</span>
-                                    <span id="expanded-ampl-total-value">$0.00</span>
-                                </div>
-                                <div class="expanded-stat-row expanded-profit-row">
-                                    <span>Profit:</span>
-                                    <span id="expanded-ampl-profit" class="expanded-profit-value">$0.00 (0.00%)</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(modal);
-        this.expandedModal = modal;
-        
-        // Bind close events
-        document.getElementById('modal-close').addEventListener('click', () => this.closeExpandedModal());
-        document.getElementById('modal-backdrop').addEventListener('click', () => this.closeExpandedModal());
-        
-        // Update expanded modal with current data
-        this.updateExpandedModal();
-        
-        console.log('📱 Expanded modal created');
-    }
-
-    showExpandedModal() {
-        if (!this.expandedModal) {
-            this.createExpandedModal();
-        }
-        
-        this.expandedModal.style.display = 'flex';
-        this.isExpanded = true;
-        
-        // Update expand button icon
-        const expandBtn = document.getElementById('expand-panel');
-        if (expandBtn) {
-            expandBtn.innerHTML = '<i class="fas fa-compress"></i>';
-            expandBtn.title = 'Collapse Panel';
-        }
-        
-        this.logAction('Panel expanded to full view');
-    }
-
-    closeExpandedModal() {
-        if (this.expandedModal) {
-            this.expandedModal.style.display = 'none';
-        }
-        
-        this.isExpanded = false;
-        
-        // Update expand button icon
-        const expandBtn = document.getElementById('expand-panel');
-        if (expandBtn) {
-            expandBtn.innerHTML = '<i class="fas fa-expand"></i>';
-            expandBtn.title = 'Expand Panel';
-        }
-        
-        this.logAction('Panel collapsed to normal view');
-    }
-
-    updateExpandedModal() {
-        if (!this.expandedModal || !this.isExpanded) return;
-        
-        // Update expanded modal with current data
-        const expandedElements = {
-            'expanded-total-invested': this.settings.totalInvested.toFixed(2),
-            'expanded-total-current-value': this.settings.totalCurrentValue.toFixed(2),
-            'expanded-total-profit': this.settings.totalProfit.toFixed(2),
-            'expanded-total-profit-percent': this.settings.totalProfitPercent.toFixed(2)
-        };
-        
-        Object.keys(expandedElements).forEach(id => {
-            const element = document.getElementById(id);
-            if (element) {
-                element.textContent = id.includes('percent') ? `${expandedElements[id]}%` : `$${expandedElements[id]}`;
-            }
-        });
-        
-        // Update coin data in expanded modal
-        Object.keys(this.coins).forEach(coinKey => {
-            const coin = this.coins[coinKey];
-            const coinLower = coinKey.toLowerCase();
-            
-            const elements = {
-                [`expanded-${coinLower}-quantity`]: coin.quantity.toFixed(coinKey === 'BTC' ? 6 : 3),
-                [`expanded-${coinLower}-purchase-price`]: `$${coin.purchasePrice.toFixed(2)}`,
-                [`expanded-${coinLower}-current-price`]: `$${coin.currentPrice.toFixed(2)}`,
-                [`expanded-${coinLower}-total-value`]: `$${coin.totalValue.toFixed(2)}`,
-                [`expanded-${coinLower}-profit`]: `$${coin.profit.toFixed(2)} (${coin.profitPercent.toFixed(2)}%)`
-            };
-            
-            Object.keys(elements).forEach(id => {
-                const element = document.getElementById(id);
-                if (element) {
-                    element.textContent = elements[id];
-                    
-                    if (id.includes('profit')) {
-                        element.className = coin.profit >= 0 ? 'expanded-profit-value positive' : 'expanded-profit-value negative';
-                    }
-                }
-            });
-            
-            // Update status in expanded modal
-            const statusEl = document.getElementById(`expanded-${coinLower}-status`);
-            if (statusEl) {
-                if (coin.quantity > 0) {
-                    if (coin.profitPercent >= this.settings.profitThreshold) {
-                        statusEl.textContent = '🎯';
-                    } else if (coin.profit > 0) {
-                        statusEl.textContent = '📈';
-                    } else {
-                        statusEl.textContent = '📊';
-                    }
-                } else {
-                    statusEl.textContent = '💤';
-                }
-            }
-        });
-    }
-
-    applyStyles() {
-        const style = document.createElement('style');
-        style.id = 'ampl-rebalancing-clean-styles';
-        style.textContent = `
-            /* Clean Rebalancing System Styles */
-            .rebalancing-container {
-                width: 100%;
-                height: 100%;
-                max-height: 100%;
-                display: flex;
-                flex-direction: column;
-                background: var(--panel-bw, #000000);
-                color: var(--text-primary, #ffffff);
-                border-radius: var(--border-radius, 6px);
-                overflow: hidden;
-                padding: 8px;
-                gap: 6px;
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                box-sizing: border-box;
-                position: relative;
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                cursor: pointer;
-            }
-
-            .rebalancing-container:hover {
-                border: 1px solid rgba(76, 175, 80, 0.2);
-            }
-
-            .rebalancing-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding: 6px 8px;
-                background: rgba(255, 255, 255, 0.06);
-                border-radius: 4px;
-                flex-shrink: 0;
-                border: 1px solid rgba(255, 255, 255, 0.12);
-                box-sizing: border-box;
-                transition: all 0.3s ease;
-            }
-
-            .rebalancing-title {
-                display: flex;
-                align-items: center;
-                gap: 6px;
-                font-size: 11px;
-                font-weight: 600;
-                color: var(--text-primary, #ffffff);
-                letter-spacing: 0.3px;
-                transition: all 0.3s ease;
-            }
-
-            .rebalancing-title i {
-                color: #4CAF50;
-                font-size: 12px;
-                transition: all 0.3s ease;
-                animation: pulse 2s infinite;
-            }
-
-            @keyframes pulse {
-                0%, 100% { opacity: 1; }
-                50% { opacity: 0.7; }
-            }
-
-            .system-status {
-                font-size: 9px;
-                padding: 2px 6px;
-                border-radius: 3px;
-                background: rgba(76, 175, 80, 0.2);
-                color: #4CAF50;
-                border: 1px solid rgba(76, 175, 80, 0.3);
-                font-weight: 500;
-                transition: all 0.3s ease;
-                animation: blink 1.5s infinite;
-            }
-
-            @keyframes blink {
-                0%, 100% { opacity: 1; }
-                50% { opacity: 0.5; }
-            }
-
-            .rebalancing-controls {
-                display: flex;
-                gap: 4px;
-            }
-
-            .rebalancing-btn {
-                background: rgba(255, 255, 255, 0.1);
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                color: var(--text-primary, #ffffff);
-                padding: 4px 6px;
-                border-radius: 3px;
-                cursor: pointer;
-                font-size: 9px;
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                display: flex;
-                align-items: center;
-                gap: 3px;
-                font-weight: 500;
-                box-sizing: border-box;
-            }
-
-            .rebalancing-btn:hover {
-                background: rgba(255, 255, 255, 0.2);
-                border-color: rgba(255, 255, 255, 0.4);
-                transform: translateY(-2px);
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-            }
-
-            .expand-btn {
-                background: rgba(76, 175, 80, 0.2);
-                border-color: rgba(76, 175, 80, 0.4);
-                color: #4CAF50;
-            }
-
-            .expand-btn:hover {
-                background: rgba(76, 175, 80, 0.3);
-                border-color: rgba(76, 175, 80, 0.6);
-            }
-
-            .rebalancing-btn i {
-                font-size: 10px;
-                transition: all 0.3s ease;
-            }
-
-            /* Settings Panel */
-            .settings-panel {
-                background: rgba(255, 255, 255, 0.04);
-                border-radius: 4px;
-                padding: 6px;
-                display: none;
-                flex-shrink: 0;
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                box-sizing: border-box;
-                transition: all 0.3s ease;
-            }
-
-            .settings-panel.visible {
-                display: block;
-            }
-
-            .settings-row {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 4px;
-                font-size: 10px;
-                transition: all 0.3s ease;
-            }
-
-            .settings-row:last-child {
-                margin-bottom: 0;
-            }
-
-            .settings-row label {
-                color: var(--text-secondary, #b0b0b0);
-                font-weight: 500;
-            }
-
-            /* Fixed dropdown styling */
-            .settings-select {
-                background: rgba(0, 0, 0, 0.8) !important;
-                border: 1px solid rgba(76, 175, 80, 0.4) !important;
-                color: #ffffff !important;
-                padding: 3px 6px;
-                border-radius: 4px;
-                font-size: 10px;
-                min-width: 70px;
-                font-weight: 600;
-                box-sizing: border-box;
-                transition: all 0.3s ease;
-            }
-
-            .settings-select:hover {
-                background: rgba(0, 0, 0, 0.9) !important;
-                border-color: rgba(76, 175, 80, 0.6) !important;
-                box-shadow: 0 0 8px rgba(76, 175, 80, 0.3);
-            }
-
-            .settings-select:focus {
-                outline: none;
-                background: rgba(0, 0, 0, 0.95) !important;
-                border-color: rgba(76, 175, 80, 0.8) !important;
-                box-shadow: 0 0 12px rgba(76, 175, 80, 0.5);
-            }
-
-            .settings-select option {
-                background: rgba(0, 0, 0, 0.95) !important;
-                color: #ffffff !important;
-                padding: 4px 8px;
-                font-weight: 600;
-                border: none;
-            }
-
-            .settings-select option:hover {
-                background: rgba(76, 175, 80, 0.2) !important;
-                color: #4CAF50 !important;
-            }
-
-            .settings-select option:checked {
-                background: rgba(76, 175, 80, 0.3) !important;
-                color: #4CAF50 !important;
-                font-weight: 700;
-            }
-
-            .threshold-value {
-                color: #FFC107;
-                font-weight: 600;
-                font-size: 10px;
-                transition: all 0.3s ease;
-            }
-
-            .current-ampl-price {
-                color: var(--text-secondary, #b0b0b0);
-                font-size: 9px;
-                font-weight: 500;
-                transition: all 0.3s ease;
-            }
-
-            /* Overall Stats */
-            .overall-stats {
-                display: grid;
-                grid-template-columns: repeat(4, 1fr);
-                gap: 4px;
-                flex-shrink: 0;
-            }
-
-            .stat-item {
-                background: rgba(255, 255, 255, 0.04);
-                border-radius: 4px;
-                padding: 4px;
-                text-align: center;
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                box-sizing: border-box;
-                cursor: help;
-            }
-
-            .stat-item:hover {
-                background: rgba(255, 255, 255, 0.08);
-                border-color: rgba(255, 255, 255, 0.25);
-                transform: translateY(-2px);
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            }
-
-            .stat-label {
-                display: block;
-                font-size: 8px;
-                color: var(--text-secondary, #b0b0b0);
-                margin-bottom: 2px;
-                font-weight: 500;
-                text-transform: uppercase;
-                letter-spacing: 0.3px;
-                transition: all 0.3s ease;
-            }
-
-            .stat-value {
-                display: block;
-                font-size: 10px;
-                font-weight: 600;
-                color: var(--text-primary, #ffffff);
-                transition: all 0.3s ease;
-            }
-
-            .stat-value.profit {
-                color: #4CAF50;
-            }
-
-            .stat-value.loss {
-                color: #F44336;
-            }
-
-            /* Coins Grid */
-            .coins-grid {
-                display: grid;
-                grid-template-columns: repeat(2, 1fr);
-                gap: 4px;
-                flex: 1;
-                min-height: 0;
-                overflow: hidden;
-            }
-
-            .coin-card {
-                background: rgba(255, 255, 255, 0.04);
-                border-radius: 4px;
-                padding: 6px;
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                display: flex;
-                flex-direction: column;
-                gap: 4px;
-                box-sizing: border-box;
-                overflow: hidden;
-                cursor: help;
-            }
-
-            .coin-card:hover {
-                border-color: rgba(255, 255, 255, 0.2);
-                background: rgba(255, 255, 255, 0.06);
-            }
-
-            .coin-card.profitable {
-                border-color: rgba(76, 175, 80, 0.4);
-                background: rgba(76, 175, 80, 0.06);
-            }
-
-            .coin-card.loss {
-                border-color: rgba(244, 67, 54, 0.4);
-                background: rgba(244, 67, 54, 0.06);
-            }
-
-            .coin-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                flex-shrink: 0;
-            }
-
-            .coin-symbol {
-                display: flex;
-                align-items: center;
-                gap: 4px;
-                font-size: 11px;
-                font-weight: 600;
-                color: var(--text-primary, #ffffff);
-                transition: all 0.3s ease;
-            }
-
-            .coin-icon {
-                font-size: 12px;
-                transition: all 0.3s ease;
-            }
-
-            .coin-status {
-                font-size: 11px;
-                transition: all 0.3s ease;
-            }
-
-            .coin-stats {
-                display: flex;
-                flex-direction: column;
-                gap: 2px;
-                flex: 1;
-                min-height: 0;
-            }
-
-            .stat-row {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                font-size: 9px;
-                transition: all 0.3s ease;
-            }
-
-            .stat-row span:first-child {
-                color: var(--text-secondary, #b0b0b0);
-                font-weight: 500;
-            }
-
-            .stat-row span:last-child {
-                color: var(--text-primary, #ffffff);
-                font-weight: 600;
-            }
-
-            .profit-row .profit-value.positive {
-                color: #4CAF50;
-            }
-
-            .profit-row .profit-value.negative {
-                color: #F44336;
-            }
-
-            /* Action Log */
-            .action-log {
-                background: rgba(255, 255, 255, 0.04);
-                border-radius: 4px;
-                padding: 4px;
-                flex-shrink: 0;
-                max-height: 60px;
-                overflow: hidden;
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                box-sizing: border-box;
-                transition: all 0.3s ease;
-            }
-
-            .log-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 3px;
-                font-size: 9px;
-                color: var(--text-secondary, #b0b0b0);
-                font-weight: 500;
-                text-transform: uppercase;
-                letter-spacing: 0.3px;
-                transition: all 0.3s ease;
-            }
-
-            .clear-log-btn {
-                background: none;
-                border: none;
-                color: var(--text-secondary, #b0b0b0);
-                cursor: pointer;
-                font-size: 8px;
-                padding: 2px 4px;
-                border-radius: 2px;
-                transition: all 0.3s ease;
-                font-weight: 500;
-            }
-
-            .clear-log-btn:hover {
-                background: rgba(255, 255, 255, 0.15);
-                color: var(--text-primary, #ffffff);
-            }
-
-            .log-messages {
-                max-height: 40px;
-                overflow-y: auto;
-                display: flex;
-                flex-direction: column;
-                gap: 2px;
-                transition: all 0.3s ease;
-            }
-
-            .log-messages::-webkit-scrollbar {
-                width: 3px;
-            }
-
-            .log-messages::-webkit-scrollbar-track {
-                background: rgba(255, 255, 255, 0.05);
-                border-radius: 2px;
-            }
-
-            .log-messages::-webkit-scrollbar-thumb {
-                background: rgba(255, 255, 255, 0.15);
-                border-radius: 2px;
-            }
-
-            .log-message {
-                display: flex;
-                gap: 4px;
-                font-size: 8px;
-                padding: 2px 3px;
-                border-radius: 2px;
-                background: rgba(255, 255, 255, 0.02);
-                border: 1px solid rgba(255, 255, 255, 0.05);
-                box-sizing: border-box;
-                transition: all 0.3s ease;
-            }
-
-            .log-time {
-                color: var(--text-muted, #808080);
-                flex-shrink: 0;
-                min-width: 35px;
-                font-weight: 500;
-                transition: all 0.3s ease;
-            }
-
-            .log-text {
-                color: var(--text-primary, #ffffff);
-                flex: 1;
-                font-weight: 500;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-            }
-
-            /* Loading animation for live data */
-            .loading {
-                animation: loading-pulse 1.5s infinite;
-            }
-
-            @keyframes loading-pulse {
-                0%, 100% { opacity: 1; }
-                50% { opacity: 0.5; }
-            }
-
-            /* Expanded Modal Styles */
-            .rebalancing-expanded-modal {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100vw;
-                height: 100vh;
-                display: none;
-                justify-content: center;
-                align-items: center;
-                z-index: 10000;
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            }
-
-            .modal-backdrop {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.8);
-                backdrop-filter: blur(5px);
-            }
-
-            .modal-content {
-                position: relative;
-                width: 480px;
-                height: 384px;
-                background: var(--panel-bw, #000000);
-                border: 2px solid rgba(76, 175, 80, 0.5);
-                border-radius: 12px;
-                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
-                display: flex;
-                flex-direction: column;
-                overflow: hidden;
-                animation: modalSlideIn 0.3s ease-out;
-            }
-
-            @keyframes modalSlideIn {
-                from {
-                    opacity: 0;
-                    transform: scale(0.8) translateY(-50px);
-                }
-                to {
-                    opacity: 1;
-                    transform: scale(1) translateY(0);
-                }
-            }
-
-            .modal-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding: 12px 16px;
-                background: rgba(76, 175, 80, 0.15);
-                border-bottom: 1px solid rgba(76, 175, 80, 0.3);
-                flex-shrink: 0;
-            }
-
-            .modal-title {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                font-size: 16px;
-                font-weight: 700;
-                color: var(--text-primary, #ffffff);
-                text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
-            }
-
-            .modal-title i {
-                color: #4CAF50;
-                font-size: 18px;
-            }
-
-            .modal-close-btn {
-                background: rgba(244, 67, 54, 0.2);
-                border: 1px solid rgba(244, 67, 54, 0.4);
-                color: #F44336;
-                padding: 8px 10px;
-                border-radius: 6px;
-                cursor: pointer;
-                font-size: 14px;
-                transition: all 0.3s ease;
-            }
-
-            .modal-close-btn:hover {
-                background: rgba(244, 67, 54, 0.3);
-                border-color: rgba(244, 67, 54, 0.6);
-                transform: scale(1.1);
-            }
-
-            .modal-body {
-                flex: 1;
-                padding: 16px;
-                overflow-y: auto;
-                display: flex;
-                flex-direction: column;
-                gap: 16px;
-            }
-
-            /* Expanded Overall Stats */
-            .expanded-overall-stats {
-                display: grid;
-                grid-template-columns: repeat(4, 1fr);
-                gap: 12px;
-                flex-shrink: 0;
-            }
-
-            .expanded-stat-item {
-                background: rgba(255, 255, 255, 0.08);
-                border-radius: 8px;
-                padding: 12px;
-                text-align: center;
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                transition: all 0.3s ease;
-                box-sizing: border-box;
-            }
-
-            .expanded-stat-item:hover {
-                background: rgba(255, 255, 255, 0.12);
-                border-color: rgba(255, 255, 255, 0.3);
-                transform: translateY(-2px);
-                box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
-            }
-
-            .expanded-stat-label {
-                display: block;
-                font-size: 12px;
-                color: var(--text-secondary, #b0b0b0);
-                margin-bottom: 6px;
-                font-weight: 600;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-            }
-
-            .expanded-stat-value {
-                display: block;
-                font-size: 16px;
-                font-weight: 700;
-                color: var(--text-primary, #ffffff);
-            }
-
-            .expanded-stat-value.profit {
-                color: #4CAF50;
-                text-shadow: 0 0 8px rgba(76, 175, 80, 0.6);
-            }
-
-            .expanded-stat-value.loss {
-                color: #F44336;
-                text-shadow: 0 0 8px rgba(244, 67, 54, 0.6);
-            }
-
-            /* Expanded Coins Grid */
-            .expanded-coins-grid {
-                display: grid;
-                grid-template-columns: repeat(2, 1fr);
-                gap: 12px;
-                flex: 1;
-                min-height: 0;
-            }
-
-            .expanded-coin-card {
-                background: rgba(255, 255, 255, 0.08);
-                border-radius: 8px;
-                padding: 12px;
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                transition: all 0.3s ease;
-                display: flex;
-                flex-direction: column;
-                gap: 8px;
-                box-sizing: border-box;
-            }
-
-            .expanded-coin-card:hover {
-                border-color: rgba(255, 255, 255, 0.3);
-                background: rgba(255, 255, 255, 0.12);
-                transform: translateY(-3px);
-                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
-            }
-
-            .expanded-coin-card.profitable {
-                border-color: rgba(76, 175, 80, 0.6);
-                background: rgba(76, 175, 80, 0.12);
-                box-shadow: 0 0 16px rgba(76, 175, 80, 0.3);
-            }
-
-            .expanded-coin-card.loss {
-                border-color: rgba(244, 67, 54, 0.6);
-                background: rgba(244, 67, 54, 0.12);
-                box-shadow: 0 0 16px rgba(244, 67, 54, 0.3);
-            }
-
-            .expanded-coin-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                flex-shrink: 0;
-            }
-
-            .expanded-coin-symbol {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                font-size: 16px;
-                font-weight: 700;
-                color: var(--text-primary, #ffffff);
-            }
-
-            .expanded-coin-icon {
-                font-size: 20px;
-            }
-
-            .expanded-coin-status {
-                font-size: 18px;
-            }
-
-            .expanded-coin-stats {
-                display: flex;
-                flex-direction: column;
-                gap: 4px;
-                flex: 1;
-            }
-
-            .expanded-stat-row {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                font-size: 13px;
-            }
-
-            .expanded-stat-row span:first-child {
-                color: var(--text-secondary, #b0b0b0);
-                font-weight: 600;
-            }
-
-            .expanded-stat-row span:last-child {
-                color: var(--text-primary, #ffffff);
-                font-weight: 700;
-            }
-
-            .expanded-profit-row .expanded-profit-value.positive {
-                color: #4CAF50;
-                text-shadow: 0 0 6px rgba(76, 175, 80, 0.6);
-            }
-
-            .expanded-profit-row .expanded-profit-value.negative {
-                color: #F44336;
-                text-shadow: 0 0 6px rgba(244, 67, 54, 0.6);
-            }
-
-            /* Tooltip Enhancement */
-            [title]:hover::after {
-                content: attr(title);
-                position: absolute;
-                bottom: 100%;
-                left: 50%;
-                transform: translateX(-50%);
-                background: rgba(0, 0, 0, 0.9);
-                color: white;
-                padding: 8px 12px;
-                border-radius: 6px;
-                font-size: 12px;
-                white-space: nowrap;
-                z-index: 1001;
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-            }
-        `;
-        
-        // Remove any existing styles first
-        const existingStyles = document.querySelectorAll('[id*="ampl-rebalancing"]');
-        existingStyles.forEach(style => style.remove());
-        
-        document.head.appendChild(style);
-    }
-
-    bindEventListeners() {
-        console.log('🔗 Binding clean rebalancing system event listeners...');
-        
-        // Main container click for expand
-        const container = document.getElementById('rebalancing-container');
-        if (container) {
-            container.addEventListener('click', (event) => {
-                // Don't expand if clicking on buttons or controls
-                if (!event.target.closest('.rebalancing-controls') && 
-                    !event.target.closest('.settings-panel') &&
-                    !event.target.closest('.clear-log-btn')) {
-                    
-                    if (this.isExpanded) {
-                        this.closeExpandedModal();
-                    } else {
-                        this.showExpandedModal();
-                    }
-                }
-            });
-        }
-        
-        this.targetPanel.addEventListener('click', (event) => {
-            const target = event.target.closest('button');
-            if (!target) return;
-            
-            // Prevent event bubbling for button clicks
-            event.stopPropagation();
-            
-            const buttonId = target.id;
-            console.log(`🔘 Clean rebalancing button clicked: ${buttonId}`);
-            
-            switch (buttonId) {
-                case 'expand-panel':
-                    if (this.isExpanded) {
-                        this.closeExpandedModal();
-                    } else {
-                        this.showExpandedModal();
-                    }
-                    break;
-                case 'show-settings':
-                    this.toggleSettings();
-                    break;
-                case 'refresh-prices':
-                    this.updateLivePrices();
-                    this.logAction('Live prices refreshed manually');
-                    break;
-                case 'clear-log':
-                    this.clearActionLog();
-                    break;
-                case 'restore-original':
-                    this.restoreOriginal();
-                    break;
-            }
-        });
-
-        // Settings change listeners
-        this.targetPanel.addEventListener('change', (event) => {
-            const target = event.target;
-            
-            switch (target.id) {
-                case 'profit-threshold':
-                    this.settings.profitThreshold = parseFloat(target.value);
-                    this.savePersistentSettings();
-                    this.logAction(`Profit threshold set to ${target.value}%`);
-                    console.log(`✅ Profit threshold changed to: ${target.value}%`);
-                    break;
-                case 'exchange-select':
-                    this.settings.selectedExchange = target.value;
-                    this.savePersistentSettings();
-                    this.logAction(`Exchange set to ${target.value}`);
-                    console.log(`✅ Exchange changed to: ${target.value}`);
-                    break;
-            }
-        });
-        
-        console.log('✅ Clean rebalancing event listeners bound');
-    }
-
-    toggleSettings() {
-        const settingsPanel = document.getElementById('settings-panel');
-        if (settingsPanel) {
-            settingsPanel.classList.toggle('visible');
-            const isVisible = settingsPanel.classList.contains('visible');
-            this.logAction(isVisible ? 'Settings panel opened' : 'Settings panel closed');
-        }
-    }
-
-    restoreOriginal() {
-        if (this.targetPanel && this.originalContent) {
-            this.targetPanel.innerHTML = this.originalContent;
-            this.logAction('Restored original Limit Orders panel');
-            console.log('✅ Restored original Limit Orders panel');
-        }
-    }
-
-    startLivePriceMonitoring() {
-        console.log('🔍 Starting live price monitoring...');
-        
-        if (this.monitoringInterval) {
-            clearInterval(this.monitoringInterval);
-        }
-        
-        this.updateLivePrices();
-        
-        this.monitoringInterval = setInterval(() => {
-            this.updateLivePrices();
-        }, 30000);
-        
-        console.log('✅ Live price monitoring started (30-second intervals)');
-    }
-
-    async updateLivePrices() {
-        try {
-            console.log('📊 Fetching live prices...');
-            this.setLoadingState(true);
-            
-            const prices = await this.fetchLivePrices();
-            
-            if (prices.SOL) this.coins.SOL.currentPrice = prices.SOL;
-            if (prices.SUI) this.coins.SUI.currentPrice = prices.SUI;
-            if (prices.BTC) this.coins.BTC.currentPrice = prices.BTC;
-            if (prices.AMPL) this.coins.AMPL.currentPrice = prices.AMPL;
-            
-            const amplPriceEl = document.getElementById('current-ampl-price');
-            if (amplPriceEl && prices.AMPL) {
-                amplPriceEl.textContent = `Current: $${prices.AMPL.toFixed(3)}`;
-            }
-            
-            this.calculateProfits();
-            this.updateDisplay();
-            this.updateExpandedModal();
-            this.checkProfitOpportunities();
-            this.setLoadingState(false);
-            
-            this.logAction('Live prices updated successfully');
-            
-        } catch (error) {
-            console.log('📊 Error updating live prices:', error.message);
-            this.logAction('Error fetching live prices - using cached data');
-            this.setLoadingState(false);
-        }
-    }
-
-    async fetchLivePrices() {
-        const prices = {};
-        
-        try {
-            // Try real APIs first
-            const responses = await Promise.allSettled([
-                this.fetchFromBinance(),
-                this.fetchFromCoinGecko(),
-                this.fetchFromKuCoin()
-            ]);
-            
-            for (const response of responses) {
-                if (response.status === 'fulfilled' && response.value) {
-                    Object.assign(prices, response.value);
-                    console.log('📊 Using real live data from APIs');
-                    break;
-                }
-            }
-            
-            // If no real data available, use realistic simulated prices
-            if (Object.keys(prices).length === 0) {
-                console.log('📊 APIs unavailable - using realistic simulated prices');
-                prices.SOL = 180 + (Math.random() - 0.5) * 20;
-                prices.SUI = 3.5 + (Math.random() - 0.5) * 0.5;
-                prices.BTC = 95000 + (Math.random() - 0.5) * 5000;
-                prices.AMPL = 1.189 + (Math.random() - 0.5) * 0.1;
-            }
-            
-        } catch (error) {
-            console.log('📊 Error in fetchLivePrices:', error.message);
-            // Fallback to realistic simulated prices
-            prices.SOL = 180 + (Math.random() - 0.5) * 20;
-            prices.SUI = 3.5 + (Math.random() - 0.5) * 0.5;
-            prices.BTC = 95000 + (Math.random() - 0.5) * 5000;
-            prices.AMPL = 1.189 + (Math.random() - 0.5) * 0.1;
-        }
-        
-        return prices;
-    }
-
-    async fetchFromBinance() {
-        try {
-            const symbols = ['SOLUSDT', 'SUIUSDT', 'BTCUSDT'];
-            const promises = symbols.map(symbol => 
-                fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`)
-                    .then(res => res.json())
-            );
-            
-            const results = await Promise.all(promises);
-            
-            return {
-                SOL: parseFloat(results[0].price),
-                SUI: parseFloat(results[1].price),
-                BTC: parseFloat(results[2].price),
-                AMPL: 1.189 + (Math.random() - 0.5) * 0.1 // AMPL not on Binance
-            };
-        } catch (error) {
-            console.log('📊 Binance API error:', error.message);
-            return null;
-        }
-    }
-
-    async fetchFromCoinGecko() {
-        try {
-            const response = await fetch(
-                'https://api.coingecko.com/api/v3/simple/price?ids=solana,sui,bitcoin,ampleforth&vs_currencies=usd'
-            );
-            const data = await response.json();
-            
-            return {
-                SOL: data.solana?.usd || 0,
-                SUI: data.sui?.usd || 0,
-                BTC: data.bitcoin?.usd || 0,
-                AMPL: data.ampleforth?.usd || 0
-            };
-        } catch (error) {
-            console.log('📊 CoinGecko API error:', error.message);
-            return null;
-        }
-    }
-
-    async fetchFromKuCoin() {
-        try {
-            const symbols = ['SOL-USDT', 'SUI-USDT', 'BTC-USDT', 'AMPL-USDT'];
-            const promises = symbols.map(symbol => 
-                fetch(`https://api.kucoin.com/api/v1/market/orderbook/level1?symbol=${symbol}`)
-                    .then(res => res.json())
-            );
-            
-            const results = await Promise.all(promises);
-            
-            return {
-                SOL: parseFloat(results[0].data?.price) || 0,
-                SUI: parseFloat(results[1].data?.price) || 0,
-                BTC: parseFloat(results[2].data?.price) || 0,
-                AMPL: parseFloat(results[3].data?.price) || 0
-            };
-        } catch (error) {
-            console.log('📊 KuCoin API error:', error.message);
-            return null;
-        }
-    }
-
-    setLoadingState(isLoading) {
-        const priceElements = [
-            'sol-current-price', 'sui-current-price', 
-            'btc-current-price', 'ampl-current-price'
-        ];
-        
-        priceElements.forEach(id => {
-            const element = document.getElementById(id);
-            if (element) {
-                if (isLoading) {
-                    element.classList.add('loading');
-                    if (element.textContent === 'Loading...') return;
-                } else {
-                    element.classList.remove('loading');
-                }
-            }
-        });
-    }
-
-    checkProfitOpportunities() {
-        const opportunities = [];
-        
-        Object.keys(this.coins).forEach(coinKey => {
-            const coin = this.coins[coinKey];
-            if (coin.quantity > 0 && coin.profitPercent >= this.settings.profitThreshold) {
-                opportunities.push({
-                    coin: coinKey,
-                    profitPercent: coin.profitPercent,
-                    action: 'SELL'
-                });
-            }
-        });
-        
-        if (opportunities.length > 0) {
-            opportunities.forEach(opp => {
-                this.logAction(`SELL opportunity: ${opp.coin} (${opp.profitPercent.toFixed(2)}%)`);
-            });
-        }
-    }
-
-    calculateProfits() {
-        let totalInvested = 0;
-        let totalCurrentValue = 0;
-        
-        Object.keys(this.coins).forEach(coinKey => {
-            const coin = this.coins[coinKey];
-            
-            if (coin.quantity > 0) {
-                const invested = coin.quantity * coin.purchasePrice;
-                const currentValue = coin.quantity * coin.currentPrice;
-                
-                coin.totalValue = currentValue;
-                coin.profit = currentValue - invested;
-                coin.profitPercent = invested > 0 ? (coin.profit / invested) * 100 : 0;
-                
-                totalInvested += invested;
-                totalCurrentValue += currentValue;
-            }
-        });
-        
-        this.settings.totalInvested = totalInvested;
-        this.settings.totalCurrentValue = totalCurrentValue;
-        this.settings.totalProfit = totalCurrentValue - totalInvested;
-        this.settings.totalProfitPercent = totalInvested > 0 ? (this.settings.totalProfit / totalInvested) * 100 : 0;
-    }
-
-    updateDisplay() {
-        // Update overall stats
-        const totalInvestedEl = document.getElementById('total-invested');
-        const totalCurrentValueEl = document.getElementById('total-current-value');
-        const totalProfitEl = document.getElementById('total-profit');
-        const totalProfitPercentEl = document.getElementById('total-profit-percent');
-        
-        if (totalInvestedEl) totalInvestedEl.textContent = `$${this.settings.totalInvested.toFixed(2)}`;
-        if (totalCurrentValueEl) totalCurrentValueEl.textContent = `$${this.settings.totalCurrentValue.toFixed(2)}`;
-        if (totalProfitEl) totalProfitEl.textContent = `$${this.settings.totalProfit.toFixed(2)}`;
-        if (totalProfitPercentEl) totalProfitPercentEl.textContent = `${this.settings.totalProfitPercent.toFixed(2)}%`;
-        
-        // Update profit colors
-        if (totalProfitEl && totalProfitPercentEl) {
-            if (this.settings.totalProfit >= 0) {
-                totalProfitEl.className = 'stat-value profit';
-                totalProfitPercentEl.className = 'stat-value profit';
-            } else {
-                totalProfitEl.className = 'stat-value loss';
-                totalProfitPercentEl.className = 'stat-value loss';
-            }
-        }
-        
-        // Update individual coins
-        Object.keys(this.coins).forEach(coinKey => {
-            const coin = this.coins[coinKey];
-            const coinLower = coinKey.toLowerCase();
-            
-            const quantityEl = document.getElementById(`${coinLower}-quantity`);
-            const purchasePriceEl = document.getElementById(`${coinLower}-purchase-price`);
-            const currentPriceEl = document.getElementById(`${coinLower}-current-price`);
-            const totalValueEl = document.getElementById(`${coinLower}-total-value`);
-            const profitEl = document.getElementById(`${coinLower}-profit`);
-            const statusEl = document.getElementById(`${coinLower}-status`);
-            
-            if (quantityEl) quantityEl.textContent = coin.quantity.toFixed(coinKey === 'BTC' ? 6 : 3);
-            if (purchasePriceEl) purchasePriceEl.textContent = `$${coin.purchasePrice.toFixed(2)}`;
-            if (currentPriceEl) currentPriceEl.textContent = `$${coin.currentPrice.toFixed(2)}`;
-            if (totalValueEl) totalValueEl.textContent = `$${coin.totalValue.toFixed(2)}`;
-            
-            if (profitEl) {
-                const profitText = `$${coin.profit.toFixed(2)} (${coin.profitPercent.toFixed(2)}%)`;
-                profitEl.textContent = profitText;
-                
-                if (coin.profit >= 0) {
-                    profitEl.className = 'profit-value positive';
-                } else {
-                    profitEl.className = 'profit-value negative';
-                }
-            }
-            
-            // Update coin card styling
-            const coinCard = document.querySelector(`[data-coin="${coinKey}"]`);
-            if (coinCard) {
-                coinCard.className = 'coin-card';
-                if (coin.profit > 0) {
-                    coinCard.classList.add('profitable');
-                } else if (coin.profit < 0) {
-                    coinCard.classList.add('loss');
-                }
-            }
-            
-            // Update status
-            if (statusEl) {
-                if (coin.quantity > 0) {
-                    if (coin.profitPercent >= this.settings.profitThreshold) {
-                        statusEl.textContent = '🎯';
-                    } else if (coin.profit > 0) {
-                        statusEl.textContent = '📈';
-                    } else {
-                        statusEl.textContent = '📊';
-                    }
-                } else {
-                    statusEl.textContent = '💤';
-                }
-            }
-        });
-    }
-
-    loadRealPositions() {
-        // Load sample data for demonstration - replace with real portfolio data
-        this.coins.SOL.quantity = 0.5;
-        this.coins.SOL.purchasePrice = 175.00;
-        
-        this.coins.SUI.quantity = 25.0;
-        this.coins.SUI.purchasePrice = 3.20;
-        
-        this.coins.BTC.quantity = 0.001;
-        this.coins.BTC.purchasePrice = 92000;
-        
-        this.coins.AMPL.quantity = 100.0;
-        this.coins.AMPL.purchasePrice = 1.15;
-        
-        this.logAction('Live portfolio positions loaded');
-        this.calculateProfits();
-        this.updateDisplay();
-    }
-
-    logAction(message) {
-        const logMessages = document.getElementById('log-messages');
-        if (!logMessages) return;
-        
-        const timestamp = new Date().toLocaleTimeString();
-        const logEntry = document.createElement('div');
-        logEntry.className = 'log-message';
-        logEntry.innerHTML = `
-            <span class="log-time">${timestamp}</span>
-            <span class="log-text">${message}</span>
-        `;
-        
-        logMessages.insertBefore(logEntry, logMessages.firstChild);
-        
-        while (logMessages.children.length > 15) {
-            logMessages.removeChild(logMessages.lastChild);
-        }
-    }
-
-    clearActionLog() {
-        const logMessages = document.getElementById('log-messages');
-        if (logMessages) {
-            logMessages.innerHTML = `
-                <div class="log-message">
-                    <span class="log-time">Ready</span>
-                    <span class="log-text">Live action log cleared</span>
-                </div>
-            `;
-        }
-        this.logAction('Live action log cleared');
-    }
-
-    // Public methods for external integration
-    updateCoinData(coinSymbol, quantity, purchasePrice) {
-        if (this.coins[coinSymbol]) {
-            this.coins[coinSymbol].quantity = quantity;
-            this.coins[coinSymbol].purchasePrice = purchasePrice;
-            this.calculateProfits();
-            this.updateDisplay();
-            this.updateExpandedModal();
-            this.logAction(`Updated ${coinSymbol}: ${quantity} @ $${purchasePrice}`);
-        }
-    }
-
-    getCurrentAMPLPrice() {
-        return this.coins.AMPL.currentPrice;
-    }
-
-    shouldBuy() {
-        return this.coins.AMPL.currentPrice < this.settings.amplThreshold;
-    }
-
-    getCoinsReadyToSell() {
-        const readyToSell = [];
-        Object.keys(this.coins).forEach(coinKey => {
-            const coin = this.coins[coinKey];
-            if (coin.quantity > 0 && coin.profitPercent >= this.settings.profitThreshold) {
-                readyToSell.push({
-                    symbol: coinKey,
-                    quantity: coin.quantity,
-                    profit: coin.profit,
-                    profitPercent: coin.profitPercent
-                });
-            }
-        });
-        return readyToSell;
-    }
 }
 
-// Initialize the clean rebalancing system
-const amplRebalancingSystemClean = new AMPLRebalancingSystemClean();
+// Initialize the rebalancing system
+const amplRebalancingSystem = new AMPLRebalancingSystem();
 
-// Global functions for external use
-function updateRebalancingCoin(coinSymbol, quantity, purchasePrice) {
-    if (amplRebalancingSystemClean) {
-        amplRebalancingSystemClean.updateCoinData(coinSymbol, quantity, purchasePrice);
-    }
-}
-
-function getRebalancingStatus() {
-    if (amplRebalancingSystemClean) {
-        return {
-            shouldBuy: amplRebalancingSystemClean.shouldBuy(),
-            coinsReadyToSell: amplRebalancingSystemClean.getCoinsReadyToSell(),
-            currentAMPLPrice: amplRebalancingSystemClean.getCurrentAMPLPrice(),
-            totalProfit: amplRebalancingSystemClean.settings.totalProfit
-        };
-    }
-    return null;
-}
-
-console.log('🎬 AMPL Rebalancing System (Clean - No Audio, Real Live Data) loaded successfully');
+console.log('🎬 AMPL Rebalancing System (Fixed Live Data Version) loaded successfully');
 

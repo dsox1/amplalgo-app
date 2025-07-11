@@ -1,9 +1,9 @@
 /**
- * AMPL Manager and Sell Price Target Persistence
- * Handles persistence for AMPL Manager checkbox and Sell Price Target buttons
+ * AMPL Manager and Sell Price Target Persistence - Fixed Version
+ * Uses proper code-based detection methods from script.js
  */
 
-class AMPLManagerPersistence {
+class AMPLManagerPersistenceFixed {
     constructor() {
         // Load persistent settings when DOM is ready
         if (document.readyState === 'loading') {
@@ -14,7 +14,7 @@ class AMPLManagerPersistence {
     }
 
     initialize() {
-        console.log('🎬 Initializing AMPL Manager and Sell Price Target Persistence...');
+        console.log('🎬 Initializing AMPL Manager and Sell Price Target Persistence (Fixed Version)...');
         
         // Load persistent settings
         this.loadAMPLManagerPersistence();
@@ -23,7 +23,7 @@ class AMPLManagerPersistence {
         // Watch for changes to auto-save
         this.watchForPersistenceChanges();
         
-        console.log('✅ AMPL Manager and Sell Price Target Persistence initialized successfully');
+        console.log('✅ AMPL Manager and Sell Price Target Persistence (Fixed) initialized successfully');
     }
 
     loadAMPLManagerPersistence() {
@@ -33,17 +33,10 @@ class AMPLManagerPersistence {
             if (savedAMPLManagerState !== null) {
                 const isEnabled = savedAMPLManagerState === 'true';
                 
-                // Apply to AMPL Manager checkbox
+                // Apply to AMPL Manager checkbox - using code-based detection from script.js
                 setTimeout(() => {
-                    // Try multiple selectors to find AMPL Manager checkbox
-                    const amplManagerCheckbox = document.querySelector(
-                        'input[type="checkbox"][id*="ampl"], ' +
-                        'input[type="checkbox"][name*="ampl"], ' +
-                        'input[type="checkbox"][class*="ampl"], ' +
-                        '.ampl-manager input[type="checkbox"], ' +
-                        '#ampl-manager, ' +
-                        '.ampl-checkbox'
-                    );
+                    // Look for AMPL Manager checkbox in the Trading Controls section
+                    const amplManagerCheckbox = document.querySelector('#ampl-manager');
                     
                     if (amplManagerCheckbox) {
                         amplManagerCheckbox.checked = isEnabled;
@@ -52,7 +45,7 @@ class AMPLManagerPersistence {
                         // Trigger change event to ensure proper state
                         amplManagerCheckbox.dispatchEvent(new Event('change', { bubbles: true }));
                     } else {
-                        console.log('⚠️ AMPL Manager checkbox not found - will retry...');
+                        console.log('⚠️ AMPL Manager checkbox (#ampl-manager) not found - will retry...');
                         // Retry after more time for elements to load
                         setTimeout(() => this.loadAMPLManagerPersistence(), 2000);
                     }
@@ -71,63 +64,40 @@ class AMPLManagerPersistence {
             const savedCurrentTarget = localStorage.getItem('amplCurrentTarget');
             
             setTimeout(() => {
-                // Apply to sell price target buttons - try multiple selectors
-                const target110Btn = document.querySelector(
-                    'button[data-target="1.10"], ' +
-                    '.target-btn[data-value="1.10"], ' +
-                    'button[value="1.10"], ' +
-                    '.price-target-110, ' +
-                    '#target-110'
-                );
+                // Apply to sell price target buttons - using code-based detection from script.js
+                // From script.js: thresholdButtons.forEach(button => { ... button.getAttribute("data-value") ... })
+                const thresholdButtons = document.querySelectorAll('.threshold-btn');
+                const currentThresholdDisplay = document.getElementById('current-threshold');
                 
-                const target125Btn = document.querySelector(
-                    'button[data-target="1.25"], ' +
-                    '.target-btn[data-value="1.25"], ' +
-                    'button[value="1.25"], ' +
-                    '.price-target-125, ' +
-                    '#target-125'
-                );
+                console.log(`Found ${thresholdButtons.length} threshold buttons`);
                 
-                const target140Btn = document.querySelector(
-                    'button[data-target="1.40"], ' +
-                    '.target-btn[data-value="1.40"], ' +
-                    'button[value="1.40"], ' +
-                    '.price-target-140, ' +
-                    '#target-140'
-                );
-                
-                if (savedTarget110 === 'true' && target110Btn) {
-                    target110Btn.classList.add('active', 'selected');
-                    console.log('✅ Restored 1.10 target button state');
-                }
-                
-                if (savedTarget125 === 'true' && target125Btn) {
-                    target125Btn.classList.add('active', 'selected');
-                    console.log('✅ Restored 1.25 target button state');
-                }
-                
-                if (savedTarget140 === 'true' && target140Btn) {
-                    target140Btn.classList.add('active', 'selected');
-                    console.log('✅ Restored 1.40 target button state');
-                }
-                
-                // Apply current target
-                if (savedCurrentTarget) {
-                    const currentTargetDisplay = document.querySelector(
-                        '.current-target, ' +
-                        '#current-target, ' +
-                        '.target-display, ' +
-                        '.selected-target'
-                    );
+                thresholdButtons.forEach(button => {
+                    const buttonValue = parseFloat(button.getAttribute('data-value'));
                     
-                    if (currentTargetDisplay) {
-                        currentTargetDisplay.textContent = savedCurrentTarget;
-                        console.log(`✅ Restored current target: ${savedCurrentTarget}`);
+                    if (buttonValue === 1.10 && savedTarget110 === 'true') {
+                        button.classList.add('active');
+                        console.log('✅ Restored 1.10 target button state');
                     }
+                    
+                    if (buttonValue === 1.25 && savedTarget125 === 'true') {
+                        button.classList.add('active');
+                        console.log('✅ Restored 1.25 target button state');
+                    }
+                    
+                    if (buttonValue === 1.40 && savedTarget140 === 'true') {
+                        button.classList.add('active');
+                        console.log('✅ Restored 1.40 target button state');
+                    }
+                });
+                
+                // Apply current target to display
+                if (savedCurrentTarget && currentThresholdDisplay) {
+                    currentThresholdDisplay.textContent = savedCurrentTarget;
+                    console.log(`✅ Restored current target display: ${savedCurrentTarget}`);
                 }
                 
-                if (!target110Btn && !target125Btn && !target140Btn) {
-                    console.log('⚠️ Sell Price Target buttons not found - will retry...');
+                if (thresholdButtons.length === 0) {
+                    console.log('⚠️ Sell Price Target buttons (.threshold-btn) not found - will retry...');
                     // Retry after more time for elements to load
                     setTimeout(() => this.loadSellPriceTargetsPersistence(), 2000);
                 }
@@ -139,14 +109,7 @@ class AMPLManagerPersistence {
 
     saveAMPLManagerPersistence() {
         try {
-            const amplManagerCheckbox = document.querySelector(
-                'input[type="checkbox"][id*="ampl"], ' +
-                'input[type="checkbox"][name*="ampl"], ' +
-                'input[type="checkbox"][class*="ampl"], ' +
-                '.ampl-manager input[type="checkbox"], ' +
-                '#ampl-manager, ' +
-                '.ampl-checkbox'
-            );
+            const amplManagerCheckbox = document.querySelector('#ampl-manager');
             
             if (amplManagerCheckbox) {
                 const isEnabled = amplManagerCheckbox.checked;
@@ -160,57 +123,38 @@ class AMPLManagerPersistence {
 
     saveSellPriceTargetsPersistence() {
         try {
-            const target110Btn = document.querySelector(
-                'button[data-target="1.10"], ' +
-                '.target-btn[data-value="1.10"], ' +
-                'button[value="1.10"], ' +
-                '.price-target-110, ' +
-                '#target-110'
-            );
+            const thresholdButtons = document.querySelectorAll('.threshold-btn');
+            const currentThresholdDisplay = document.getElementById('current-threshold');
             
-            const target125Btn = document.querySelector(
-                'button[data-target="1.25"], ' +
-                '.target-btn[data-value="1.25"], ' +
-                'button[value="1.25"], ' +
-                '.price-target-125, ' +
-                '#target-125'
-            );
+            // Reset all saved states first
+            localStorage.setItem('amplSellTarget110', 'false');
+            localStorage.setItem('amplSellTarget125', 'false');
+            localStorage.setItem('amplSellTarget140', 'false');
             
-            const target140Btn = document.querySelector(
-                'button[data-target="1.40"], ' +
-                '.target-btn[data-value="1.40"], ' +
-                'button[value="1.40"], ' +
-                '.price-target-140, ' +
-                '#target-140'
-            );
+            // Save active button states
+            thresholdButtons.forEach(button => {
+                const buttonValue = parseFloat(button.getAttribute('data-value'));
+                const isActive = button.classList.contains('active');
+                
+                if (buttonValue === 1.10) {
+                    localStorage.setItem('amplSellTarget110', isActive.toString());
+                    console.log(`💾 Saved 1.10 target state: ${isActive}`);
+                }
+                
+                if (buttonValue === 1.25) {
+                    localStorage.setItem('amplSellTarget125', isActive.toString());
+                    console.log(`💾 Saved 1.25 target state: ${isActive}`);
+                }
+                
+                if (buttonValue === 1.40) {
+                    localStorage.setItem('amplSellTarget140', isActive.toString());
+                    console.log(`💾 Saved 1.40 target state: ${isActive}`);
+                }
+            });
             
-            const currentTargetDisplay = document.querySelector(
-                '.current-target, ' +
-                '#current-target, ' +
-                '.target-display, ' +
-                '.selected-target'
-            );
-            
-            if (target110Btn) {
-                const isActive = target110Btn.classList.contains('active') || target110Btn.classList.contains('selected');
-                localStorage.setItem('amplSellTarget110', isActive.toString());
-                console.log(`💾 Saved 1.10 target state: ${isActive}`);
-            }
-            
-            if (target125Btn) {
-                const isActive = target125Btn.classList.contains('active') || target125Btn.classList.contains('selected');
-                localStorage.setItem('amplSellTarget125', isActive.toString());
-                console.log(`💾 Saved 1.25 target state: ${isActive}`);
-            }
-            
-            if (target140Btn) {
-                const isActive = target140Btn.classList.contains('active') || target140Btn.classList.contains('selected');
-                localStorage.setItem('amplSellTarget140', isActive.toString());
-                console.log(`💾 Saved 1.40 target state: ${isActive}`);
-            }
-            
-            if (currentTargetDisplay) {
-                const currentTarget = currentTargetDisplay.textContent;
+            // Save current target display
+            if (currentThresholdDisplay) {
+                const currentTarget = currentThresholdDisplay.textContent;
                 localStorage.setItem('amplCurrentTarget', currentTarget);
                 console.log(`💾 Saved current target: ${currentTarget}`);
             }
@@ -222,20 +166,13 @@ class AMPLManagerPersistence {
     // Watch for changes in AMPL Manager and Sell Price Targets to auto-save
     watchForPersistenceChanges() {
         // Watch AMPL Manager checkbox changes
-        const amplManagerCheckbox = document.querySelector(
-            'input[type="checkbox"][id*="ampl"], ' +
-            'input[type="checkbox"][name*="ampl"], ' +
-            'input[type="checkbox"][class*="ampl"], ' +
-            '.ampl-manager input[type="checkbox"], ' +
-            '#ampl-manager, ' +
-            '.ampl-checkbox'
-        );
+        const amplManagerCheckbox = document.querySelector('#ampl-manager');
         
         if (amplManagerCheckbox) {
             amplManagerCheckbox.addEventListener('change', () => {
                 this.saveAMPLManagerPersistence();
             });
-            console.log('👀 Watching AMPL Manager checkbox for changes');
+            console.log('👀 Watching AMPL Manager checkbox (#ampl-manager) for changes');
         } else {
             // Retry watching after delay
             setTimeout(() => {
@@ -243,28 +180,19 @@ class AMPLManagerPersistence {
             }, 2000);
         }
         
-        // Watch sell price target button changes
-        const targetButtons = document.querySelectorAll(
-            'button[data-target], ' +
-            '.target-btn[data-value], ' +
-            'button[value*="1."], ' +
-            '.price-target-110, ' +
-            '.price-target-125, ' +
-            '.price-target-140, ' +
-            '#target-110, ' +
-            '#target-125, ' +
-            '#target-140'
-        );
+        // Watch sell price target button changes - using code-based detection from script.js
+        const thresholdButtons = document.querySelectorAll('.threshold-btn');
         
-        if (targetButtons.length > 0) {
-            targetButtons.forEach(button => {
+        if (thresholdButtons.length > 0) {
+            thresholdButtons.forEach(button => {
                 button.addEventListener('click', () => {
+                    // Small delay to ensure the active class has been applied
                     setTimeout(() => {
                         this.saveSellPriceTargetsPersistence();
-                    }, 100); // Small delay to ensure state has changed
+                    }, 100);
                 });
             });
-            console.log(`👀 Watching ${targetButtons.length} sell price target buttons for changes`);
+            console.log(`👀 Watching ${thresholdButtons.length} sell price target buttons (.threshold-btn) for changes`);
         } else {
             // Retry watching after delay
             setTimeout(() => {
@@ -272,30 +200,31 @@ class AMPLManagerPersistence {
             }, 2000);
         }
         
-        // Watch for any button clicks in the sell price targets area
-        document.addEventListener('click', (event) => {
-            const target = event.target;
-            
-            // Check if clicked element is related to sell price targets
-            if (target.matches('button[data-target], .target-btn, button[value*="1."]') ||
-                target.closest('.sell-price-targets') ||
-                target.closest('.price-targets') ||
-                target.textContent.includes('1.10') ||
-                target.textContent.includes('1.25') ||
-                target.textContent.includes('1.40')) {
-                
+        // Also watch for any changes to the current threshold display
+        const currentThresholdDisplay = document.getElementById('current-threshold');
+        if (currentThresholdDisplay) {
+            // Use MutationObserver to watch for text changes
+            const observer = new MutationObserver(() => {
                 setTimeout(() => {
                     this.saveSellPriceTargetsPersistence();
-                }, 200); // Delay to ensure state changes are applied
-            }
-        });
+                }, 100);
+            });
+            
+            observer.observe(currentThresholdDisplay, {
+                childList: true,
+                subtree: true,
+                characterData: true
+            });
+            
+            console.log('👀 Watching current threshold display (#current-threshold) for changes');
+        }
         
-        console.log('👀 Watching for AMPL Manager and Sell Price Target changes for auto-persistence');
+        console.log('👀 Watching for AMPL Manager and Sell Price Target changes for auto-persistence (Fixed Version)');
     }
 }
 
-// Initialize AMPL Manager and Sell Price Target persistence
-const amplManagerPersistence = new AMPLManagerPersistence();
+// Initialize AMPL Manager and Sell Price Target persistence (Fixed Version)
+const amplManagerPersistenceFixed = new AMPLManagerPersistenceFixed();
 
-console.log('🎬 AMPL Manager and Sell Price Target Persistence loaded successfully');
+console.log('🎬 AMPL Manager and Sell Price Target Persistence (Fixed Version) loaded successfully');
 
