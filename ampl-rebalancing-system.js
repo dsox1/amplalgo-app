@@ -1,9 +1,9 @@
 /**
- * AMPL Rebalancing System - Final Version
- * Features: No rebalancing sounds, fixed page load zoom sounds, corrected persistence
+ * AMPL Rebalancing System - Simplified Version
+ * Features: 6-second continuous beeping on page load, extended persistence for AMPL Manager and Sell Price Targets
  */
 
-class AMPLRebalancingSystemFinal {
+class AMPLRebalancingSystemSimplified {
     constructor() {
         this.targetPanel = null;
         this.isInitialized = false;
@@ -11,7 +11,7 @@ class AMPLRebalancingSystemFinal {
         this.audioContext = null;
         this.isExpanded = false;
         this.expandedModal = null;
-        this.pageLoadSoundsAdded = false;
+        this.pageLoadSoundsTriggered = false;
         
         // Rebalancing system data
         this.coins = {
@@ -28,8 +28,7 @@ class AMPLRebalancingSystemFinal {
             totalInvested: 0,
             totalCurrentValue: 0,
             totalProfit: 0,
-            totalProfitPercent: 0,
-            rebalanceThreshold: 7
+            totalProfitPercent: 0
         };
         
         // API endpoints for live data
@@ -39,14 +38,14 @@ class AMPLRebalancingSystemFinal {
             coinbase: 'https://api.coinbase.com/v2/exchange-rates'
         };
         
-        // Initialize audio context for page load sounds only
+        // Initialize audio context
         this.initializeAudio();
         
-        // Load persistent settings using corrected theme-style persistence
+        // Load persistent settings (including AMPL Manager and Sell Price Targets)
         this.loadPersistentSettings();
         
-        // Add page load zoom sounds immediately
-        this.addPageLoadZoomSounds();
+        // Start 6-second continuous beeping immediately on page load
+        this.startPageLoadBeeping();
         
         // Initialize when DOM is ready
         if (document.readyState === 'loading') {
@@ -59,63 +58,33 @@ class AMPLRebalancingSystemFinal {
     initializeAudio() {
         try {
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            console.log('🔊 Audio context initialized for page load zoom sounds only');
+            console.log('🔊 Audio context initialized for 6-second page load beeping');
         } catch (error) {
             console.log('🔇 Audio not available:', error.message);
         }
     }
 
-    // Enhanced page load zoom sounds - FIXED VERSION
-    createSoberZoomSound(oscillator, gainNode, filterNode) {
-        // More sober mechanical sound with longer duration
-        oscillator.type = 'sawtooth';
-        filterNode.type = 'lowpass';
-        filterNode.frequency.setValueAtTime(1500, this.audioContext.currentTime);
-        filterNode.frequency.exponentialRampToValueAtTime(400, this.audioContext.currentTime + 1.2);
+    // SIMPLIFIED: 6-second continuous beeping on page load
+    startPageLoadBeeping() {
+        if (this.pageLoadSoundsTriggered || !this.audioContext) return;
         
-        oscillator.frequency.setValueAtTime(150, this.audioContext.currentTime);
-        oscillator.frequency.exponentialRampToValueAtTime(120, this.audioContext.currentTime + 0.6);
-        oscillator.frequency.exponentialRampToValueAtTime(80, this.audioContext.currentTime + 1.2);
+        console.log('🔊 Starting 6-second continuous beeping on page load...');
         
-        gainNode.gain.setValueAtTime(0.08, this.audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.05, this.audioContext.currentTime + 0.6);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 1.2);
+        // Start beeping immediately
+        setTimeout(() => {
+            this.playContinuousBeeping();
+        }, 100); // Very short delay to ensure audio context is ready
         
-        oscillator.start();
-        oscillator.stop(this.audioContext.currentTime + 1.2);
+        this.pageLoadSoundsTriggered = true;
+        console.log('✅ 6-second continuous beeping started');
     }
 
-    createSoberBeepSound(oscillator, gainNode, filterNode) {
-        // Sober beeping with longer delays
-        oscillator.type = 'sine';
-        filterNode.type = 'bandpass';
-        filterNode.frequency.setValueAtTime(600, this.audioContext.currentTime);
-        
-        // Create beeping pattern with longer delays
-        const beepDuration = 0.3;
-        const pauseDuration = 0.8; // Much longer pause
-        const totalBeeps = 3;
-        
-        for (let i = 0; i < totalBeeps; i++) {
-            const startTime = this.audioContext.currentTime + (i * (beepDuration + pauseDuration));
-            const endTime = startTime + beepDuration;
-            
-            oscillator.frequency.setValueAtTime(600, startTime);
-            gainNode.gain.setValueAtTime(0.06, startTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, endTime);
-            
-            if (i === 0) {
-                oscillator.start(startTime);
-            }
-        }
-        
-        oscillator.stop(this.audioContext.currentTime + (totalBeeps * (beepDuration + pauseDuration)));
-    }
-
-    playPageLoadSound(type) {
+    playContinuousBeeping() {
         if (!this.audioContext) return;
         
         try {
+            console.log('🔊 Playing 6-second continuous beeping sequence...');
+            
             const oscillator = this.audioContext.createOscillator();
             const gainNode = this.audioContext.createGain();
             const filterNode = this.audioContext.createBiquadFilter();
@@ -124,100 +93,49 @@ class AMPLRebalancingSystemFinal {
             filterNode.connect(gainNode);
             gainNode.connect(this.audioContext.destination);
             
-            switch (type) {
-                case 'sober_zoom':
-                    this.createSoberZoomSound(oscillator, gainNode, filterNode);
-                    break;
-                case 'sober_beep':
-                    this.createSoberBeepSound(oscillator, gainNode, filterNode);
-                    break;
+            // Configure for sober beeping
+            oscillator.type = 'sine';
+            filterNode.type = 'bandpass';
+            filterNode.frequency.setValueAtTime(600, this.audioContext.currentTime);
+            
+            const beepDuration = 0.3;
+            const pauseDuration = 0.8;
+            const totalDuration = 6.0; // 6 seconds total
+            const beepCycle = beepDuration + pauseDuration; // 1.1 seconds per cycle
+            const totalBeeps = Math.floor(totalDuration / beepCycle); // About 5-6 beeps
+            
+            console.log(`🔊 Creating ${totalBeeps} beeps over ${totalDuration} seconds`);
+            
+            for (let i = 0; i < totalBeeps; i++) {
+                const startTime = this.audioContext.currentTime + (i * beepCycle);
+                const endTime = startTime + beepDuration;
+                
+                oscillator.frequency.setValueAtTime(600, startTime);
+                gainNode.gain.setValueAtTime(0.08, startTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, endTime);
+                
+                if (i === 0) {
+                    oscillator.start(startTime);
+                }
             }
+            
+            oscillator.stop(this.audioContext.currentTime + totalDuration);
+            
+            console.log('✅ 6-second continuous beeping sequence initiated');
+            
         } catch (error) {
-            console.log('🔇 Page load sound error:', error.message);
+            console.log('🔇 Page load beeping error:', error.message);
         }
     }
 
-    // Fixed page load zoom sounds - NO MOUSEOVER DEPENDENCY
-    addPageLoadZoomSounds() {
-        if (this.pageLoadSoundsAdded) return;
-        
-        console.log('🔊 Adding page load zoom sounds (no mouseover dependency)...');
-        
-        // Wait for page elements to be ready
-        setTimeout(() => {
-            // Target the main zoom animation that happens on page load
-            const mainContainer = document.querySelector('.main-container');
-            
-            if (mainContainer) {
-                // Watch for the zoom animation that starts at page load
-                const zoomDisplay = document.getElementById('current-zoom');
-                if (zoomDisplay) {
-                    // Create observer to watch zoom changes
-                    let lastZoomValue = '30%';
-                    const zoomObserver = new MutationObserver(() => {
-                        const currentZoom = zoomDisplay.textContent;
-                        if (currentZoom !== lastZoomValue && currentZoom !== '30%') {
-                            console.log(`🔊 Zoom changed from ${lastZoomValue} to ${currentZoom} - playing sober zoom sound`);
-                            this.playPageLoadSound('sober_zoom');
-                            lastZoomValue = currentZoom;
-                        }
-                    });
-                    
-                    zoomObserver.observe(zoomDisplay, {
-                        childList: true,
-                        characterData: true,
-                        subtree: true
-                    });
-                }
-                
-                // Also trigger sound based on timing (matches your zoom animation)
-                setTimeout(() => {
-                    console.log('🔊 Triggering initial page load zoom sound');
-                    this.playPageLoadSound('sober_zoom');
-                }, 2000); // Match your 2-second delay
-                
-                // Add sober beep sounds to individual panels (not mouseover dependent)
-                const panels = [
-                    '.webhook-display-section',
-                    '.tradingview-chart-section', 
-                    '.order-log-section'
-                ];
-                
-                panels.forEach((selector, index) => {
-                    const panel = document.querySelector(selector);
-                    if (panel) {
-                        // Trigger beep sounds at staggered intervals after page load
-                        setTimeout(() => {
-                            console.log(`🔊 Triggering panel beep sound for ${selector}`);
-                            this.playPageLoadSound('sober_beep');
-                        }, 3000 + (index * 1000)); // Staggered timing
-                        
-                        // Also add CSS transition listener for when panels animate
-                        panel.addEventListener('transitionstart', (e) => {
-                            if (e.propertyName === 'transform' || e.propertyName === 'scale') {
-                                this.playPageLoadSound('sober_beep');
-                                console.log(`🔊 Panel transition sound triggered for ${selector}`);
-                            }
-                        });
-                    }
-                });
-            }
-            
-        }, 1000);
-        
-        this.pageLoadSoundsAdded = true;
-        console.log('✅ Page load zoom sounds added (no mouseover dependency)');
-    }
-
-    // Corrected theme-style persistence methods
+    // Extended persistence methods (including AMPL Manager and Sell Price Targets)
     loadPersistentSettings() {
         try {
-            console.log('📖 Loading persistent settings using corrected theme-style method...');
+            console.log('📖 Loading extended persistent settings...');
             
-            // Load each setting individually (exactly like theme persistence)
+            // Existing rebalancing settings
             const savedProfitThreshold = localStorage.getItem('amplRebalancingProfitThreshold');
             const savedExchange = localStorage.getItem('amplRebalancingExchange');
-            const savedRebalanceThreshold = localStorage.getItem('amplRebalancingRebalanceThreshold');
             
             if (savedProfitThreshold !== null) {
                 this.settings.profitThreshold = parseFloat(savedProfitThreshold);
@@ -229,38 +147,177 @@ class AMPLRebalancingSystemFinal {
                 console.log(`✅ Loaded exchange: ${this.settings.selectedExchange}`);
             }
             
-            if (savedRebalanceThreshold !== null) {
-                this.settings.rebalanceThreshold = parseFloat(savedRebalanceThreshold);
-                console.log(`✅ Loaded rebalance threshold: ${this.settings.rebalanceThreshold}%`);
-            }
+            // Extended persistence for AMPL Manager and Sell Price Targets
+            this.loadAMPLManagerPersistence();
+            this.loadSellPriceTargetsPersistence();
             
-            console.log('✅ Persistent settings loaded successfully using theme-style persistence');
+            console.log('✅ Extended persistent settings loaded successfully');
         } catch (error) {
             console.log('⚠️ Error loading persistent settings:', error.message);
         }
     }
 
+    loadAMPLManagerPersistence() {
+        try {
+            const savedAMPLManagerState = localStorage.getItem('amplManagerEnabled');
+            
+            if (savedAMPLManagerState !== null) {
+                const isEnabled = savedAMPLManagerState === 'true';
+                
+                // Apply to AMPL Manager checkbox
+                setTimeout(() => {
+                    const amplManagerCheckbox = document.querySelector('input[type="checkbox"][id*="ampl"], input[type="checkbox"][name*="ampl"]');
+                    if (amplManagerCheckbox) {
+                        amplManagerCheckbox.checked = isEnabled;
+                        console.log(`✅ Restored AMPL Manager state: ${isEnabled ? 'Enabled' : 'Disabled'}`);
+                        
+                        // Trigger change event to ensure proper state
+                        amplManagerCheckbox.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                }, 1000); // Delay to ensure elements are loaded
+            }
+        } catch (error) {
+            console.log('⚠️ Error loading AMPL Manager persistence:', error.message);
+        }
+    }
+
+    loadSellPriceTargetsPersistence() {
+        try {
+            const savedTarget110 = localStorage.getItem('amplSellTarget110');
+            const savedTarget125 = localStorage.getItem('amplSellTarget125');
+            const savedTarget140 = localStorage.getItem('amplSellTarget140');
+            const savedCurrentTarget = localStorage.getItem('amplCurrentTarget');
+            
+            setTimeout(() => {
+                // Apply to sell price target buttons
+                const target110Btn = document.querySelector('button[data-target="1.10"], .target-btn[data-value="1.10"]');
+                const target125Btn = document.querySelector('button[data-target="1.25"], .target-btn[data-value="1.25"]');
+                const target140Btn = document.querySelector('button[data-target="1.40"], .target-btn[data-value="1.40"]');
+                
+                if (savedTarget110 === 'true' && target110Btn) {
+                    target110Btn.classList.add('active', 'selected');
+                    console.log('✅ Restored 1.10 target button state');
+                }
+                
+                if (savedTarget125 === 'true' && target125Btn) {
+                    target125Btn.classList.add('active', 'selected');
+                    console.log('✅ Restored 1.25 target button state');
+                }
+                
+                if (savedTarget140 === 'true' && target140Btn) {
+                    target140Btn.classList.add('active', 'selected');
+                    console.log('✅ Restored 1.40 target button state');
+                }
+                
+                // Apply current target
+                if (savedCurrentTarget) {
+                    const currentTargetDisplay = document.querySelector('.current-target, #current-target');
+                    if (currentTargetDisplay) {
+                        currentTargetDisplay.textContent = savedCurrentTarget;
+                        console.log(`✅ Restored current target: ${savedCurrentTarget}`);
+                    }
+                }
+            }, 1000);
+        } catch (error) {
+            console.log('⚠️ Error loading Sell Price Targets persistence:', error.message);
+        }
+    }
+
     savePersistentSettings() {
         try {
-            console.log('💾 Saving persistent settings using corrected theme-style method...');
+            console.log('💾 Saving extended persistent settings...');
             
-            // Save each setting individually (exactly like theme persistence)
+            // Save rebalancing settings
             localStorage.setItem('amplRebalancingProfitThreshold', this.settings.profitThreshold.toString());
             localStorage.setItem('amplRebalancingExchange', this.settings.selectedExchange);
-            localStorage.setItem('amplRebalancingRebalanceThreshold', this.settings.rebalanceThreshold.toString());
             
             console.log(`💾 Saved profit threshold: ${this.settings.profitThreshold}%`);
             console.log(`💾 Saved exchange: ${this.settings.selectedExchange}`);
-            console.log(`💾 Saved rebalance threshold: ${this.settings.rebalanceThreshold}%`);
             
-            console.log('✅ Persistent settings saved successfully using theme-style persistence');
+            // Save extended settings
+            this.saveAMPLManagerPersistence();
+            this.saveSellPriceTargetsPersistence();
+            
+            console.log('✅ Extended persistent settings saved successfully');
         } catch (error) {
             console.log('⚠️ Error saving persistent settings:', error.message);
         }
     }
 
+    saveAMPLManagerPersistence() {
+        try {
+            const amplManagerCheckbox = document.querySelector('input[type="checkbox"][id*="ampl"], input[type="checkbox"][name*="ampl"]');
+            
+            if (amplManagerCheckbox) {
+                const isEnabled = amplManagerCheckbox.checked;
+                localStorage.setItem('amplManagerEnabled', isEnabled.toString());
+                console.log(`💾 Saved AMPL Manager state: ${isEnabled ? 'Enabled' : 'Disabled'}`);
+            }
+        } catch (error) {
+            console.log('⚠️ Error saving AMPL Manager persistence:', error.message);
+        }
+    }
+
+    saveSellPriceTargetsPersistence() {
+        try {
+            const target110Btn = document.querySelector('button[data-target="1.10"], .target-btn[data-value="1.10"]');
+            const target125Btn = document.querySelector('button[data-target="1.25"], .target-btn[data-value="1.25"]');
+            const target140Btn = document.querySelector('button[data-target="1.40"], .target-btn[data-value="1.40"]');
+            const currentTargetDisplay = document.querySelector('.current-target, #current-target');
+            
+            if (target110Btn) {
+                const isActive = target110Btn.classList.contains('active') || target110Btn.classList.contains('selected');
+                localStorage.setItem('amplSellTarget110', isActive.toString());
+                console.log(`💾 Saved 1.10 target state: ${isActive}`);
+            }
+            
+            if (target125Btn) {
+                const isActive = target125Btn.classList.contains('active') || target125Btn.classList.contains('selected');
+                localStorage.setItem('amplSellTarget125', isActive.toString());
+                console.log(`💾 Saved 1.25 target state: ${isActive}`);
+            }
+            
+            if (target140Btn) {
+                const isActive = target140Btn.classList.contains('active') || target140Btn.classList.contains('selected');
+                localStorage.setItem('amplSellTarget140', isActive.toString());
+                console.log(`💾 Saved 1.40 target state: ${isActive}`);
+            }
+            
+            if (currentTargetDisplay) {
+                const currentTarget = currentTargetDisplay.textContent;
+                localStorage.setItem('amplCurrentTarget', currentTarget);
+                console.log(`💾 Saved current target: ${currentTarget}`);
+            }
+        } catch (error) {
+            console.log('⚠️ Error saving Sell Price Targets persistence:', error.message);
+        }
+    }
+
+    // Watch for changes in AMPL Manager and Sell Price Targets to auto-save
+    watchForPersistenceChanges() {
+        // Watch AMPL Manager checkbox changes
+        const amplManagerCheckbox = document.querySelector('input[type="checkbox"][id*="ampl"], input[type="checkbox"][name*="ampl"]');
+        if (amplManagerCheckbox) {
+            amplManagerCheckbox.addEventListener('change', () => {
+                this.saveAMPLManagerPersistence();
+            });
+        }
+        
+        // Watch sell price target button changes
+        const targetButtons = document.querySelectorAll('button[data-target], .target-btn[data-value]');
+        targetButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                setTimeout(() => {
+                    this.saveSellPriceTargetsPersistence();
+                }, 100); // Small delay to ensure state has changed
+            });
+        });
+        
+        console.log('👀 Watching for AMPL Manager and Sell Price Target changes for auto-persistence');
+    }
+
     initialize() {
-        console.log('🎬 Initializing AMPL Rebalancing System (Final)...');
+        console.log('🎬 Initializing AMPL Rebalancing System (Simplified)...');
         
         // Find the Limit Orders panel
         this.findLimitOrdersPanel();
@@ -271,8 +328,9 @@ class AMPLRebalancingSystemFinal {
             this.bindEventListeners();
             this.startLivePriceMonitoring();
             this.loadRealPositions();
+            this.watchForPersistenceChanges();
             this.isInitialized = true;
-            console.log('✅ AMPL Rebalancing System (Final) initialized successfully');
+            console.log('✅ AMPL Rebalancing System (Simplified) initialized successfully');
         } else {
             console.log('❌ Limit Orders panel not found - watching for ladder panel...');
             this.watchForLadderPanel();
@@ -289,8 +347,9 @@ class AMPLRebalancingSystemFinal {
                     this.bindEventListeners();
                     this.startLivePriceMonitoring();
                     this.loadRealPositions();
+                    this.watchForPersistenceChanges();
                     this.isInitialized = true;
-                    console.log('✅ AMPL Rebalancing System (Final) initialized after ladder panel activation');
+                    console.log('✅ AMPL Rebalancing System (Simplified) initialized after ladder panel activation');
                     observer.disconnect();
                 }
             }
@@ -338,7 +397,7 @@ class AMPLRebalancingSystemFinal {
     replaceWithRebalancingSystem() {
         if (!this.targetPanel) return;
 
-        console.log('🔄 Replacing Limit Orders content with Final Rebalancing System...');
+        console.log('🔄 Replacing Limit Orders content with Simplified Rebalancing System...');
         this.originalContent = this.targetPanel.innerHTML;
 
         const rebalancingHTML = `
@@ -366,11 +425,11 @@ class AMPLRebalancingSystemFinal {
                     </div>
                 </div>
 
-                <!-- Settings Panel -->
+                <!-- Settings Panel (Simplified) -->
                 <div class="settings-panel" id="settings-panel">
                     <div class="settings-row">
                         <label>Profit Threshold:</label>
-                        <select id="profit-threshold">
+                        <select id="profit-threshold" class="settings-select">
                             <option value="1.5">1.5%</option>
                             <option value="5">5%</option>
                             <option value="7" selected>7%</option>
@@ -379,17 +438,8 @@ class AMPLRebalancingSystemFinal {
                         </select>
                     </div>
                     <div class="settings-row">
-                        <label>Rebalance Threshold:</label>
-                        <select id="rebalance-threshold">
-                            <option value="5">5%</option>
-                            <option value="7" selected>7%</option>
-                            <option value="10">10%</option>
-                            <option value="15">15%</option>
-                        </select>
-                    </div>
-                    <div class="settings-row">
                         <label>Exchange:</label>
-                        <select id="exchange-select">
+                        <select id="exchange-select" class="settings-select">
                             <option value="kucoin" selected>KuCoin</option>
                             <option value="binance">Binance</option>
                             <option value="both">Both</option>
@@ -562,7 +612,7 @@ class AMPLRebalancingSystemFinal {
                     <div class="log-messages" id="log-messages">
                         <div class="log-message">
                             <span class="log-time">Ready</span>
-                            <span class="log-text">Final rebalancing system initialized</span>
+                            <span class="log-text">Simplified rebalancing system with 6-second beeping initialized</span>
                         </div>
                     </div>
                 </div>
@@ -571,17 +621,16 @@ class AMPLRebalancingSystemFinal {
 
         this.targetPanel.innerHTML = rebalancingHTML;
         
-        // Apply persistent settings to UI using corrected theme-style pattern
+        // Apply persistent settings to UI
         this.applyPersistentSettingsToUI();
         
-        console.log('✅ Limit Orders panel content replaced with Final Rebalancing System');
+        console.log('✅ Limit Orders panel content replaced with Simplified Rebalancing System');
     }
 
     applyPersistentSettingsToUI() {
-        // Apply saved settings to UI elements using corrected theme-style pattern
+        // Apply saved settings to UI elements
         setTimeout(() => {
             const profitThresholdSelect = document.getElementById('profit-threshold');
-            const rebalanceThresholdSelect = document.getElementById('rebalance-threshold');
             const exchangeSelect = document.getElementById('exchange-select');
             
             if (profitThresholdSelect) {
@@ -589,16 +638,11 @@ class AMPLRebalancingSystemFinal {
                 console.log(`✅ Applied profit threshold to UI: ${this.settings.profitThreshold}%`);
             }
             
-            if (rebalanceThresholdSelect) {
-                rebalanceThresholdSelect.value = this.settings.rebalanceThreshold.toString();
-                console.log(`✅ Applied rebalance threshold to UI: ${this.settings.rebalanceThreshold}%`);
-            }
-            
             if (exchangeSelect) {
                 exchangeSelect.value = this.settings.selectedExchange;
                 console.log(`✅ Applied exchange to UI: ${this.settings.selectedExchange}`);
             }
-        }, 100); // Small delay to ensure elements are ready
+        }, 100);
     }
 
     createExpandedModal() {
@@ -884,9 +928,9 @@ class AMPLRebalancingSystemFinal {
 
     applyStyles() {
         const style = document.createElement('style');
-        style.id = 'ampl-rebalancing-final-styles';
+        style.id = 'ampl-rebalancing-simplified-styles';
         style.textContent = `
-            /* Final Rebalancing System Styles - No Sound Effects */
+            /* Simplified Rebalancing System Styles */
             .rebalancing-container {
                 width: 100%;
                 height: 100%;
@@ -1041,17 +1085,50 @@ class AMPLRebalancingSystemFinal {
                 font-weight: 500;
             }
 
-            .settings-row select {
-                background: rgba(255, 255, 255, 0.1);
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                color: var(--text-primary, #ffffff);
-                padding: 2px 4px;
-                border-radius: 3px;
-                font-size: 9px;
-                min-width: 60px;
-                font-weight: 500;
+            /* Fixed dropdown styling */
+            .settings-select {
+                background: rgba(0, 0, 0, 0.8) !important;
+                border: 1px solid rgba(76, 175, 80, 0.4) !important;
+                color: #ffffff !important;
+                padding: 3px 6px;
+                border-radius: 4px;
+                font-size: 10px;
+                min-width: 70px;
+                font-weight: 600;
                 box-sizing: border-box;
                 transition: all 0.3s ease;
+            }
+
+            .settings-select:hover {
+                background: rgba(0, 0, 0, 0.9) !important;
+                border-color: rgba(76, 175, 80, 0.6) !important;
+                box-shadow: 0 0 8px rgba(76, 175, 80, 0.3);
+            }
+
+            .settings-select:focus {
+                outline: none;
+                background: rgba(0, 0, 0, 0.95) !important;
+                border-color: rgba(76, 175, 80, 0.8) !important;
+                box-shadow: 0 0 12px rgba(76, 175, 80, 0.5);
+            }
+
+            .settings-select option {
+                background: rgba(0, 0, 0, 0.95) !important;
+                color: #ffffff !important;
+                padding: 4px 8px;
+                font-weight: 600;
+                border: none;
+            }
+
+            .settings-select option:hover {
+                background: rgba(76, 175, 80, 0.2) !important;
+                color: #4CAF50 !important;
+            }
+
+            .settings-select option:checked {
+                background: rgba(76, 175, 80, 0.3) !important;
+                color: #4CAF50 !important;
+                font-weight: 700;
             }
 
             .threshold-value {
@@ -1603,7 +1680,7 @@ class AMPLRebalancingSystemFinal {
     }
 
     bindEventListeners() {
-        console.log('🔗 Binding final rebalancing system event listeners (no sound effects)...');
+        console.log('🔗 Binding simplified rebalancing system event listeners...');
         
         // Main container click for expand
         const container = document.getElementById('rebalancing-container');
@@ -1631,7 +1708,7 @@ class AMPLRebalancingSystemFinal {
             event.stopPropagation();
             
             const buttonId = target.id;
-            console.log(`🔘 Final rebalancing button clicked: ${buttonId}`);
+            console.log(`🔘 Simplified rebalancing button clicked: ${buttonId}`);
             
             switch (buttonId) {
                 case 'expand-panel':
@@ -1657,7 +1734,7 @@ class AMPLRebalancingSystemFinal {
             }
         });
 
-        // Settings change listeners with corrected theme-style persistence
+        // Settings change listeners with extended persistence
         this.targetPanel.addEventListener('change', (event) => {
             const target = event.target;
             
@@ -1668,12 +1745,6 @@ class AMPLRebalancingSystemFinal {
                     this.logAction(`Profit threshold set to ${target.value}%`);
                     console.log(`✅ Profit threshold changed to: ${target.value}%`);
                     break;
-                case 'rebalance-threshold':
-                    this.settings.rebalanceThreshold = parseFloat(target.value);
-                    this.savePersistentSettings();
-                    this.logAction(`Rebalance threshold set to ${target.value}%`);
-                    console.log(`✅ Rebalance threshold changed to: ${target.value}%`);
-                    break;
                 case 'exchange-select':
                     this.settings.selectedExchange = target.value;
                     this.savePersistentSettings();
@@ -1683,7 +1754,7 @@ class AMPLRebalancingSystemFinal {
             }
         });
         
-        console.log('✅ Final rebalancing event listeners bound (no sound effects, corrected persistence)');
+        console.log('✅ Simplified rebalancing event listeners bound');
     }
 
     toggleSettings() {
@@ -1739,7 +1810,7 @@ class AMPLRebalancingSystemFinal {
             this.calculateProfits();
             this.updateDisplay();
             this.updateExpandedModal();
-            this.checkRebalanceOpportunities();
+            this.checkProfitOpportunities();
             this.setLoadingState(false);
             
             this.logAction('Live prices updated successfully');
@@ -1869,23 +1940,23 @@ class AMPLRebalancingSystemFinal {
         });
     }
 
-    checkRebalanceOpportunities() {
+    checkProfitOpportunities() {
         const opportunities = [];
         
         Object.keys(this.coins).forEach(coinKey => {
             const coin = this.coins[coinKey];
-            if (coin.quantity > 0 && Math.abs(coin.profitPercent) >= this.settings.rebalanceThreshold) {
+            if (coin.quantity > 0 && coin.profitPercent >= this.settings.profitThreshold) {
                 opportunities.push({
                     coin: coinKey,
                     profitPercent: coin.profitPercent,
-                    action: coin.profitPercent > 0 ? 'SELL' : 'HOLD'
+                    action: 'SELL'
                 });
             }
         });
         
         if (opportunities.length > 0) {
             opportunities.forEach(opp => {
-                this.logAction(`${opp.action} opportunity: ${opp.coin} (${opp.profitPercent.toFixed(2)}%)`);
+                this.logAction(`SELL opportunity: ${opp.coin} (${opp.profitPercent.toFixed(2)}%)`);
             });
         }
     }
@@ -2081,46 +2152,29 @@ class AMPLRebalancingSystemFinal {
         });
         return readyToSell;
     }
-
-    getRebalanceOpportunities() {
-        const opportunities = [];
-        Object.keys(this.coins).forEach(coinKey => {
-            const coin = this.coins[coinKey];
-            if (coin.quantity > 0 && Math.abs(coin.profitPercent) >= this.settings.rebalanceThreshold) {
-                opportunities.push({
-                    symbol: coinKey,
-                    quantity: coin.quantity,
-                    profitPercent: coin.profitPercent,
-                    action: coin.profitPercent > 0 ? 'SELL' : 'HOLD'
-                });
-            }
-        });
-        return opportunities;
-    }
 }
 
-// Initialize the final rebalancing system
-const amplRebalancingSystemFinal = new AMPLRebalancingSystemFinal();
+// Initialize the simplified rebalancing system
+const amplRebalancingSystemSimplified = new AMPLRebalancingSystemSimplified();
 
 // Global functions for external use
 function updateRebalancingCoin(coinSymbol, quantity, purchasePrice) {
-    if (amplRebalancingSystemFinal) {
-        amplRebalancingSystemFinal.updateCoinData(coinSymbol, quantity, purchasePrice);
+    if (amplRebalancingSystemSimplified) {
+        amplRebalancingSystemSimplified.updateCoinData(coinSymbol, quantity, purchasePrice);
     }
 }
 
 function getRebalancingStatus() {
-    if (amplRebalancingSystemFinal) {
+    if (amplRebalancingSystemSimplified) {
         return {
-            shouldBuy: amplRebalancingSystemFinal.shouldBuy(),
-            coinsReadyToSell: amplRebalancingSystemFinal.getCoinsReadyToSell(),
-            rebalanceOpportunities: amplRebalancingSystemFinal.getRebalanceOpportunities(),
-            currentAMPLPrice: amplRebalancingSystemFinal.getCurrentAMPLPrice(),
-            totalProfit: amplRebalancingSystemFinal.settings.totalProfit
+            shouldBuy: amplRebalancingSystemSimplified.shouldBuy(),
+            coinsReadyToSell: amplRebalancingSystemSimplified.getCoinsReadyToSell(),
+            currentAMPLPrice: amplRebalancingSystemSimplified.getCurrentAMPLPrice(),
+            totalProfit: amplRebalancingSystemSimplified.settings.totalProfit
         };
     }
     return null;
 }
 
-console.log('🎬 AMPL Rebalancing System (Final - No Sounds, Fixed Page Load Sounds, Corrected Persistence) loaded successfully');
+console.log('🎬 AMPL Rebalancing System (Simplified - 6-Second Continuous Beeping, Extended Persistence) loaded successfully');
 
