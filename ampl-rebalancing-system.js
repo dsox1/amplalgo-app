@@ -4,7 +4,7 @@
  */
 
 // Enhanced Rebalancing System with Automatic Trigger Logic
-class AMPLRebalancingSystemWithTrigger {
+class AMPLRebalancingSystem {
     constructor() {
         this.isInitialized = false;
         this.originalContent = null;
