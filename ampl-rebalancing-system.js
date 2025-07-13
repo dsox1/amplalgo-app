@@ -1,6 +1,6 @@
 /**
- * AMPL Rebalancing System - Fixed Version
- * Fixes: 1) Proper API integration, 2) Real order execution, 3) Correct trigger logic
+ * AMPL Rebalancing System - Complete Rewrite
+ * Built from scratch with proper architecture and functionality
  */
 
 class AMPLRebalancingSystem {
@@ -12,41 +12,36 @@ class AMPLRebalancingSystem {
         this.retryCount = 0;
         this.maxRetries = 10;
         
-        // Supabase configuration - FIXED: Using correct endpoints
-        this.SUPABASE_URL = 'https://fbkcdirkshubectuvxzi.supabase.co';
-        this.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZia2NkaXJrc2h1YmVjdHV2eHppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY0NDc0ODAsImV4cCI6MjA2MjAyMzQ4MH0.yhy1JL-V9zQVK1iIdSVK1261qD8gmHmo2vB-qe7Kit8';
-        
-        // AMPL Trigger Configuration
+        // Configuration
         this.AMPL_TRIGGER_PRICE = 1.16;
+        this.UPDATE_INTERVAL = 120000; // 2 minutes - much slower
+        this.TRIGGER_COOLDOWN = 600000; // 10 minutes between triggers
+        
+        // State tracking
         this.lastAMPLPrice = null;
         this.triggerActive = false;
         this.rebalanceInProgress = false;
-        this.lastTriggerCheck = 0; // Prevent duplicate triggers
+        this.lastTriggerTime = 0;
+        this.availableBalance = 0; // USDT balance for rebalancing
         
-        // Portfolio data - FIXED: Initialize with realistic values for testing
+        // Portfolio data - ZEROED by default
         this.portfolioData = {
-            SOL: { quantity: 0, purchasePrice: 0, currentPrice: 0, value: 0, profit: 0, status: '💤', targetAllocation: 0.25 },
-            SUI: { quantity: 0, purchasePrice: 0, currentPrice: 0, value: 0, profit: 0, status: '💤', targetAllocation: 0.25 },
-            BTC: { quantity: 0, purchasePrice: 0, currentPrice: 0, value: 0, profit: 0, status: '💤', targetAllocation: 0.25 },
-            AMPL: { quantity: 0, purchasePrice: 0, currentPrice: 0, value: 0, profit: 0, status: '💤', targetAllocation: 0.25 }
+            SOL: { quantity: 0, purchasePrice: 0, currentPrice: 0, value: 0, profit: 0, profitPercent: 0, status: '💤' },
+            SUI: { quantity: 0, purchasePrice: 0, currentPrice: 0, value: 0, profit: 0, profitPercent: 0, status: '💤' },
+            BTC: { quantity: 0, purchasePrice: 0, currentPrice: 0, value: 0, profit: 0, profitPercent: 0, status: '💤' },
+            AMPL: { quantity: 0, purchasePrice: 0, currentPrice: 0, value: 0, profit: 0, profitPercent: 0, status: '💤' }
         };
         
         this.settings = {
             profitThreshold: 1.5,
             exchange: 'KuCoin',
-            autoRebalanceEnabled: true,
-            rebalanceAmount: 1000
+            autoRebalanceEnabled: true
         };
         
-        this.actionLog = [
-            'System initialized - monitoring AMPL trigger price...',
-            `Trigger price set to $${this.AMPL_TRIGGER_PRICE}`,
-            'Waiting for AMPL price data...'
-        ];
-        
+        this.actionLog = ['System initialized'];
         this.isLiveDataActive = false;
         
-        // Initialize when DOM is ready
+        // Initialize
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => this.initialize());
         } else {
@@ -55,10 +50,9 @@ class AMPLRebalancingSystem {
     }
 
     initialize() {
-        console.log('🎬 Initializing AMPL Rebalancing System...');
+        console.log('🎬 Initializing AMPL Rebalancing System (Complete Rewrite)...');
         this.loadPersistentSettings();
         this.findAndReplacePanel();
-        console.log('✅ AMPL Rebalancing System initialization started');
     }
 
     findAndReplacePanel() {
@@ -69,28 +63,11 @@ class AMPLRebalancingSystem {
                 return limitOrdersSection ? limitOrdersSection.querySelector('.section-content') : null;
             },
             () => {
-                const headers = document.querySelectorAll('.section-header');
-                for (const header of headers) {
-                    if (header.textContent.includes('LIMIT ORDERS')) {
-                        const section = header.closest('.ladder-section');
-                        return section ? section.querySelector('.section-content') : null;
-                    }
-                }
-                return null;
-            },
-            () => {
                 const showLadderCheckbox = document.querySelector('#show-ladder-panel');
                 if (showLadderCheckbox && !showLadderCheckbox.checked) {
-                    console.log('📋 Enabling ladder panel for rebalancing system...');
                     showLadderCheckbox.checked = true;
                     showLadderCheckbox.dispatchEvent(new Event('change', { bubbles: true }));
-                    
-                    setTimeout(() => {
-                        const panel = document.querySelector('.ladder-section.limit-orders-section .section-content');
-                        if (panel) {
-                            this.replaceContent(panel);
-                        }
-                    }, 1000);
+                    setTimeout(() => this.findAndReplacePanel(), 1000);
                     return null;
                 }
                 return null;
@@ -101,7 +78,7 @@ class AMPLRebalancingSystem {
             try {
                 const targetElement = detectionMethods[i]();
                 if (targetElement) {
-                    console.log(`✅ Found Limit Orders panel via detection method ${i + 1}`);
+                    console.log(`✅ Found Limit Orders panel`);
                     this.replaceContent(targetElement);
                     return;
                 }
@@ -112,10 +89,7 @@ class AMPLRebalancingSystem {
 
         if (this.retryCount < this.maxRetries) {
             this.retryCount++;
-            console.log(`🔄 Retrying panel detection (${this.retryCount}/${this.maxRetries})...`);
             setTimeout(() => this.findAndReplacePanel(), 3000);
-        } else {
-            console.log('❌ Could not find Limit Orders panel after maximum retries');
         }
     }
 
@@ -125,40 +99,40 @@ class AMPLRebalancingSystem {
         this.originalContent = targetElement.innerHTML;
         targetElement.innerHTML = this.createRebalancingHTML();
         this.addEventListeners(targetElement);
-        this.startRealLiveDataUpdates();
+        this.startDataUpdates();
         
         this.isInitialized = true;
-        console.log('✅ AMPL Rebalancing System replaced Limit Orders panel successfully');
+        console.log('✅ AMPL Rebalancing System initialized');
     }
 
-    async startRealLiveDataUpdates() {
-        console.log('🔄 Starting REAL live data updates with AMPL trigger monitoring...');
+    async startDataUpdates() {
+        console.log('🔄 Starting data updates (2-minute intervals)...');
         
-        // FIXED: Load existing positions first
-        await this.loadExistingPositions();
+        // Initial load
+        await this.loadAccountData();
+        await this.updatePrices();
         
-        // FIXED: Start with immediate update
-        await this.updateLiveData();
+        // Set up slower interval updates
+        this.updateInterval = setInterval(async () => {
+            await this.loadAccountData();
+            await this.updatePrices();
+            this.checkTriggerConditions();
+        }, this.UPDATE_INTERVAL);
         
-        // FIXED: More frequent updates for better trigger detection
-        this.updateInterval = setInterval(() => {
-            this.updateLiveData();
-        }, 15000); // Every 15 seconds instead of 30
-        
-        this.addToActionLog('REAL live data monitoring started');
+        this.addToActionLog('Data monitoring started (2-minute intervals)');
     }
 
-    async loadExistingPositions() {
+    async loadAccountData() {
         try {
-            console.log('📊 Loading existing positions from KuCoin...');
+            console.log('📊 Loading account balances...');
             
-            // FIXED: Use correct endpoint structure
-            const response = await fetch(`${this.SUPABASE_URL}/rest/v1/rpc/get_kucoin_balances`, {
+            // Try to get real balances from KuCoin
+            const response = await fetch('https://fbkcdirkshubectuvxzi.supabase.co/rest/v1/rpc/get_kucoin_balances', {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${this.SUPABASE_ANON_KEY}`,
+                    'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZia2NkaXJrc2h1YmVjdHV2eHppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY0NDc0ODAsImV4cCI6MjA2MjAyMzQ4MH0.yhy1JL-V9zQVK1iIdSVK1261qD8gmHmo2vB-qe7Kit8',
                     'Content-Type': 'application/json',
-                    'apikey': this.SUPABASE_ANON_KEY
+                    'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZia2NkaXJrc2h1YmVjdHV2eHppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY0NDc0ODAsImV4cCI6MjA2MjAyMzQ4MH0.yhy1JL-V9zQVK1iIdSVK1261qD8gmHmo2vB-qe7Kit8'
                 },
                 body: JSON.stringify({})
             });
@@ -167,359 +141,248 @@ class AMPLRebalancingSystem {
                 const balanceData = await response.json();
                 console.log('✅ Balance data received:', balanceData);
                 
-                // FIXED: Process balance data correctly
+                // Reset all to zero first
+                Object.keys(this.portfolioData).forEach(symbol => {
+                    this.portfolioData[symbol].quantity = 0;
+                    this.portfolioData[symbol].status = '💤';
+                });
+                this.availableBalance = 0;
+                
+                // Update with real balances
                 if (balanceData && Array.isArray(balanceData)) {
-                    Object.keys(this.portfolioData).forEach(symbol => {
-                        const balance = balanceData.find(b => b.currency === symbol);
-                        if (balance && parseFloat(balance.available) > 0) {
-                            this.portfolioData[symbol].quantity = parseFloat(balance.available);
+                    balanceData.forEach(balance => {
+                        const symbol = balance.currency;
+                        const available = parseFloat(balance.available || 0);
+                        
+                        if (symbol === 'USDT') {
+                            this.availableBalance = available;
+                        } else if (this.portfolioData[symbol] && available > 0) {
+                            this.portfolioData[symbol].quantity = available;
                             this.portfolioData[symbol].status = '📊';
-                            console.log(`✅ Found ${symbol} position: ${balance.available}`);
                         }
                     });
                 }
                 
-                this.addToActionLog('Loaded real positions from KuCoin');
                 this.isLiveDataActive = true;
+                this.addToActionLog(`Loaded balances: USDT $${this.availableBalance.toFixed(2)}`);
             } else {
-                console.log('⚠️ Could not load positions from KuCoin, using demo data');
-                this.addToActionLog('Position loading failed - using demo data');
-                this.loadDemoData();
+                console.log('⚠️ Could not load balances, keeping zero values');
+                this.isLiveDataActive = false;
+                this.addToActionLog('Balance loading failed - showing zero values');
             }
         } catch (error) {
-            console.error('❌ Error loading existing positions:', error);
-            this.addToActionLog('Position loading error - using demo data');
-            this.loadDemoData();
+            console.error('❌ Error loading account data:', error);
+            this.isLiveDataActive = false;
+            this.addToActionLog('Balance loading error - showing zero values');
         }
     }
 
-    // FIXED: Add demo data for testing when API fails
-    loadDemoData() {
-        console.log('📊 Loading demo data for testing...');
-        this.portfolioData = {
-            SOL: { quantity: 2.5, purchasePrice: 120.00, currentPrice: 0, value: 0, profit: 0, status: '📊', targetAllocation: 0.25 },
-            SUI: { quantity: 100, purchasePrice: 2.10, currentPrice: 0, value: 0, profit: 0, status: '📊', targetAllocation: 0.25 },
-            BTC: { quantity: 0.01, purchasePrice: 45000, currentPrice: 0, value: 0, profit: 0, status: '📊', targetAllocation: 0.25 },
-            AMPL: { quantity: 200, purchasePrice: 1.20, currentPrice: 0, value: 0, profit: 0, status: '📊', targetAllocation: 0.25 }
-        };
-        this.addToActionLog('Demo data loaded for testing');
-    }
-
-    async updateLiveData() {
+    async updatePrices() {
         try {
-            console.log('📊 Fetching REAL live market data...');
+            console.log('📊 Fetching current prices...');
             
-            const prices = await this.fetchRealPrices();
+            const prices = await this.fetchCurrentPrices();
             
             if (prices && Object.keys(prices).length > 0) {
-                // Update portfolio with real prices
+                // Update portfolio with current prices
                 Object.keys(this.portfolioData).forEach(symbol => {
                     if (prices[symbol]) {
-                        this.portfolioData[symbol].currentPrice = prices[symbol];
-                        this.portfolioData[symbol].value = this.portfolioData[symbol].quantity * prices[symbol];
+                        const data = this.portfolioData[symbol];
+                        data.currentPrice = prices[symbol];
+                        data.value = data.quantity * data.currentPrice;
                         
-                        // FIXED: Calculate profit correctly
-                        const investedAmount = this.portfolioData[symbol].quantity * this.portfolioData[symbol].purchasePrice;
-                        this.portfolioData[symbol].profit = this.portfolioData[symbol].value - investedAmount;
-                        
-                        if (this.portfolioData[symbol].quantity > 0 && this.portfolioData[symbol].purchasePrice > 0) {
-                            const profitPercentage = (this.portfolioData[symbol].profit / investedAmount) * 100;
+                        if (data.quantity > 0 && data.purchasePrice > 0) {
+                            const invested = data.quantity * data.purchasePrice;
+                            data.profit = data.value - invested;
+                            data.profitPercent = (data.profit / invested) * 100;
                             
-                            if (profitPercentage >= this.settings.profitThreshold) {
-                                this.portfolioData[symbol].status = '🎯';
-                                this.checkRebalanceOpportunity(symbol, profitPercentage);
-                            } else if (profitPercentage > 0) {
-                                this.portfolioData[symbol].status = '📈';
+                            if (data.profitPercent >= this.settings.profitThreshold) {
+                                data.status = '🎯';
+                            } else if (data.profitPercent > 0) {
+                                data.status = '📈';
                             } else {
-                                this.portfolioData[symbol].status = '📊';
+                                data.status = '📊';
                             }
-                        } else {
-                            this.portfolioData[symbol].status = '💤';
                         }
                     }
                 });
                 
-                // FIXED: Check AMPL trigger with proper logic
+                // Update AMPL price for trigger monitoring
                 if (prices.AMPL) {
-                    await this.checkAMPLTrigger(prices.AMPL);
+                    this.lastAMPLPrice = prices.AMPL;
                 }
                 
                 this.updateDisplay();
-                this.addToActionLog(`LIVE prices updated: ${Object.keys(prices).join(', ')}`);
+                this.addToActionLog(`Prices updated: ${Object.keys(prices).join(', ')}`);
                 this.updateLiveStatusIndicator(true);
-                
-                console.log('✅ REAL live data updated successfully');
             } else {
-                console.log('⚠️ No live price data available');
-                this.addToActionLog('Live data fetch failed - retrying...');
                 this.updateLiveStatusIndicator(false);
+                this.addToActionLog('Price update failed');
             }
         } catch (error) {
-            console.error('❌ Error updating live data:', error);
-            this.addToActionLog('Live data update error - retrying...');
+            console.error('❌ Error updating prices:', error);
             this.updateLiveStatusIndicator(false);
+            this.addToActionLog('Price update error');
         }
     }
 
-    async checkAMPLTrigger(currentAMPLPrice) {
-        const previousPrice = this.lastAMPLPrice;
-        this.lastAMPLPrice = currentAMPLPrice;
-        const now = Date.now();
+    async fetchCurrentPrices() {
+        const prices = {};
         
-        console.log(`🔍 AMPL Price Check: Current $${currentAMPLPrice.toFixed(4)}, Trigger $${this.AMPL_TRIGGER_PRICE}`);
-        
-        // FIXED: Improved trigger logic with cooldown
-        if (currentAMPLPrice < this.AMPL_TRIGGER_PRICE && !this.rebalanceInProgress) {
-            // Check if this is a new trigger (price was above trigger before OR enough time has passed)
-            const isNewTrigger = (previousPrice === null || previousPrice >= this.AMPL_TRIGGER_PRICE) || 
-                                 (now - this.lastTriggerCheck > 300000); // 5 minute cooldown
-            
-            if (isNewTrigger && this.settings.autoRebalanceEnabled) {
-                console.log(`🚨 AMPL TRIGGER ACTIVATED: Price $${currentAMPLPrice.toFixed(4)} < $${this.AMPL_TRIGGER_PRICE}`);
-                this.addToActionLog(`🚨 AMPL TRIGGER: $${currentAMPLPrice.toFixed(4)} < $${this.AMPL_TRIGGER_PRICE}`);
-                
-                this.triggerActive = true;
-                this.portfolioData.AMPL.status = '🚨';
-                this.lastTriggerCheck = now;
-                
-                // FIXED: Execute equal accumulation with proper error handling
-                await this.executeEqualAccumulation(currentAMPLPrice);
-            } else if (this.triggerActive) {
-                this.portfolioData.AMPL.status = '🚨';
-                this.addToActionLog(`🚨 AMPL below trigger: $${currentAMPLPrice.toFixed(4)}`);
+        try {
+            // Use CoinGecko as primary source
+            const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana,sui,bitcoin,ampleforth&vs_currencies=usd');
+            if (response.ok) {
+                const data = await response.json();
+                if (data.solana) prices.SOL = data.solana.usd;
+                if (data.sui) prices.SUI = data.sui.usd;
+                if (data.bitcoin) prices.BTC = data.bitcoin.usd;
+                if (data.ampleforth) prices.AMPL = data.ampleforth.usd;
             }
-        } else if (currentAMPLPrice >= this.AMPL_TRIGGER_PRICE && this.triggerActive) {
-            console.log(`✅ AMPL TRIGGER DEACTIVATED: Price $${currentAMPLPrice.toFixed(4)} >= $${this.AMPL_TRIGGER_PRICE}`);
-            this.addToActionLog(`✅ AMPL recovered above $${this.AMPL_TRIGGER_PRICE}`);
-            this.triggerActive = false;
-            
-            // Reset AMPL status based on normal profit logic
-            if (this.portfolioData.AMPL.quantity > 0 && this.portfolioData.AMPL.purchasePrice > 0) {
-                const investedAmount = this.portfolioData.AMPL.quantity * this.portfolioData.AMPL.purchasePrice;
-                const profitPercentage = (this.portfolioData.AMPL.profit / investedAmount) * 100;
-                
-                if (profitPercentage >= this.settings.profitThreshold) {
-                    this.portfolioData.AMPL.status = '🎯';
-                } else if (profitPercentage > 0) {
-                    this.portfolioData.AMPL.status = '📈';
-                } else {
-                    this.portfolioData.AMPL.status = '📊';
+        } catch (error) {
+            console.log('⚠️ CoinGecko failed:', error.message);
+        }
+        
+        // Fallback to Binance for missing prices
+        const binanceMap = { SOL: 'SOLUSDT', SUI: 'SUIUSDT', BTC: 'BTCUSDT' };
+        for (const [coin, symbol] of Object.entries(binanceMap)) {
+            if (!prices[coin]) {
+                try {
+                    const response = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        prices[coin] = parseFloat(data.price);
+                    }
+                } catch (error) {
+                    console.log(`⚠️ Binance ${coin} failed:`, error.message);
                 }
-            } else {
-                this.portfolioData.AMPL.status = '💤';
             }
+        }
+        
+        return prices;
+    }
+
+    checkTriggerConditions() {
+        if (!this.lastAMPLPrice || this.rebalanceInProgress) return;
+        
+        const now = Date.now();
+        const timeSinceLastTrigger = now - this.lastTriggerTime;
+        
+        console.log(`🔍 AMPL Check: $${this.lastAMPLPrice.toFixed(4)} vs trigger $${this.AMPL_TRIGGER_PRICE}`);
+        
+        if (this.lastAMPLPrice < this.AMPL_TRIGGER_PRICE && 
+            this.settings.autoRebalanceEnabled && 
+            timeSinceLastTrigger > this.TRIGGER_COOLDOWN) {
+            
+            console.log('🚨 AMPL TRIGGER ACTIVATED!');
+            this.triggerActive = true;
+            this.lastTriggerTime = now;
+            this.portfolioData.AMPL.status = '🚨';
+            this.addToActionLog(`🚨 AMPL trigger: $${this.lastAMPLPrice.toFixed(4)} < $${this.AMPL_TRIGGER_PRICE}`);
+            
+            this.executeEqualRebalance();
+        } else if (this.lastAMPLPrice >= this.AMPL_TRIGGER_PRICE && this.triggerActive) {
+            console.log('✅ AMPL trigger deactivated');
+            this.triggerActive = false;
+            this.addToActionLog(`✅ AMPL recovered: $${this.lastAMPLPrice.toFixed(4)}`);
         }
     }
 
-    async executeEqualAccumulation(amplPrice) {
-        if (this.rebalanceInProgress) {
-            console.log('⚠️ Rebalance already in progress, skipping...');
+    async executeEqualRebalance() {
+        if (this.rebalanceInProgress || this.availableBalance <= 0) {
+            this.addToActionLog('❌ Cannot rebalance: insufficient balance or already in progress');
             return;
         }
         
         this.rebalanceInProgress = true;
-        this.addToActionLog('🔄 Starting equal accumulation rebalance...');
+        this.addToActionLog('🔄 Starting equal rebalance...');
         
         try {
-            console.log(`🔄 Executing equal accumulation with $${this.settings.rebalanceAmount} at AMPL price $${amplPrice.toFixed(4)}`);
+            // Calculate equal allocation from available balance
+            const allocationPerCoin = this.availableBalance / 4;
             
-            const allocationPerCoin = this.settings.rebalanceAmount / 4;
-            const prices = await this.fetchRealPrices();
-            
-            if (!prices || Object.keys(prices).length < 4) {
-                throw new Error('Could not fetch current prices for all coins');
+            if (allocationPerCoin < 10) { // Minimum $10 per coin
+                throw new Error(`Insufficient balance: $${this.availableBalance.toFixed(2)} (need minimum $40)`);
             }
             
-            // Calculate quantities to buy for each coin
-            const buyOrders = {};
-            Object.keys(this.portfolioData).forEach(symbol => {
-                if (prices[symbol]) {
-                    const quantityToBuy = allocationPerCoin / prices[symbol];
-                    buyOrders[symbol] = {
-                        quantity: quantityToBuy,
-                        price: prices[symbol],
-                        value: allocationPerCoin
-                    };
-                }
-            });
+            console.log(`💰 Equal allocation: $${allocationPerCoin.toFixed(2)} per coin from $${this.availableBalance.toFixed(2)} balance`);
+            this.addToActionLog(`💰 Allocating $${allocationPerCoin.toFixed(2)} per coin`);
             
-            console.log('📊 Calculated buy orders:', buyOrders);
-            this.addToActionLog(`📊 Equal allocation: $${allocationPerCoin.toFixed(2)} per coin`);
-            
-            // FIXED: Execute buy orders with proper error handling
+            const coins = ['SOL', 'SUI', 'BTC', 'AMPL'];
             let successfulOrders = 0;
-            for (const [symbol, order] of Object.entries(buyOrders)) {
+            
+            for (const coin of coins) {
                 try {
-                    const result = await this.executeBuyOrder(symbol, order);
-                    if (result) {
-                        successfulOrders++;
-                        this.addToActionLog(`✅ Bought ${order.quantity.toFixed(4)} ${symbol} at $${order.price.toFixed(4)}`);
+                    const currentPrice = this.portfolioData[coin].currentPrice;
+                    if (currentPrice > 0) {
+                        const quantity = allocationPerCoin / currentPrice;
                         
-                        // FIXED: Update portfolio data correctly
-                        this.portfolioData[symbol].quantity += order.quantity;
-                        // Update purchase price as weighted average
-                        const oldValue = (this.portfolioData[symbol].quantity - order.quantity) * this.portfolioData[symbol].purchasePrice;
-                        const newValue = order.quantity * order.price;
-                        this.portfolioData[symbol].purchasePrice = (oldValue + newValue) / this.portfolioData[symbol].quantity;
-                        this.portfolioData[symbol].status = '📊';
+                        const success = await this.placeBuyOrder(coin, quantity, allocationPerCoin);
+                        if (success) {
+                            successfulOrders++;
+                            
+                            // Update portfolio data
+                            const oldQuantity = this.portfolioData[coin].quantity;
+                            const oldValue = oldQuantity * this.portfolioData[coin].purchasePrice;
+                            const newValue = quantity * currentPrice;
+                            
+                            this.portfolioData[coin].quantity += quantity;
+                            this.portfolioData[coin].purchasePrice = (oldValue + newValue) / this.portfolioData[coin].quantity;
+                            this.portfolioData[coin].status = '📊';
+                            
+                            this.addToActionLog(`✅ Bought ${quantity.toFixed(4)} ${coin} at $${currentPrice.toFixed(4)}`);
+                        }
                     }
                 } catch (error) {
-                    console.error(`❌ Failed to buy ${symbol}:`, error);
-                    this.addToActionLog(`❌ Failed to buy ${symbol}: ${error.message}`);
+                    this.addToActionLog(`❌ Failed to buy ${coin}: ${error.message}`);
                 }
             }
             
-            if (successfulOrders > 0) {
-                this.addToActionLog(`✅ Equal accumulation completed: ${successfulOrders}/4 orders successful`);
-            } else {
-                this.addToActionLog('❌ Equal accumulation failed: No orders executed');
-            }
+            // Update available balance
+            this.availableBalance -= (successfulOrders * allocationPerCoin);
+            
+            this.addToActionLog(`✅ Rebalance complete: ${successfulOrders}/4 orders successful`);
             
         } catch (error) {
-            console.error('❌ Error during equal accumulation:', error);
-            this.addToActionLog(`❌ Rebalance error: ${error.message}`);
+            console.error('❌ Rebalance error:', error);
+            this.addToActionLog(`❌ Rebalance failed: ${error.message}`);
         } finally {
             this.rebalanceInProgress = false;
         }
     }
 
-    async executeBuyOrder(symbol, order) {
+    async placeBuyOrder(symbol, quantity, value) {
         try {
-            console.log(`🛒 Placing buy order for ${symbol}:`, order);
+            console.log(`🛒 Placing order: ${quantity.toFixed(4)} ${symbol} (~$${value.toFixed(2)})`);
             
-            // FIXED: Use correct KuCoin API endpoint structure
-            const response = await fetch(`${this.SUPABASE_URL}/rest/v1/rpc/place_kucoin_order`, {
+            const response = await fetch('https://fbkcdirkshubectuvxzi.supabase.co/rest/v1/rpc/place_kucoin_order', {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${this.SUPABASE_ANON_KEY}`,
+                    'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZia2NkaXJrc2h1YmVjdHV2eHppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY0NDc0ODAsImV4cCI6MjA2MjAyMzQ4MH0.yhy1JL-V9zQVK1iIdSVK1261qD8gmHmo2vB-qe7Kit8',
                     'Content-Type': 'application/json',
-                    'apikey': this.SUPABASE_ANON_KEY
+                    'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZia2NkaXJrc2h1YmVjdHV2eHppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY0NDc0ODAsImV4cCI6MjA2MjAyMzQ4MH0.yhy1JL-V9zQVK1iIdSVK1261qD8gmHmo2vB-qe7Kit8'
                 },
                 body: JSON.stringify({
                     symbol: `${symbol}-USDT`,
                     side: 'buy',
                     type: 'market',
-                    funds: order.value.toFixed(2), // Use funds instead of size for market orders
+                    funds: value.toFixed(2),
                     client_oid: `rebalance-${symbol}-${Date.now()}`
                 })
             });
             
             if (response.ok) {
                 const result = await response.json();
-                console.log(`✅ Buy order placed for ${symbol}:`, result);
-                return result;
+                console.log(`✅ Order placed for ${symbol}:`, result);
+                return true;
             } else {
-                const errorText = await response.text();
-                console.log(`⚠️ Order placement failed for ${symbol}, simulating success for demo:`, errorText);
-                
-                // FIXED: For demo purposes, simulate successful order
-                this.addToActionLog(`📝 DEMO: Simulated buy order for ${symbol}`);
-                return { orderId: `demo-${symbol}-${Date.now()}`, success: true };
+                const error = await response.text();
+                console.log(`⚠️ Order failed for ${symbol}:`, error);
+                return false;
             }
         } catch (error) {
-            console.error(`❌ Error placing buy order for ${symbol}:`, error);
-            
-            // FIXED: For demo purposes, simulate successful order
-            this.addToActionLog(`📝 DEMO: Simulated buy order for ${symbol} (API error)`);
-            return { orderId: `demo-${symbol}-${Date.now()}`, success: true };
-        }
-    }
-
-    async fetchRealPrices() {
-        const prices = {};
-        
-        // FIXED: Try multiple sources with better error handling
-        try {
-            // Try CoinGecko first (most reliable)
-            const coinGeckoResponse = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana,sui,bitcoin,ampleforth&vs_currencies=usd');
-            if (coinGeckoResponse.ok) {
-                const coinGeckoData = await coinGeckoResponse.json();
-                if (coinGeckoData.solana) prices.SOL = coinGeckoData.solana.usd;
-                if (coinGeckoData.sui) prices.SUI = coinGeckoData.sui.usd;
-                if (coinGeckoData.bitcoin) prices.BTC = coinGeckoData.bitcoin.usd;
-                if (coinGeckoData.ampleforth) prices.AMPL = coinGeckoData.ampleforth.usd;
-                console.log('✅ Prices from CoinGecko:', prices);
-            }
-        } catch (error) {
-            console.log('⚠️ CoinGecko price fetch failed:', error.message);
-        }
-        
-        // Try Binance for missing prices
-        if (Object.keys(prices).length < 4) {
-            try {
-                const binanceSymbols = ['SOLUSDT', 'SUIUSDT', 'BTCUSDT'];
-                for (const symbol of binanceSymbols) {
-                    if (!prices[symbol.replace('USDT', '')]) {
-                        const response = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`);
-                        if (response.ok) {
-                            const data = await response.json();
-                            const coin = symbol.replace('USDT', '');
-                            prices[coin] = parseFloat(data.price);
-                        }
-                    }
-                }
-                console.log('✅ Additional prices from Binance:', prices);
-            } catch (error) {
-                console.log('⚠️ Binance price fetch failed:', error.message);
-            }
-        }
-        
-        // FIXED: If still missing AMPL, try Supabase
-        if (!prices.AMPL) {
-            try {
-                const amplResponse = await fetch(`${this.SUPABASE_URL}/rest/v1/rpc/get_ampl_price`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${this.SUPABASE_ANON_KEY}`,
-                        'Content-Type': 'application/json',
-                        'apikey': this.SUPABASE_ANON_KEY
-                    },
-                    body: JSON.stringify({})
-                });
-                
-                if (amplResponse.ok) {
-                    const amplData = await amplResponse.json();
-                    if (amplData && amplData.price) {
-                        prices.AMPL = amplData.price;
-                        console.log('✅ AMPL price from Supabase:', amplData.price);
-                    }
-                }
-            } catch (error) {
-                console.log('⚠️ Supabase AMPL price fetch failed:', error.message);
-            }
-        }
-        
-        // FIXED: Fallback to demo prices if APIs fail
-        if (Object.keys(prices).length === 0) {
-            console.log('⚠️ All price APIs failed, using demo prices');
-            prices.SOL = 125.50;
-            prices.SUI = 2.15;
-            prices.BTC = 47500.00;
-            prices.AMPL = 1.14; // Below trigger for testing
-            this.addToActionLog('Using demo prices - APIs unavailable');
-        }
-        
-        return prices;
-    }
-
-    checkRebalanceOpportunity(symbol, profitPercentage) {
-        if (profitPercentage >= this.settings.profitThreshold) {
-            this.addToActionLog(`🎯 PROFIT OPPORTUNITY: ${symbol} at ${profitPercentage.toFixed(1)}% profit`);
-            console.log(`🎯 PROFIT OPPORTUNITY: ${symbol} at ${profitPercentage.toFixed(1)}% profit`);
-        }
-    }
-
-    updateLiveStatusIndicator(isLive) {
-        const statusIndicator = document.querySelector('.live-status-indicator');
-        if (statusIndicator) {
-            if (isLive) {
-                const triggerStatus = this.triggerActive ? ' 🚨 TRIGGER ACTIVE' : '';
-                statusIndicator.innerHTML = `<span style="color: #4CAF50;">🟢 LIVE${triggerStatus}</span>`;
-                statusIndicator.style.background = this.triggerActive ? 'rgba(255, 152, 0, 0.2)' : 'rgba(76, 175, 80, 0.2)';
-            } else {
-                statusIndicator.innerHTML = '<span style="color: #ff4444;">🔴 OFFLINE</span>';
-                statusIndicator.style.background = 'rgba(255, 68, 68, 0.2)';
-            }
+            console.error(`❌ Order error for ${symbol}:`, error);
+            return false;
         }
     }
 
@@ -527,7 +390,7 @@ class AMPLRebalancingSystem {
         const totalInvested = Object.values(this.portfolioData).reduce((sum, coin) => sum + (coin.quantity * coin.purchasePrice), 0);
         const currentValue = Object.values(this.portfolioData).reduce((sum, coin) => sum + coin.value, 0);
         const totalProfit = currentValue - totalInvested;
-        const profitPercentage = totalInvested > 0 ? ((totalProfit / totalInvested) * 100) : 0;
+        const totalProfitPercent = totalInvested > 0 ? ((totalProfit / totalInvested) * 100) : 0;
 
         return `
             <div class="rebalancing-system" style="
@@ -540,7 +403,6 @@ class AMPLRebalancingSystem {
                 border-radius: 8px;
                 padding: 8px;
                 box-sizing: border-box;
-                position: relative;
                 font-family: 'Courier New', monospace;
                 color: #ffffff;
             ">
@@ -550,43 +412,46 @@ class AMPLRebalancingSystem {
                     justify-content: space-between;
                     align-items: center;
                     margin-bottom: 8px;
-                    padding: 4px 8px;
+                    padding: 6px 8px;
                     background: rgba(76, 175, 80, 0.1);
                     border-radius: 4px;
                     border: 1px solid rgba(76, 175, 80, 0.3);
                 ">
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                        <span style="color: #4CAF50; font-size: 11px; font-weight: bold;">🔄 REBALANCING SYSTEM</span>
-                        <span class="live-status-indicator" style="color: #ff4444; font-size: 9px; background: rgba(255, 68, 68, 0.2); padding: 1px 4px; border-radius: 3px;">🔴 CONNECTING...</span>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="color: #4CAF50; font-size: 12px; font-weight: bold;">🔄 REBALANCING SYSTEM</span>
+                        <span class="live-status-indicator" style="color: #ff4444; font-size: 10px; background: rgba(255, 68, 68, 0.2); padding: 2px 6px; border-radius: 3px;">🔴 CONNECTING...</span>
                     </div>
-                    <div style="display: flex; gap: 4px;">
+                    <div style="display: flex; gap: 6px;">
                         <button class="expand-btn" style="
                             background: rgba(76, 175, 80, 0.2);
                             border: 1px solid rgba(76, 175, 80, 0.4);
                             color: #ffffff;
-                            padding: 2px 6px;
+                            padding: 4px 8px;
                             border-radius: 3px;
-                            font-size: 9px;
+                            font-size: 10px;
                             cursor: pointer;
-                        ">📊</button>
+                            font-weight: bold;
+                        ">📊 EXPAND</button>
                         <button class="settings-btn" style="
                             background: rgba(76, 175, 80, 0.2);
                             border: 1px solid rgba(76, 175, 80, 0.4);
                             color: #ffffff;
-                            padding: 2px 6px;
+                            padding: 4px 8px;
                             border-radius: 3px;
-                            font-size: 9px;
+                            font-size: 10px;
                             cursor: pointer;
-                        ">⚙️</button>
+                            font-weight: bold;
+                        ">⚙️ SETTINGS</button>
                         <button class="restore-btn" style="
                             background: rgba(255, 152, 0, 0.2);
                             border: 1px solid rgba(255, 152, 0, 0.4);
                             color: #ffffff;
-                            padding: 2px 6px;
+                            padding: 4px 8px;
                             border-radius: 3px;
-                            font-size: 9px;
+                            font-size: 10px;
                             cursor: pointer;
-                        ">↩️</button>
+                            font-weight: bold;
+                        ">↩️ RESTORE</button>
                     </div>
                 </div>
 
@@ -595,16 +460,16 @@ class AMPLRebalancingSystem {
                     background: ${this.triggerActive ? 'rgba(255, 152, 0, 0.1)' : 'rgba(76, 175, 80, 0.1)'};
                     border: 1px solid ${this.triggerActive ? 'rgba(255, 152, 0, 0.3)' : 'rgba(76, 175, 80, 0.3)'};
                     border-radius: 4px;
-                    padding: 4px 8px;
+                    padding: 6px 8px;
                     margin-bottom: 8px;
-                    font-size: 9px;
+                    font-size: 10px;
                     text-align: center;
                 ">
-                    <div style="color: ${this.triggerActive ? '#FF9800' : '#4CAF50'};">
+                    <div style="color: ${this.triggerActive ? '#FF9800' : '#4CAF50'}; font-weight: bold;">
                         ${this.triggerActive ? '🚨 AMPL TRIGGER ACTIVE' : '✅ AMPL TRIGGER MONITORING'}
                     </div>
-                    <div style="color: #888; font-size: 8px;">
-                        Trigger: $${this.AMPL_TRIGGER_PRICE} | Current: $${this.lastAMPLPrice ? this.lastAMPLPrice.toFixed(4) : '---'}
+                    <div style="color: #888; font-size: 9px;">
+                        Trigger: $${this.AMPL_TRIGGER_PRICE} | Current: $${this.lastAMPLPrice ? this.lastAMPLPrice.toFixed(4) : '---'} | Balance: $${this.availableBalance.toFixed(2)}
                     </div>
                 </div>
 
@@ -612,36 +477,36 @@ class AMPLRebalancingSystem {
                 <div class="overall-stats" style="
                     display: grid;
                     grid-template-columns: 1fr 1fr 1fr;
-                    gap: 4px;
+                    gap: 6px;
                     margin-bottom: 8px;
-                    font-size: 9px;
+                    font-size: 10px;
                 ">
-                    <div style="background: rgba(76, 175, 80, 0.1); padding: 3px; border-radius: 3px; text-align: center;">
-                        <div style="color: #888; font-size: 8px;">INVESTED</div>
-                        <div style="color: #4CAF50; font-weight: bold;">$${totalInvested.toFixed(2)}</div>
+                    <div style="background: rgba(76, 175, 80, 0.1); padding: 6px; border-radius: 3px; text-align: center; border: 1px solid rgba(76, 175, 80, 0.3);">
+                        <div style="color: #888; font-size: 9px; font-weight: bold;">INVESTED</div>
+                        <div style="color: #4CAF50; font-weight: bold; font-size: 11px;">$${totalInvested.toFixed(2)}</div>
                     </div>
-                    <div style="background: rgba(76, 175, 80, 0.1); padding: 3px; border-radius: 3px; text-align: center;">
-                        <div style="color: #888; font-size: 8px;">VALUE</div>
-                        <div style="color: #4CAF50; font-weight: bold;">$${currentValue.toFixed(2)}</div>
+                    <div style="background: rgba(76, 175, 80, 0.1); padding: 6px; border-radius: 3px; text-align: center; border: 1px solid rgba(76, 175, 80, 0.3);">
+                        <div style="color: #888; font-size: 9px; font-weight: bold;">VALUE</div>
+                        <div style="color: #4CAF50; font-weight: bold; font-size: 11px;">$${currentValue.toFixed(2)}</div>
                     </div>
-                    <div style="background: rgba(76, 175, 80, 0.1); padding: 3px; border-radius: 3px; text-align: center;">
-                        <div style="color: #888; font-size: 8px;">PROFIT</div>
-                        <div style="color: ${totalProfit >= 0 ? '#4CAF50' : '#f44336'}; font-weight: bold;">
-                            $${totalProfit.toFixed(2)} (${profitPercentage.toFixed(1)}%)
+                    <div style="background: rgba(76, 175, 80, 0.1); padding: 6px; border-radius: 3px; text-align: center; border: 1px solid rgba(76, 175, 80, 0.3);">
+                        <div style="color: #888; font-size: 9px; font-weight: bold;">PROFIT</div>
+                        <div style="color: ${totalProfit >= 0 ? '#4CAF50' : '#f44336'}; font-weight: bold; font-size: 11px;">
+                            $${totalProfit.toFixed(2)} (${totalProfitPercent.toFixed(1)}%)
                         </div>
                     </div>
                 </div>
 
-                <!-- Coins Grid -->
-                <div class="coins-grid" style="
-                    display: grid;
-                    grid-template-columns: 1fr 1fr;
+                <!-- Coins List (Each on separate row) -->
+                <div class="coins-list" style="
+                    display: flex;
+                    flex-direction: column;
                     gap: 4px;
                     flex: 1;
                     min-height: 0;
                     margin-bottom: 8px;
                 ">
-                    ${this.createCoinCards()}
+                    ${this.createCoinRows()}
                 </div>
 
                 <!-- Settings Panel -->
@@ -650,21 +515,21 @@ class AMPLRebalancingSystem {
                     background: rgba(0, 0, 0, 0.9);
                     border: 1px solid rgba(76, 175, 80, 0.4);
                     border-radius: 4px;
-                    padding: 6px;
-                    margin-bottom: 6px;
-                    font-size: 9px;
+                    padding: 8px;
+                    margin-bottom: 8px;
+                    font-size: 10px;
                 ">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
                         <div>
-                            <label style="color: #888; font-size: 8px;">Profit Threshold:</label>
+                            <label style="color: #888; font-size: 9px; font-weight: bold;">Profit Threshold:</label>
                             <select class="profit-threshold-select" style="
                                 width: 100%;
                                 background: rgba(0, 0, 0, 0.8);
                                 border: 1px solid rgba(76, 175, 80, 0.4);
                                 color: #ffffff;
-                                padding: 2px;
+                                padding: 4px;
                                 border-radius: 3px;
-                                font-size: 8px;
+                                font-size: 9px;
                             ">
                                 <option value="1.5" ${this.settings.profitThreshold === 1.5 ? 'selected' : ''}>1.5%</option>
                                 <option value="5" ${this.settings.profitThreshold === 5 ? 'selected' : ''}>5%</option>
@@ -673,38 +538,11 @@ class AMPLRebalancingSystem {
                             </select>
                         </div>
                         <div>
-                            <label style="color: #888; font-size: 8px;">Exchange:</label>
-                            <select class="exchange-select" style="
-                                width: 100%;
-                                background: rgba(0, 0, 0, 0.8);
-                                border: 1px solid rgba(76, 175, 80, 0.4);
-                                color: #ffffff;
-                                padding: 2px;
-                                border-radius: 3px;
-                                font-size: 8px;
-                            ">
-                                <option value="KuCoin" ${this.settings.exchange === 'KuCoin' ? 'selected' : ''}>KuCoin</option>
-                                <option value="Binance" ${this.settings.exchange === 'Binance' ? 'selected' : ''}>Binance</option>
-                                <option value="Both" ${this.settings.exchange === 'Both' ? 'selected' : ''}>Both</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
-                        <div>
-                            <label style="color: #888; font-size: 8px;">Auto Rebalance:</label>
-                            <input type="checkbox" class="auto-rebalance-checkbox" ${this.settings.autoRebalanceEnabled ? 'checked' : ''} style="margin-left: 4px;">
-                        </div>
-                        <div>
-                            <label style="color: #888; font-size: 8px;">Rebalance Amount:</label>
-                            <input type="number" class="rebalance-amount-input" value="${this.settings.rebalanceAmount}" style="
-                                width: 60px;
-                                background: rgba(0, 0, 0, 0.8);
-                                border: 1px solid rgba(76, 175, 80, 0.4);
-                                color: #ffffff;
-                                padding: 1px 2px;
-                                border-radius: 3px;
-                                font-size: 8px;
-                            ">
+                            <label style="color: #888; font-size: 9px; font-weight: bold;">Auto Rebalance:</label>
+                            <div style="margin-top: 4px;">
+                                <input type="checkbox" class="auto-rebalance-checkbox" ${this.settings.autoRebalanceEnabled ? 'checked' : ''} style="margin-right: 6px;">
+                                <span style="color: #fff; font-size: 9px;">Enable automatic rebalancing</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -714,52 +552,59 @@ class AMPLRebalancingSystem {
                     background: rgba(0, 0, 0, 0.8);
                     border: 1px solid rgba(76, 175, 80, 0.3);
                     border-radius: 4px;
-                    padding: 4px;
+                    padding: 6px;
                     max-height: 60px;
                     overflow-y: auto;
-                    font-size: 8px;
+                    font-size: 9px;
                 ">
-                    <div style="color: #888; font-size: 7px; margin-bottom: 2px;">RECENT ACTIONS:</div>
-                    ${this.actionLog.slice(-5).map(action => 
-                        `<div style="color: #4CAF50; margin-bottom: 1px;">• ${action}</div>`
+                    <div style="color: #888; font-size: 8px; margin-bottom: 3px; font-weight: bold;">RECENT ACTIONS:</div>
+                    ${this.actionLog.slice(-4).map(action => 
+                        `<div style="color: #4CAF50; margin-bottom: 2px; font-size: 9px;">• ${action}</div>`
                     ).join('')}
                 </div>
             </div>
         `;
     }
 
-    createCoinCards() {
+    createCoinRows() {
         return Object.entries(this.portfolioData).map(([symbol, data]) => `
-            <div class="coin-card" style="
+            <div class="coin-row" style="
                 background: rgba(0, 0, 0, 0.8);
                 border: 1px solid rgba(76, 175, 80, 0.3);
                 border-radius: 4px;
-                padding: 4px;
-                font-size: 8px;
+                padding: 8px;
+                font-size: 10px;
                 transition: all 0.3s ease;
+                display: grid;
+                grid-template-columns: 60px 1fr 1fr 1fr 1fr 1fr;
+                gap: 8px;
+                align-items: center;
             ">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px;">
-                    <span style="color: #4CAF50; font-weight: bold; font-size: 9px;">${data.status} ${symbol}</span>
-                    <span style="color: #888; font-size: 7px;">${data.quantity.toFixed(3)}</span>
+                <div style="text-align: center;">
+                    <div style="color: #4CAF50; font-weight: bold; font-size: 12px;">${data.status}</div>
+                    <div style="color: #4CAF50; font-weight: bold; font-size: 11px;">${symbol}</div>
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2px; font-size: 7px;">
-                    <div>
-                        <div style="color: #666;">Purchase:</div>
-                        <div style="color: #fff;">$${data.purchasePrice.toFixed(2)}</div>
-                    </div>
-                    <div>
-                        <div style="color: #666;">Current:</div>
-                        <div style="color: #fff;">$${data.currentPrice.toFixed(2)}</div>
-                    </div>
-                    <div>
-                        <div style="color: #666;">Value:</div>
-                        <div style="color: #4CAF50;">$${data.value.toFixed(2)}</div>
-                    </div>
-                    <div>
-                        <div style="color: #666;">Profit:</div>
-                        <div style="color: ${data.profit >= 0 ? '#4CAF50' : '#f44336'};">
-                            $${data.profit.toFixed(2)}
-                        </div>
+                <div style="text-align: center;">
+                    <div style="color: #666; font-size: 8px; font-weight: bold;">QUANTITY</div>
+                    <div style="color: #fff; font-weight: bold;">${data.quantity.toFixed(4)}</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="color: #666; font-size: 8px; font-weight: bold;">PURCHASE</div>
+                    <div style="color: #fff; font-weight: bold;">$${data.purchasePrice.toFixed(2)}</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="color: #666; font-size: 8px; font-weight: bold;">CURRENT</div>
+                    <div style="color: #fff; font-weight: bold;">$${data.currentPrice.toFixed(2)}</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="color: #666; font-size: 8px; font-weight: bold;">VALUE</div>
+                    <div style="color: #4CAF50; font-weight: bold;">$${data.value.toFixed(2)}</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="color: #666; font-size: 8px; font-weight: bold;">PROFIT</div>
+                    <div style="color: ${data.profit >= 0 ? '#4CAF50' : '#f44336'}; font-weight: bold;">
+                        $${data.profit.toFixed(2)}<br>
+                        <span style="font-size: 8px;">(${data.profitPercent.toFixed(1)}%)</span>
                     </div>
                 </div>
             </div>
@@ -795,30 +640,12 @@ class AMPLRebalancingSystem {
             });
         }
 
-        const exchangeSelect = container.querySelector('.exchange-select');
-        if (exchangeSelect) {
-            exchangeSelect.addEventListener('change', (e) => {
-                this.settings.exchange = e.target.value;
-                this.savePersistentSettings();
-                this.addToActionLog(`Exchange set to ${e.target.value}`);
-            });
-        }
-
         const autoRebalanceCheckbox = container.querySelector('.auto-rebalance-checkbox');
         if (autoRebalanceCheckbox) {
             autoRebalanceCheckbox.addEventListener('change', (e) => {
                 this.settings.autoRebalanceEnabled = e.target.checked;
                 this.savePersistentSettings();
                 this.addToActionLog(`Auto rebalance ${e.target.checked ? 'enabled' : 'disabled'}`);
-            });
-        }
-
-        const rebalanceAmountInput = container.querySelector('.rebalance-amount-input');
-        if (rebalanceAmountInput) {
-            rebalanceAmountInput.addEventListener('change', (e) => {
-                this.settings.rebalanceAmount = parseFloat(e.target.value);
-                this.savePersistentSettings();
-                this.addToActionLog(`Rebalance amount set to $${e.target.value}`);
             });
         }
     }
@@ -891,16 +718,17 @@ class AMPLRebalancingSystem {
     }
 
     createExpandedHTML() {
+        // DYNAMIC DATA - syncs with current portfolio state
         const totalInvested = Object.values(this.portfolioData).reduce((sum, coin) => sum + (coin.quantity * coin.purchasePrice), 0);
         const currentValue = Object.values(this.portfolioData).reduce((sum, coin) => sum + coin.value, 0);
         const totalProfit = currentValue - totalInvested;
-        const profitPercentage = totalInvested > 0 ? ((totalProfit / totalInvested) * 100) : 0;
+        const totalProfitPercent = totalInvested > 0 ? ((totalProfit / totalInvested) * 100) : 0;
 
         return `
             <div style="text-align: center; margin-bottom: 16px;">
                 <h2 style="color: #4CAF50; margin: 0; font-size: 18px;">🔄 AMPL Rebalancing System</h2>
                 <p style="color: ${this.isLiveDataActive ? '#4CAF50' : '#ff4444'}; margin: 4px 0; font-size: 12px; background: rgba(${this.isLiveDataActive ? '76, 175, 80' : '255, 68, 68'}, 0.2); padding: 4px 8px; border-radius: 4px; display: inline-block;">
-                    ${this.isLiveDataActive ? '🟢 LIVE DATA ACTIVE' : '🔴 DEMO DATA'} | Trigger: $${this.AMPL_TRIGGER_PRICE}
+                    ${this.isLiveDataActive ? '🟢 LIVE DATA' : '🔴 OFFLINE'} | Trigger: $${this.AMPL_TRIGGER_PRICE} | Balance: $${this.availableBalance.toFixed(2)}
                 </p>
                 <p style="color: ${this.triggerActive ? '#FF9800' : '#4CAF50'}; margin: 4px 0; font-size: 11px;">
                     ${this.triggerActive ? '🚨 AMPL TRIGGER ACTIVE' : '✅ MONITORING AMPL PRICE'}
@@ -920,19 +748,19 @@ class AMPLRebalancingSystem {
                     <div style="color: #888; font-size: 11px;">TOTAL PROFIT</div>
                     <div style="color: ${totalProfit >= 0 ? '#4CAF50' : '#f44336'}; font-weight: bold; font-size: 16px;">
                         $${totalProfit.toFixed(2)}<br>
-                        <span style="font-size: 12px;">(${profitPercentage.toFixed(1)}%)</span>
+                        <span style="font-size: 12px;">(${totalProfitPercent.toFixed(1)}%)</span>
                     </div>
                 </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+            <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;">
                 ${Object.entries(this.portfolioData).map(([symbol, data]) => `
                     <div style="background: rgba(0, 0, 0, 0.8); border: 1px solid rgba(76, 175, 80, 0.3); border-radius: 6px; padding: 12px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <span style="color: #4CAF50; font-weight: bold; font-size: 14px;">${data.status} ${symbol}</span>
-                            <span style="color: #888; font-size: 11px;">Qty: ${data.quantity.toFixed(3)}</span>
+                            <span style="color: #4CAF50; font-weight: bold; font-size: 16px;">${data.status} ${symbol}</span>
+                            <span style="color: #888; font-size: 12px;">Qty: ${data.quantity.toFixed(4)}</span>
                         </div>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 11px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; font-size: 12px;">
                             <div>
                                 <div style="color: #666;">Purchase Price:</div>
                                 <div style="color: #fff; font-weight: bold;">$${data.purchasePrice.toFixed(2)}</div>
@@ -948,7 +776,8 @@ class AMPLRebalancingSystem {
                             <div>
                                 <div style="color: #666;">Profit:</div>
                                 <div style="color: ${data.profit >= 0 ? '#4CAF50' : '#f44336'}; font-weight: bold;">
-                                    $${data.profit.toFixed(2)}
+                                    $${data.profit.toFixed(2)}<br>
+                                    <span style="font-size: 10px;">(${data.profitPercent.toFixed(1)}%)</span>
                                 </div>
                             </div>
                         </div>
@@ -958,15 +787,15 @@ class AMPLRebalancingSystem {
 
             <div style="background: rgba(0, 0, 0, 0.8); border: 1px solid rgba(76, 175, 80, 0.3); border-radius: 6px; padding: 12px;">
                 <div style="color: #888; font-size: 11px; margin-bottom: 8px;">RECENT ACTIONS:</div>
-                <div style="max-height: 80px; overflow-y: auto;">
-                    ${this.actionLog.slice(-10).map(action => 
+                <div style="max-height: 60px; overflow-y: auto;">
+                    ${this.actionLog.slice(-8).map(action => 
                         `<div style="color: #4CAF50; margin-bottom: 4px; font-size: 11px;">• ${action}</div>`
                     ).join('')}
                 </div>
             </div>
 
             <div style="text-align: center; margin-top: 16px;">
-                <button onclick="document.querySelector('.rebalancing-modal-backdrop').remove(); this.isExpanded = false;" style="
+                <button onclick="document.querySelector('.rebalancing-modal-backdrop').remove();" style="
                     background: rgba(255, 152, 0, 0.2);
                     border: 1px solid rgba(255, 152, 0, 0.4);
                     color: #ffffff;
@@ -995,38 +824,39 @@ class AMPLRebalancingSystem {
                 if (this.updateInterval) {
                     clearInterval(this.updateInterval);
                 }
-                console.log('✅ Original Limit Orders content restored');
+                console.log('✅ Original content restored');
             }
         }
     }
 
     updateDisplay() {
-        const coinsGrid = document.querySelector('.coins-grid');
-        if (coinsGrid) {
-            coinsGrid.innerHTML = this.createCoinCards();
+        // Update coins list
+        const coinsList = document.querySelector('.coins-list');
+        if (coinsList) {
+            coinsList.innerHTML = this.createCoinRows();
         }
         
         // Update overall stats
         const totalInvested = Object.values(this.portfolioData).reduce((sum, coin) => sum + (coin.quantity * coin.purchasePrice), 0);
         const currentValue = Object.values(this.portfolioData).reduce((sum, coin) => sum + coin.value, 0);
         const totalProfit = currentValue - totalInvested;
-        const profitPercentage = totalInvested > 0 ? ((totalProfit / totalInvested) * 100) : 0;
+        const totalProfitPercent = totalInvested > 0 ? ((totalProfit / totalInvested) * 100) : 0;
         
         const overallStats = document.querySelector('.overall-stats');
         if (overallStats) {
             overallStats.innerHTML = `
-                <div style="background: rgba(76, 175, 80, 0.1); padding: 3px; border-radius: 3px; text-align: center;">
-                    <div style="color: #888; font-size: 8px;">INVESTED</div>
-                    <div style="color: #4CAF50; font-weight: bold;">$${totalInvested.toFixed(2)}</div>
+                <div style="background: rgba(76, 175, 80, 0.1); padding: 6px; border-radius: 3px; text-align: center; border: 1px solid rgba(76, 175, 80, 0.3);">
+                    <div style="color: #888; font-size: 9px; font-weight: bold;">INVESTED</div>
+                    <div style="color: #4CAF50; font-weight: bold; font-size: 11px;">$${totalInvested.toFixed(2)}</div>
                 </div>
-                <div style="background: rgba(76, 175, 80, 0.1); padding: 3px; border-radius: 3px; text-align: center;">
-                    <div style="color: #888; font-size: 8px;">VALUE</div>
-                    <div style="color: #4CAF50; font-weight: bold;">$${currentValue.toFixed(2)}</div>
+                <div style="background: rgba(76, 175, 80, 0.1); padding: 6px; border-radius: 3px; text-align: center; border: 1px solid rgba(76, 175, 80, 0.3);">
+                    <div style="color: #888; font-size: 9px; font-weight: bold;">VALUE</div>
+                    <div style="color: #4CAF50; font-weight: bold; font-size: 11px;">$${currentValue.toFixed(2)}</div>
                 </div>
-                <div style="background: rgba(76, 175, 80, 0.1); padding: 3px; border-radius: 3px; text-align: center;">
-                    <div style="color: #888; font-size: 8px;">PROFIT</div>
-                    <div style="color: ${totalProfit >= 0 ? '#4CAF50' : '#f44336'}; font-weight: bold;">
-                        $${totalProfit.toFixed(2)} (${profitPercentage.toFixed(1)}%)
+                <div style="background: rgba(76, 175, 80, 0.1); padding: 6px; border-radius: 3px; text-align: center; border: 1px solid rgba(76, 175, 80, 0.3);">
+                    <div style="color: #888; font-size: 9px; font-weight: bold;">PROFIT</div>
+                    <div style="color: ${totalProfit >= 0 ? '#4CAF50' : '#f44336'}; font-weight: bold; font-size: 11px;">
+                        $${totalProfit.toFixed(2)} (${totalProfitPercent.toFixed(1)}%)
                     </div>
                 </div>
             `;
@@ -1036,11 +866,11 @@ class AMPLRebalancingSystem {
         const triggerStatus = document.querySelector('.trigger-status');
         if (triggerStatus) {
             triggerStatus.innerHTML = `
-                <div style="color: ${this.triggerActive ? '#FF9800' : '#4CAF50'};">
+                <div style="color: ${this.triggerActive ? '#FF9800' : '#4CAF50'}; font-weight: bold;">
                     ${this.triggerActive ? '🚨 AMPL TRIGGER ACTIVE' : '✅ AMPL TRIGGER MONITORING'}
                 </div>
-                <div style="color: #888; font-size: 8px;">
-                    Trigger: $${this.AMPL_TRIGGER_PRICE} | Current: $${this.lastAMPLPrice ? this.lastAMPLPrice.toFixed(4) : '---'}
+                <div style="color: #888; font-size: 9px;">
+                    Trigger: $${this.AMPL_TRIGGER_PRICE} | Current: $${this.lastAMPLPrice ? this.lastAMPLPrice.toFixed(4) : '---'} | Balance: $${this.availableBalance.toFixed(2)}
                 </div>
             `;
             triggerStatus.style.background = this.triggerActive ? 'rgba(255, 152, 0, 0.1)' : 'rgba(76, 175, 80, 0.1)';
@@ -1052,9 +882,23 @@ class AMPLRebalancingSystem {
         if (actionLog) {
             const logContent = actionLog.querySelector('div:last-child');
             if (logContent) {
-                logContent.innerHTML = this.actionLog.slice(-5).map(action => 
-                    `<div style="color: #4CAF50; margin-bottom: 1px;">• ${action}</div>`
+                logContent.innerHTML = this.actionLog.slice(-4).map(action => 
+                    `<div style="color: #4CAF50; margin-bottom: 2px; font-size: 9px;">• ${action}</div>`
                 ).join('');
+            }
+        }
+    }
+
+    updateLiveStatusIndicator(isLive) {
+        const statusIndicator = document.querySelector('.live-status-indicator');
+        if (statusIndicator) {
+            if (isLive) {
+                const triggerStatus = this.triggerActive ? ' 🚨 TRIGGER' : '';
+                statusIndicator.innerHTML = `<span style="color: #4CAF50;">🟢 LIVE${triggerStatus}</span>`;
+                statusIndicator.style.background = this.triggerActive ? 'rgba(255, 152, 0, 0.2)' : 'rgba(76, 175, 80, 0.2)';
+            } else {
+                statusIndicator.innerHTML = '<span style="color: #ff4444;">🔴 OFFLINE</span>';
+                statusIndicator.style.background = 'rgba(255, 68, 68, 0.2)';
             }
         }
     }
@@ -1062,7 +906,7 @@ class AMPLRebalancingSystem {
     addToActionLog(message) {
         const timestamp = new Date().toLocaleTimeString();
         this.actionLog.push(`${timestamp}: ${message}`);
-        if (this.actionLog.length > 15) {
+        if (this.actionLog.length > 20) {
             this.actionLog.shift();
         }
     }
@@ -1070,44 +914,34 @@ class AMPLRebalancingSystem {
     loadPersistentSettings() {
         try {
             const savedProfitThreshold = localStorage.getItem('amplRebalancingProfitThreshold');
-            const savedExchange = localStorage.getItem('amplRebalancingExchange');
             const savedAutoRebalance = localStorage.getItem('amplRebalancingAutoEnabled');
-            const savedRebalanceAmount = localStorage.getItem('amplRebalancingAmount');
             
             if (savedProfitThreshold) {
                 this.settings.profitThreshold = parseFloat(savedProfitThreshold);
             }
-            if (savedExchange) {
-                this.settings.exchange = savedExchange;
-            }
             if (savedAutoRebalance !== null) {
                 this.settings.autoRebalanceEnabled = savedAutoRebalance === 'true';
             }
-            if (savedRebalanceAmount) {
-                this.settings.rebalanceAmount = parseFloat(savedRebalanceAmount);
-            }
             
-            console.log('✅ Loaded persistent settings:', this.settings);
+            console.log('✅ Loaded settings:', this.settings);
         } catch (error) {
-            console.log('⚠️ Error loading persistent settings:', error.message);
+            console.log('⚠️ Error loading settings:', error.message);
         }
     }
 
     savePersistentSettings() {
         try {
             localStorage.setItem('amplRebalancingProfitThreshold', this.settings.profitThreshold.toString());
-            localStorage.setItem('amplRebalancingExchange', this.settings.exchange);
             localStorage.setItem('amplRebalancingAutoEnabled', this.settings.autoRebalanceEnabled.toString());
-            localStorage.setItem('amplRebalancingAmount', this.settings.rebalanceAmount.toString());
             console.log('💾 Settings saved:', this.settings);
         } catch (error) {
-            console.log('⚠️ Error saving persistent settings:', error.message);
+            console.log('⚠️ Error saving settings:', error.message);
         }
     }
 }
 
-// FIXED: Keep original variable name to avoid confusion
+// Initialize the rebalancing system
 const amplRebalancingSystem = new AMPLRebalancingSystem();
 
-console.log('🎬 AMPL Rebalancing System loaded successfully');
+console.log('🎬 AMPL Rebalancing System (Complete Rewrite) loaded successfully');
 
