@@ -1,20 +1,19 @@
 /**
- * AMPL Rebalancing System - Complete Rewrite
- * Built from scratch with proper architecture and functionality
+ * AMPL Rebalancing System - Simple & Clean
+ * Fixed version with proper layer management and dynamic data updates
  */
 
 class AMPLRebalancingSystem {
     constructor() {
         this.isInitialized = false;
         this.originalContent = null;
-        this.isExpanded = false;
         this.updateInterval = null;
         this.retryCount = 0;
         this.maxRetries = 10;
         
         // Configuration
         this.AMPL_TRIGGER_PRICE = 1.16;
-        this.UPDATE_INTERVAL = 120000; // 2 minutes - much slower
+        this.UPDATE_INTERVAL = 120000; // 2 minutes
         this.TRIGGER_COOLDOWN = 600000; // 10 minutes between triggers
         
         // State tracking
@@ -22,7 +21,8 @@ class AMPLRebalancingSystem {
         this.triggerActive = false;
         this.rebalanceInProgress = false;
         this.lastTriggerTime = 0;
-        this.availableBalance = 0; // USDT balance for rebalancing
+        this.availableBalance = 0;
+        this.expandedViewOpen = false;
         
         // Portfolio data - ZEROED by default
         this.portfolioData = {
@@ -34,7 +34,6 @@ class AMPLRebalancingSystem {
         
         this.settings = {
             profitThreshold: 1.5,
-            exchange: 'KuCoin',
             autoRebalanceEnabled: true
         };
         
@@ -50,12 +49,15 @@ class AMPLRebalancingSystem {
     }
 
     initialize() {
-        console.log('🎬 Initializing AMPL Rebalancing System (Complete Rewrite)...');
+        console.log('🎬 Initializing AMPL Rebalancing System (Fixed Version)...');
         this.loadPersistentSettings();
         this.findAndReplacePanel();
     }
 
     findAndReplacePanel() {
+        // Clear any existing instances first to prevent conflicts
+        this.clearExistingInstances();
+        
         const detectionMethods = [
             () => document.querySelector('.ladder-section.limit-orders-section .section-content'),
             () => {
@@ -93,16 +95,30 @@ class AMPLRebalancingSystem {
         }
     }
 
+    clearExistingInstances() {
+        // Remove any existing rebalancing panels to prevent conflicts
+        const existingPanels = document.querySelectorAll('.simple-rebalancing-panel, .rebalancing-fullsize-backdrop');
+        existingPanels.forEach(panel => panel.remove());
+        
+        // Clear any existing intervals
+        if (this.updateInterval) {
+            clearInterval(this.updateInterval);
+            this.updateInterval = null;
+        }
+        
+        console.log('🧹 Cleared existing instances to prevent conflicts');
+    }
+
     replaceContent(targetElement) {
         if (this.isInitialized) return;
 
         this.originalContent = targetElement.innerHTML;
-        targetElement.innerHTML = this.createRebalancingHTML();
+        targetElement.innerHTML = this.createSimplePanelHTML();
         this.addEventListeners(targetElement);
         this.startDataUpdates();
         
         this.isInitialized = true;
-        console.log('✅ AMPL Rebalancing System initialized');
+        console.log('✅ AMPL Rebalancing System initialized (conflict-free)');
     }
 
     async startDataUpdates() {
@@ -117,6 +133,9 @@ class AMPLRebalancingSystem {
             await this.loadAccountData();
             await this.updatePrices();
             this.checkTriggerConditions();
+            
+            // Update both simple and expanded views if open
+            this.updateAllViews();
         }, this.UPDATE_INTERVAL);
         
         this.addToActionLog('Data monitoring started (2-minute intervals)');
@@ -212,16 +231,12 @@ class AMPLRebalancingSystem {
                     this.lastAMPLPrice = prices.AMPL;
                 }
                 
-                this.updateDisplay();
                 this.addToActionLog(`Prices updated: ${Object.keys(prices).join(', ')}`);
-                this.updateLiveStatusIndicator(true);
             } else {
-                this.updateLiveStatusIndicator(false);
                 this.addToActionLog('Price update failed');
             }
         } catch (error) {
             console.error('❌ Error updating prices:', error);
-            this.updateLiveStatusIndicator(false);
             this.addToActionLog('Price update error');
         }
     }
@@ -386,432 +401,352 @@ class AMPLRebalancingSystem {
         }
     }
 
-    createRebalancingHTML() {
+    createSimplePanelHTML() {
         const totalInvested = Object.values(this.portfolioData).reduce((sum, coin) => sum + (coin.quantity * coin.purchasePrice), 0);
         const currentValue = Object.values(this.portfolioData).reduce((sum, coin) => sum + coin.value, 0);
         const totalProfit = currentValue - totalInvested;
         const totalProfitPercent = totalInvested > 0 ? ((totalProfit / totalInvested) * 100) : 0;
 
         return `
-            <div class="rebalancing-system" style="
+            <div class="simple-rebalancing-panel" style="
                 width: 100%;
                 height: 100%;
-                max-height: 100%;
-                overflow: hidden;
                 background: rgba(0, 0, 0, 0.95);
                 border: 1px solid rgba(76, 175, 80, 0.3);
                 border-radius: 8px;
-                padding: 8px;
+                padding: 20px;
                 box-sizing: border-box;
                 font-family: 'Courier New', monospace;
                 color: #ffffff;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                text-align: center;
+                position: relative;
+                z-index: 1000;
             ">
-                <!-- Header -->
-                <div class="rebalancing-header" style="
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    margin-bottom: 8px;
-                    padding: 6px 8px;
+                <!-- Title -->
+                <div style="
+                    color: #4CAF50;
+                    font-size: 24px;
+                    font-weight: bold;
+                    margin-bottom: 20px;
+                ">
+                    🔄 AMPL REBALANCING SYSTEM
+                </div>
+
+                <!-- Status -->
+                <div style="
+                    color: ${this.triggerActive ? '#FF9800' : '#4CAF50'};
+                    font-size: 16px;
+                    margin-bottom: 20px;
+                    background: rgba(${this.triggerActive ? '255, 152, 0' : '76, 175, 80'}, 0.1);
+                    border: 1px solid rgba(${this.triggerActive ? '255, 152, 0' : '76, 175, 80'}, 0.3);
+                    border-radius: 6px;
+                    padding: 12px;
+                ">
+                    ${this.triggerActive ? '🚨 TRIGGER ACTIVE' : '✅ MONITORING'}
+                </div>
+
+                <!-- Balance -->
+                <div style="
                     background: rgba(76, 175, 80, 0.1);
-                    border-radius: 4px;
                     border: 1px solid rgba(76, 175, 80, 0.3);
+                    border-radius: 8px;
+                    padding: 16px;
+                    margin-bottom: 16px;
                 ">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="color: #4CAF50; font-size: 12px; font-weight: bold;">🔄 REBALANCING SYSTEM</span>
-                        <span class="live-status-indicator" style="color: #ff4444; font-size: 10px; background: rgba(255, 68, 68, 0.2); padding: 2px 6px; border-radius: 3px;">🔴 CONNECTING...</span>
+                    <div style="color: #888; font-size: 14px; margin-bottom: 8px;">AVAILABLE BALANCE</div>
+                    <div style="color: #4CAF50; font-size: 28px; font-weight: bold;">$${this.availableBalance.toFixed(2)}</div>
+                </div>
+
+                <!-- Profit -->
+                <div style="
+                    background: rgba(${totalProfit >= 0 ? '76, 175, 80' : '244, 67, 54'}, 0.1);
+                    border: 1px solid rgba(${totalProfit >= 0 ? '76, 175, 80' : '244, 67, 54'}, 0.3);
+                    border-radius: 8px;
+                    padding: 16px;
+                    margin-bottom: 20px;
+                ">
+                    <div style="color: #888; font-size: 14px; margin-bottom: 8px;">TOTAL PROFIT</div>
+                    <div style="color: ${totalProfit >= 0 ? '#4CAF50' : '#f44336'}; font-size: 28px; font-weight: bold;">
+                        $${totalProfit.toFixed(2)}
                     </div>
-                    <div style="display: flex; gap: 6px;">
-                        <button class="expand-btn" style="
-                            background: rgba(76, 175, 80, 0.2);
-                            border: 1px solid rgba(76, 175, 80, 0.4);
-                            color: #ffffff;
-                            padding: 4px 8px;
-                            border-radius: 3px;
-                            font-size: 10px;
-                            cursor: pointer;
-                            font-weight: bold;
-                        ">📊 EXPAND</button>
-                        <button class="settings-btn" style="
-                            background: rgba(76, 175, 80, 0.2);
-                            border: 1px solid rgba(76, 175, 80, 0.4);
-                            color: #ffffff;
-                            padding: 4px 8px;
-                            border-radius: 3px;
-                            font-size: 10px;
-                            cursor: pointer;
-                            font-weight: bold;
-                        ">⚙️ SETTINGS</button>
-                        <button class="restore-btn" style="
-                            background: rgba(255, 152, 0, 0.2);
-                            border: 1px solid rgba(255, 152, 0, 0.4);
-                            color: #ffffff;
-                            padding: 4px 8px;
-                            border-radius: 3px;
-                            font-size: 10px;
-                            cursor: pointer;
-                            font-weight: bold;
-                        ">↩️ RESTORE</button>
+                    <div style="color: ${totalProfit >= 0 ? '#4CAF50' : '#f44336'}; font-size: 16px; margin-top: 4px;">
+                        (${totalProfitPercent.toFixed(1)}%)
                     </div>
                 </div>
 
-                <!-- AMPL Trigger Status -->
-                <div class="trigger-status" style="
-                    background: ${this.triggerActive ? 'rgba(255, 152, 0, 0.1)' : 'rgba(76, 175, 80, 0.1)'};
-                    border: 1px solid ${this.triggerActive ? 'rgba(255, 152, 0, 0.3)' : 'rgba(76, 175, 80, 0.3)'};
+                <!-- Description -->
+                <div style="
+                    color: #888;
+                    font-size: 14px;
+                    line-height: 1.5;
+                    margin-bottom: 24px;
+                    background: rgba(76, 175, 80, 0.05);
+                    border: 1px solid rgba(76, 175, 80, 0.2);
+                    border-radius: 6px;
+                    padding: 16px;
+                ">
+                    <strong style="color: #4CAF50;">Automated Portfolio Rebalancing:</strong><br>
+                    Monitors AMPL price and automatically purchases equal amounts of SOL, SUI, BTC, and AMPL when AMPL drops below $1.16. 
+                    Tracks profit opportunities at 1.5% threshold for optimal rebalancing decisions.
+                </div>
+
+                <!-- View Details Button -->
+                <button class="view-details-btn" style="
+                    background: rgba(76, 175, 80, 0.2);
+                    border: 2px solid rgba(76, 175, 80, 0.5);
+                    color: #ffffff;
+                    padding: 16px 24px;
+                    border-radius: 8px;
+                    font-size: 18px;
+                    font-weight: bold;
+                    cursor: pointer;
+                    font-family: 'Courier New', monospace;
+                    transition: all 0.3s ease;
+                    margin-bottom: 16px;
+                    position: relative;
+                    z-index: 1001;
+                " onmouseover="this.style.background='rgba(76, 175, 80, 0.3)'" onmouseout="this.style.background='rgba(76, 175, 80, 0.2)'">
+                    📊 VIEW DETAILED PORTFOLIO
+                </button>
+
+                <!-- Restore Button -->
+                <button class="restore-btn" style="
+                    background: rgba(255, 152, 0, 0.2);
+                    border: 1px solid rgba(255, 152, 0, 0.4);
+                    color: #ffffff;
+                    padding: 8px 16px;
                     border-radius: 4px;
-                    padding: 6px 8px;
-                    margin-bottom: 8px;
-                    font-size: 10px;
-                    text-align: center;
+                    font-size: 14px;
+                    cursor: pointer;
+                    font-family: 'Courier New', monospace;
+                    position: relative;
+                    z-index: 1001;
                 ">
-                    <div style="color: ${this.triggerActive ? '#FF9800' : '#4CAF50'}; font-weight: bold;">
-                        ${this.triggerActive ? '🚨 AMPL TRIGGER ACTIVE' : '✅ AMPL TRIGGER MONITORING'}
-                    </div>
-                    <div style="color: #888; font-size: 9px;">
-                        Trigger: $${this.AMPL_TRIGGER_PRICE} | Current: $${this.lastAMPLPrice ? this.lastAMPLPrice.toFixed(4) : '---'} | Balance: $${this.availableBalance.toFixed(2)}
-                    </div>
-                </div>
-
-                <!-- Overall Stats -->
-                <div class="overall-stats" style="
-                    display: grid;
-                    grid-template-columns: 1fr 1fr 1fr;
-                    gap: 6px;
-                    margin-bottom: 8px;
-                    font-size: 10px;
-                ">
-                    <div style="background: rgba(76, 175, 80, 0.1); padding: 6px; border-radius: 3px; text-align: center; border: 1px solid rgba(76, 175, 80, 0.3);">
-                        <div style="color: #888; font-size: 9px; font-weight: bold;">INVESTED</div>
-                        <div style="color: #4CAF50; font-weight: bold; font-size: 11px;">$${totalInvested.toFixed(2)}</div>
-                    </div>
-                    <div style="background: rgba(76, 175, 80, 0.1); padding: 6px; border-radius: 3px; text-align: center; border: 1px solid rgba(76, 175, 80, 0.3);">
-                        <div style="color: #888; font-size: 9px; font-weight: bold;">VALUE</div>
-                        <div style="color: #4CAF50; font-weight: bold; font-size: 11px;">$${currentValue.toFixed(2)}</div>
-                    </div>
-                    <div style="background: rgba(76, 175, 80, 0.1); padding: 6px; border-radius: 3px; text-align: center; border: 1px solid rgba(76, 175, 80, 0.3);">
-                        <div style="color: #888; font-size: 9px; font-weight: bold;">PROFIT</div>
-                        <div style="color: ${totalProfit >= 0 ? '#4CAF50' : '#f44336'}; font-weight: bold; font-size: 11px;">
-                            $${totalProfit.toFixed(2)} (${totalProfitPercent.toFixed(1)}%)
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Coins List (Each on separate row) -->
-                <div class="coins-list" style="
-                    display: flex;
-                    flex-direction: column;
-                    gap: 4px;
-                    flex: 1;
-                    min-height: 0;
-                    margin-bottom: 8px;
-                ">
-                    ${this.createCoinRows()}
-                </div>
-
-                <!-- Settings Panel -->
-                <div class="settings-panel" style="
-                    display: none;
-                    background: rgba(0, 0, 0, 0.9);
-                    border: 1px solid rgba(76, 175, 80, 0.4);
-                    border-radius: 4px;
-                    padding: 8px;
-                    margin-bottom: 8px;
-                    font-size: 10px;
-                ">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
-                        <div>
-                            <label style="color: #888; font-size: 9px; font-weight: bold;">Profit Threshold:</label>
-                            <select class="profit-threshold-select" style="
-                                width: 100%;
-                                background: rgba(0, 0, 0, 0.8);
-                                border: 1px solid rgba(76, 175, 80, 0.4);
-                                color: #ffffff;
-                                padding: 4px;
-                                border-radius: 3px;
-                                font-size: 9px;
-                            ">
-                                <option value="1.5" ${this.settings.profitThreshold === 1.5 ? 'selected' : ''}>1.5%</option>
-                                <option value="5" ${this.settings.profitThreshold === 5 ? 'selected' : ''}>5%</option>
-                                <option value="10" ${this.settings.profitThreshold === 10 ? 'selected' : ''}>10%</option>
-                                <option value="15" ${this.settings.profitThreshold === 15 ? 'selected' : ''}>15%</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label style="color: #888; font-size: 9px; font-weight: bold;">Auto Rebalance:</label>
-                            <div style="margin-top: 4px;">
-                                <input type="checkbox" class="auto-rebalance-checkbox" ${this.settings.autoRebalanceEnabled ? 'checked' : ''} style="margin-right: 6px;">
-                                <span style="color: #fff; font-size: 9px;">Enable automatic rebalancing</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Action Log -->
-                <div class="action-log" style="
-                    background: rgba(0, 0, 0, 0.8);
-                    border: 1px solid rgba(76, 175, 80, 0.3);
-                    border-radius: 4px;
-                    padding: 6px;
-                    max-height: 60px;
-                    overflow-y: auto;
-                    font-size: 9px;
-                ">
-                    <div style="color: #888; font-size: 8px; margin-bottom: 3px; font-weight: bold;">RECENT ACTIONS:</div>
-                    ${this.actionLog.slice(-4).map(action => 
-                        `<div style="color: #4CAF50; margin-bottom: 2px; font-size: 9px;">• ${action}</div>`
-                    ).join('')}
-                </div>
+                    ↩️ RESTORE ORIGINAL PANEL
+                </button>
             </div>
         `;
     }
 
-    createCoinRows() {
-        return Object.entries(this.portfolioData).map(([symbol, data]) => `
-            <div class="coin-row" style="
-                background: rgba(0, 0, 0, 0.8);
-                border: 1px solid rgba(76, 175, 80, 0.3);
-                border-radius: 4px;
-                padding: 8px;
-                font-size: 10px;
-                transition: all 0.3s ease;
-                display: grid;
-                grid-template-columns: 60px 1fr 1fr 1fr 1fr 1fr;
-                gap: 8px;
-                align-items: center;
-            ">
-                <div style="text-align: center;">
-                    <div style="color: #4CAF50; font-weight: bold; font-size: 12px;">${data.status}</div>
-                    <div style="color: #4CAF50; font-weight: bold; font-size: 11px;">${symbol}</div>
-                </div>
-                <div style="text-align: center;">
-                    <div style="color: #666; font-size: 8px; font-weight: bold;">QUANTITY</div>
-                    <div style="color: #fff; font-weight: bold;">${data.quantity.toFixed(4)}</div>
-                </div>
-                <div style="text-align: center;">
-                    <div style="color: #666; font-size: 8px; font-weight: bold;">PURCHASE</div>
-                    <div style="color: #fff; font-weight: bold;">$${data.purchasePrice.toFixed(2)}</div>
-                </div>
-                <div style="text-align: center;">
-                    <div style="color: #666; font-size: 8px; font-weight: bold;">CURRENT</div>
-                    <div style="color: #fff; font-weight: bold;">$${data.currentPrice.toFixed(2)}</div>
-                </div>
-                <div style="text-align: center;">
-                    <div style="color: #666; font-size: 8px; font-weight: bold;">VALUE</div>
-                    <div style="color: #4CAF50; font-weight: bold;">$${data.value.toFixed(2)}</div>
-                </div>
-                <div style="text-align: center;">
-                    <div style="color: #666; font-size: 8px; font-weight: bold;">PROFIT</div>
-                    <div style="color: ${data.profit >= 0 ? '#4CAF50' : '#f44336'}; font-weight: bold;">
-                        $${data.profit.toFixed(2)}<br>
-                        <span style="font-size: 8px;">(${data.profitPercent.toFixed(1)}%)</span>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-    }
-
     addEventListeners(container) {
-        // Expand button
-        const expandBtn = container.querySelector('.expand-btn');
-        if (expandBtn) {
-            expandBtn.addEventListener('click', () => this.toggleExpanded());
-        }
-
-        // Settings button
-        const settingsBtn = container.querySelector('.settings-btn');
-        if (settingsBtn) {
-            settingsBtn.addEventListener('click', () => this.toggleSettings());
+        // View Details button
+        const viewDetailsBtn = container.querySelector('.view-details-btn');
+        if (viewDetailsBtn) {
+            viewDetailsBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.showFullSizeView();
+            });
         }
 
         // Restore button
         const restoreBtn = container.querySelector('.restore-btn');
         if (restoreBtn) {
-            restoreBtn.addEventListener('click', () => this.restoreOriginalContent());
-        }
-
-        // Settings controls
-        const profitThresholdSelect = container.querySelector('.profit-threshold-select');
-        if (profitThresholdSelect) {
-            profitThresholdSelect.addEventListener('change', (e) => {
-                this.settings.profitThreshold = parseFloat(e.target.value);
-                this.savePersistentSettings();
-                this.addToActionLog(`Profit threshold set to ${e.target.value}%`);
-            });
-        }
-
-        const autoRebalanceCheckbox = container.querySelector('.auto-rebalance-checkbox');
-        if (autoRebalanceCheckbox) {
-            autoRebalanceCheckbox.addEventListener('change', (e) => {
-                this.settings.autoRebalanceEnabled = e.target.checked;
-                this.savePersistentSettings();
-                this.addToActionLog(`Auto rebalance ${e.target.checked ? 'enabled' : 'disabled'}`);
+            restoreBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.restoreOriginalContent();
             });
         }
     }
 
-    toggleExpanded() {
-        if (this.isExpanded) {
-            this.closeExpandedView();
-        } else {
-            this.showExpandedView();
+    showFullSizeView() {
+        // Remove any existing expanded views first
+        const existingBackdrop = document.querySelector('.rebalancing-fullsize-backdrop');
+        if (existingBackdrop) {
+            existingBackdrop.remove();
         }
-    }
 
-    showExpandedView() {
-        // Create modal backdrop
+        // Create full-screen backdrop
         const backdrop = document.createElement('div');
-        backdrop.className = 'rebalancing-modal-backdrop';
+        backdrop.className = 'rebalancing-fullsize-backdrop';
         backdrop.style.cssText = `
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(5px);
-            z-index: 10000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        `;
-
-        // Create modal content (4" x 5" = 480px x 384px)
-        const modal = document.createElement('div');
-        modal.className = 'rebalancing-modal';
-        modal.style.cssText = `
-            width: 480px;
-            height: 384px;
             background: rgba(0, 0, 0, 0.95);
-            border: 2px solid rgba(76, 175, 80, 0.5);
-            border-radius: 12px;
-            padding: 16px;
-            box-sizing: border-box;
-            font-family: 'Courier New', monospace;
-            color: #ffffff;
+            z-index: 10000;
             overflow-y: auto;
-            box-shadow: 0 0 30px rgba(76, 175, 80, 0.3);
+            padding: 20px;
+            box-sizing: border-box;
         `;
 
-        modal.innerHTML = this.createExpandedHTML();
-        backdrop.appendChild(modal);
+        backdrop.innerHTML = this.createFullSizeHTML();
         document.body.appendChild(backdrop);
+        
+        this.expandedViewOpen = true;
 
-        // Close on backdrop click
+        // Add event listeners for full-size view
+        const returnBtn = backdrop.querySelector('.return-btn');
+        if (returnBtn) {
+            returnBtn.addEventListener('click', () => {
+                backdrop.remove();
+                this.expandedViewOpen = false;
+            });
+        }
+
+        // Close on backdrop click (but not on content click)
         backdrop.addEventListener('click', (e) => {
             if (e.target === backdrop) {
-                this.closeExpandedView();
+                backdrop.remove();
+                this.expandedViewOpen = false;
             }
         });
 
-        this.isExpanded = true;
-        this.addToActionLog('Expanded view opened');
+        this.addToActionLog('Detailed view opened');
     }
 
-    closeExpandedView() {
-        const backdrop = document.querySelector('.rebalancing-modal-backdrop');
-        if (backdrop) {
-            backdrop.remove();
-        }
-        this.isExpanded = false;
-        this.addToActionLog('Expanded view closed');
-    }
-
-    createExpandedHTML() {
-        // DYNAMIC DATA - syncs with current portfolio state
+    createFullSizeHTML() {
         const totalInvested = Object.values(this.portfolioData).reduce((sum, coin) => sum + (coin.quantity * coin.purchasePrice), 0);
         const currentValue = Object.values(this.portfolioData).reduce((sum, coin) => sum + coin.value, 0);
         const totalProfit = currentValue - totalInvested;
         const totalProfitPercent = totalInvested > 0 ? ((totalProfit / totalInvested) * 100) : 0;
 
         return `
-            <div style="text-align: center; margin-bottom: 16px;">
-                <h2 style="color: #4CAF50; margin: 0; font-size: 18px;">🔄 AMPL Rebalancing System</h2>
-                <p style="color: ${this.isLiveDataActive ? '#4CAF50' : '#ff4444'}; margin: 4px 0; font-size: 12px; background: rgba(${this.isLiveDataActive ? '76, 175, 80' : '255, 68, 68'}, 0.2); padding: 4px 8px; border-radius: 4px; display: inline-block;">
-                    ${this.isLiveDataActive ? '🟢 LIVE DATA' : '🔴 OFFLINE'} | Trigger: $${this.AMPL_TRIGGER_PRICE} | Balance: $${this.availableBalance.toFixed(2)}
-                </p>
-                <p style="color: ${this.triggerActive ? '#FF9800' : '#4CAF50'}; margin: 4px 0; font-size: 11px;">
-                    ${this.triggerActive ? '🚨 AMPL TRIGGER ACTIVE' : '✅ MONITORING AMPL PRICE'}
-                </p>
-            </div>
+            <div style="
+                max-width: 1200px;
+                margin: 0 auto;
+                background: rgba(0, 0, 0, 0.95);
+                border: 2px solid rgba(76, 175, 80, 0.5);
+                border-radius: 12px;
+                padding: 30px;
+                font-family: 'Courier New', monospace;
+                color: #ffffff;
+                box-shadow: 0 0 50px rgba(76, 175, 80, 0.3);
+            ">
+                <!-- Header -->
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <h1 style="color: #4CAF50; margin: 0; font-size: 32px; margin-bottom: 10px;">🔄 AMPL REBALANCING SYSTEM</h1>
+                    <p style="color: ${this.isLiveDataActive ? '#4CAF50' : '#ff4444'}; margin: 0; font-size: 16px; background: rgba(${this.isLiveDataActive ? '76, 175, 80' : '255, 68, 68'}, 0.2); padding: 8px 16px; border-radius: 6px; display: inline-block;">
+                        ${this.isLiveDataActive ? '🟢 LIVE DATA' : '🔴 OFFLINE'} | AMPL: $${this.lastAMPLPrice ? this.lastAMPLPrice.toFixed(4) : '---'} | Trigger: $${this.AMPL_TRIGGER_PRICE} | Balance: $${this.availableBalance.toFixed(2)}
+                    </p>
+                    <p style="color: ${this.triggerActive ? '#FF9800' : '#4CAF50'}; margin: 8px 0; font-size: 18px; font-weight: bold;">
+                        ${this.triggerActive ? '🚨 AMPL TRIGGER ACTIVE' : '✅ MONITORING AMPL PRICE'}
+                    </p>
+                </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px;">
-                <div style="background: rgba(76, 175, 80, 0.1); padding: 12px; border-radius: 6px; text-align: center; border: 1px solid rgba(76, 175, 80, 0.3);">
-                    <div style="color: #888; font-size: 11px;">TOTAL INVESTED</div>
-                    <div style="color: #4CAF50; font-weight: bold; font-size: 16px;">$${totalInvested.toFixed(2)}</div>
-                </div>
-                <div style="background: rgba(76, 175, 80, 0.1); padding: 12px; border-radius: 6px; text-align: center; border: 1px solid rgba(76, 175, 80, 0.3);">
-                    <div style="color: #888; font-size: 11px;">CURRENT VALUE</div>
-                    <div style="color: #4CAF50; font-weight: bold; font-size: 16px;">$${currentValue.toFixed(2)}</div>
-                </div>
-                <div style="background: rgba(76, 175, 80, 0.1); padding: 12px; border-radius: 6px; text-align: center; border: 1px solid rgba(76, 175, 80, 0.3);">
-                    <div style="color: #888; font-size: 11px;">TOTAL PROFIT</div>
-                    <div style="color: ${totalProfit >= 0 ? '#4CAF50' : '#f44336'}; font-weight: bold; font-size: 16px;">
-                        $${totalProfit.toFixed(2)}<br>
-                        <span style="font-size: 12px;">(${totalProfitPercent.toFixed(1)}%)</span>
+                <!-- Overall Stats -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+                    <div style="background: rgba(76, 175, 80, 0.1); padding: 20px; border-radius: 8px; text-align: center; border: 2px solid rgba(76, 175, 80, 0.3);">
+                        <div style="color: #888; font-size: 16px; margin-bottom: 8px;">TOTAL INVESTED</div>
+                        <div style="color: #4CAF50; font-weight: bold; font-size: 24px;">$${totalInvested.toFixed(2)}</div>
+                    </div>
+                    <div style="background: rgba(76, 175, 80, 0.1); padding: 20px; border-radius: 8px; text-align: center; border: 2px solid rgba(76, 175, 80, 0.3);">
+                        <div style="color: #888; font-size: 16px; margin-bottom: 8px;">CURRENT VALUE</div>
+                        <div style="color: #4CAF50; font-weight: bold; font-size: 24px;">$${currentValue.toFixed(2)}</div>
+                    </div>
+                    <div style="background: rgba(76, 175, 80, 0.1); padding: 20px; border-radius: 8px; text-align: center; border: 2px solid rgba(76, 175, 80, 0.3);">
+                        <div style="color: #888; font-size: 16px; margin-bottom: 8px;">TOTAL PROFIT</div>
+                        <div style="color: ${totalProfit >= 0 ? '#4CAF50' : '#f44336'}; font-weight: bold; font-size: 24px;">
+                            $${totalProfit.toFixed(2)}<br>
+                            <span style="font-size: 18px;">(${totalProfitPercent.toFixed(1)}%)</span>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;">
-                ${Object.entries(this.portfolioData).map(([symbol, data]) => `
-                    <div style="background: rgba(0, 0, 0, 0.8); border: 1px solid rgba(76, 175, 80, 0.3); border-radius: 6px; padding: 12px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <span style="color: #4CAF50; font-weight: bold; font-size: 16px;">${data.status} ${symbol}</span>
-                            <span style="color: #888; font-size: 12px;">Qty: ${data.quantity.toFixed(4)}</span>
-                        </div>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; font-size: 12px;">
-                            <div>
-                                <div style="color: #666;">Purchase Price:</div>
-                                <div style="color: #fff; font-weight: bold;">$${data.purchasePrice.toFixed(2)}</div>
+                <!-- Coins Grid -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+                    ${Object.entries(this.portfolioData).map(([symbol, data]) => `
+                        <div style="background: rgba(0, 0, 0, 0.8); border: 2px solid rgba(76, 175, 80, 0.4); border-radius: 12px; padding: 24px;">
+                            <div style="text-align: center; margin-bottom: 20px;">
+                                <div style="color: #4CAF50; font-size: 48px; margin-bottom: 8px;">${data.status}</div>
+                                <div style="color: #4CAF50; font-weight: bold; font-size: 28px; margin-bottom: 8px;">${symbol}</div>
+                                <div style="color: #888; font-size: 16px;">Quantity: ${data.quantity.toFixed(4)}</div>
                             </div>
-                            <div>
-                                <div style="color: #666;">Current Price:</div>
-                                <div style="color: #fff; font-weight: bold;">$${data.currentPrice.toFixed(2)}</div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                                <div style="background: rgba(76, 175, 80, 0.1); border: 1px solid rgba(76, 175, 80, 0.3); border-radius: 6px; padding: 12px; text-align: center;">
+                                    <div style="color: #888; font-size: 12px; margin-bottom: 4px;">PURCHASE PRICE</div>
+                                    <div style="color: #ffffff; font-weight: bold; font-size: 18px;">$${data.purchasePrice.toFixed(2)}</div>
+                                </div>
+                                <div style="background: rgba(76, 175, 80, 0.1); border: 1px solid rgba(76, 175, 80, 0.3); border-radius: 6px; padding: 12px; text-align: center;">
+                                    <div style="color: #888; font-size: 12px; margin-bottom: 4px;">CURRENT PRICE</div>
+                                    <div style="color: #ffffff; font-weight: bold; font-size: 18px;">$${data.currentPrice.toFixed(2)}</div>
+                                </div>
                             </div>
-                            <div>
-                                <div style="color: #666;">Value:</div>
-                                <div style="color: #4CAF50; font-weight: bold;">$${data.value.toFixed(2)}</div>
-                            </div>
-                            <div>
-                                <div style="color: #666;">Profit:</div>
-                                <div style="color: ${data.profit >= 0 ? '#4CAF50' : '#f44336'}; font-weight: bold;">
-                                    $${data.profit.toFixed(2)}<br>
-                                    <span style="font-size: 10px;">(${data.profitPercent.toFixed(1)}%)</span>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                <div style="background: rgba(76, 175, 80, 0.1); border: 1px solid rgba(76, 175, 80, 0.3); border-radius: 6px; padding: 12px; text-align: center;">
+                                    <div style="color: #888; font-size: 12px; margin-bottom: 4px;">CURRENT VALUE</div>
+                                    <div style="color: #4CAF50; font-weight: bold; font-size: 18px;">$${data.value.toFixed(2)}</div>
+                                </div>
+                                <div style="background: rgba(${data.profit >= 0 ? '76, 175, 80' : '244, 67, 54'}, 0.1); border: 1px solid rgba(${data.profit >= 0 ? '76, 175, 80' : '244, 67, 54'}, 0.3); border-radius: 6px; padding: 12px; text-align: center;">
+                                    <div style="color: #888; font-size: 12px; margin-bottom: 4px;">PROFIT/LOSS</div>
+                                    <div style="color: ${data.profit >= 0 ? '#4CAF50' : '#f44336'}; font-weight: bold; font-size: 18px;">
+                                        $${data.profit.toFixed(2)}<br>
+                                        <span style="font-size: 14px;">(${data.profitPercent.toFixed(1)}%)</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                `).join('')}
-            </div>
-
-            <div style="background: rgba(0, 0, 0, 0.8); border: 1px solid rgba(76, 175, 80, 0.3); border-radius: 6px; padding: 12px;">
-                <div style="color: #888; font-size: 11px; margin-bottom: 8px;">RECENT ACTIONS:</div>
-                <div style="max-height: 60px; overflow-y: auto;">
-                    ${this.actionLog.slice(-8).map(action => 
-                        `<div style="color: #4CAF50; margin-bottom: 4px; font-size: 11px;">• ${action}</div>`
-                    ).join('')}
+                    `).join('')}
                 </div>
-            </div>
 
-            <div style="text-align: center; margin-top: 16px;">
-                <button onclick="document.querySelector('.rebalancing-modal-backdrop').remove();" style="
-                    background: rgba(255, 152, 0, 0.2);
-                    border: 1px solid rgba(255, 152, 0, 0.4);
-                    color: #ffffff;
-                    padding: 8px 16px;
-                    border-radius: 4px;
-                    font-size: 12px;
-                    cursor: pointer;
-                ">Close</button>
+                <!-- Action Log -->
+                <div style="background: rgba(0, 0, 0, 0.8); border: 2px solid rgba(76, 175, 80, 0.3); border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                    <div style="color: #888; font-size: 16px; margin-bottom: 12px; font-weight: bold;">RECENT ACTIONS:</div>
+                    <div style="max-height: 150px; overflow-y: auto;">
+                        ${this.actionLog.slice(-10).map(action => 
+                            `<div style="color: #4CAF50; margin-bottom: 6px; font-size: 14px;">• ${action}</div>`
+                        ).join('')}
+                    </div>
+                </div>
+
+                <!-- Return Button -->
+                <div style="text-align: center;">
+                    <button class="return-btn" style="
+                        background: rgba(255, 152, 0, 0.2);
+                        border: 2px solid rgba(255, 152, 0, 0.4);
+                        color: #ffffff;
+                        padding: 16px 32px;
+                        border-radius: 8px;
+                        font-size: 18px;
+                        font-weight: bold;
+                        cursor: pointer;
+                        font-family: 'Courier New', monospace;
+                        transition: all 0.3s ease;
+                    " onmouseover="this.style.background='rgba(255, 152, 0, 0.3)'" onmouseout="this.style.background='rgba(255, 152, 0, 0.2)'">
+                        ↩️ RETURN TO SIMPLE VIEW
+                    </button>
+                </div>
             </div>
         `;
     }
 
-    toggleSettings() {
-        const settingsPanel = document.querySelector('.settings-panel');
-        if (settingsPanel) {
-            settingsPanel.style.display = settingsPanel.style.display === 'none' ? 'block' : 'none';
+    updateAllViews() {
+        // Update simple panel
+        this.updateSimpleDisplay();
+        
+        // Update expanded view if it's open
+        if (this.expandedViewOpen) {
+            const backdrop = document.querySelector('.rebalancing-fullsize-backdrop');
+            if (backdrop) {
+                const content = backdrop.querySelector('div');
+                if (content) {
+                    content.innerHTML = this.createFullSizeHTML().match(/<div[^>]*>([\s\S]*)<\/div>$/)[1];
+                    
+                    // Re-add event listeners for the updated content
+                    const returnBtn = backdrop.querySelector('.return-btn');
+                    if (returnBtn) {
+                        returnBtn.addEventListener('click', () => {
+                            backdrop.remove();
+                            this.expandedViewOpen = false;
+                        });
+                    }
+                }
+            }
+        }
+    }
+
+    updateSimpleDisplay() {
+        // Update the simple panel display
+        const panel = document.querySelector('.simple-rebalancing-panel');
+        if (panel) {
+            panel.innerHTML = this.createSimplePanelHTML().match(/<div class="simple-rebalancing-panel"[^>]*>([\s\S]*)<\/div>$/)[1];
+            this.addEventListeners(panel.parentElement);
         }
     }
 
@@ -821,84 +756,19 @@ class AMPLRebalancingSystem {
             if (targetElement) {
                 targetElement.innerHTML = this.originalContent;
                 this.isInitialized = false;
+                this.expandedViewOpen = false;
+                
+                // Clear intervals and remove any expanded views
                 if (this.updateInterval) {
                     clearInterval(this.updateInterval);
                 }
+                
+                const existingBackdrop = document.querySelector('.rebalancing-fullsize-backdrop');
+                if (existingBackdrop) {
+                    existingBackdrop.remove();
+                }
+                
                 console.log('✅ Original content restored');
-            }
-        }
-    }
-
-    updateDisplay() {
-        // Update coins list
-        const coinsList = document.querySelector('.coins-list');
-        if (coinsList) {
-            coinsList.innerHTML = this.createCoinRows();
-        }
-        
-        // Update overall stats
-        const totalInvested = Object.values(this.portfolioData).reduce((sum, coin) => sum + (coin.quantity * coin.purchasePrice), 0);
-        const currentValue = Object.values(this.portfolioData).reduce((sum, coin) => sum + coin.value, 0);
-        const totalProfit = currentValue - totalInvested;
-        const totalProfitPercent = totalInvested > 0 ? ((totalProfit / totalInvested) * 100) : 0;
-        
-        const overallStats = document.querySelector('.overall-stats');
-        if (overallStats) {
-            overallStats.innerHTML = `
-                <div style="background: rgba(76, 175, 80, 0.1); padding: 6px; border-radius: 3px; text-align: center; border: 1px solid rgba(76, 175, 80, 0.3);">
-                    <div style="color: #888; font-size: 9px; font-weight: bold;">INVESTED</div>
-                    <div style="color: #4CAF50; font-weight: bold; font-size: 11px;">$${totalInvested.toFixed(2)}</div>
-                </div>
-                <div style="background: rgba(76, 175, 80, 0.1); padding: 6px; border-radius: 3px; text-align: center; border: 1px solid rgba(76, 175, 80, 0.3);">
-                    <div style="color: #888; font-size: 9px; font-weight: bold;">VALUE</div>
-                    <div style="color: #4CAF50; font-weight: bold; font-size: 11px;">$${currentValue.toFixed(2)}</div>
-                </div>
-                <div style="background: rgba(76, 175, 80, 0.1); padding: 6px; border-radius: 3px; text-align: center; border: 1px solid rgba(76, 175, 80, 0.3);">
-                    <div style="color: #888; font-size: 9px; font-weight: bold;">PROFIT</div>
-                    <div style="color: ${totalProfit >= 0 ? '#4CAF50' : '#f44336'}; font-weight: bold; font-size: 11px;">
-                        $${totalProfit.toFixed(2)} (${totalProfitPercent.toFixed(1)}%)
-                    </div>
-                </div>
-            `;
-        }
-        
-        // Update trigger status
-        const triggerStatus = document.querySelector('.trigger-status');
-        if (triggerStatus) {
-            triggerStatus.innerHTML = `
-                <div style="color: ${this.triggerActive ? '#FF9800' : '#4CAF50'}; font-weight: bold;">
-                    ${this.triggerActive ? '🚨 AMPL TRIGGER ACTIVE' : '✅ AMPL TRIGGER MONITORING'}
-                </div>
-                <div style="color: #888; font-size: 9px;">
-                    Trigger: $${this.AMPL_TRIGGER_PRICE} | Current: $${this.lastAMPLPrice ? this.lastAMPLPrice.toFixed(4) : '---'} | Balance: $${this.availableBalance.toFixed(2)}
-                </div>
-            `;
-            triggerStatus.style.background = this.triggerActive ? 'rgba(255, 152, 0, 0.1)' : 'rgba(76, 175, 80, 0.1)';
-            triggerStatus.style.borderColor = this.triggerActive ? 'rgba(255, 152, 0, 0.3)' : 'rgba(76, 175, 80, 0.3)';
-        }
-        
-        // Update action log
-        const actionLog = document.querySelector('.action-log');
-        if (actionLog) {
-            const logContent = actionLog.querySelector('div:last-child');
-            if (logContent) {
-                logContent.innerHTML = this.actionLog.slice(-4).map(action => 
-                    `<div style="color: #4CAF50; margin-bottom: 2px; font-size: 9px;">• ${action}</div>`
-                ).join('');
-            }
-        }
-    }
-
-    updateLiveStatusIndicator(isLive) {
-        const statusIndicator = document.querySelector('.live-status-indicator');
-        if (statusIndicator) {
-            if (isLive) {
-                const triggerStatus = this.triggerActive ? ' 🚨 TRIGGER' : '';
-                statusIndicator.innerHTML = `<span style="color: #4CAF50;">🟢 LIVE${triggerStatus}</span>`;
-                statusIndicator.style.background = this.triggerActive ? 'rgba(255, 152, 0, 0.2)' : 'rgba(76, 175, 80, 0.2)';
-            } else {
-                statusIndicator.innerHTML = '<span style="color: #ff4444;">🔴 OFFLINE</span>';
-                statusIndicator.style.background = 'rgba(255, 68, 68, 0.2)';
             }
         }
     }
@@ -943,5 +813,5 @@ class AMPLRebalancingSystem {
 // Initialize the rebalancing system
 const amplRebalancingSystem = new AMPLRebalancingSystem();
 
-console.log('🎬 AMPL Rebalancing System (Complete Rewrite) loaded successfully');
+console.log('🎬 AMPL Rebalancing System (Fixed - No Conflicts) loaded successfully');
 
