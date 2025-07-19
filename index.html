@@ -3,99 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AMPL Profit Panel - Clean Version</title>
+    <title>AMPL Profit Panel - Dark Theme Test</title>
     <style>
         body {
             margin: 0;
             padding: 20px;
             background: #0a0a0a;
             font-family: 'Courier New', monospace;
-            min-height: 100vh;
+            color: #ffffff;
         }
         
-        .page-header {
-            text-align: center;
+        .test-info {
+            background: #1a1a1a;
+            border: 1px solid #333333;
+            border-radius: 6px;
+            padding: 16px;
             margin-bottom: 20px;
+            color: #cccccc;
+        }
+        
+        .test-info h3 {
             color: #00ffff;
+            margin-top: 0;
         }
         
-        .page-header h1 {
-            margin: 0;
-            font-size: 24px;
-            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        .test-info ul {
+            margin: 8px 0;
+            padding-left: 20px;
         }
         
-        .page-header p {
-            margin: 5px 0 0 0;
-            color: #888;
-            font-size: 14px;
+        .test-info li {
+            margin: 4px 0;
+            color: #ffffff;
         }
         
-        /* The panel will be inserted here with its own styles */
+        .warning {
+            background: rgba(255, 165, 0, 0.1);
+            border: 1px solid #ffa500;
+            border-radius: 4px;
+            padding: 8px;
+            margin: 8px 0;
+            color: #ffa500;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
-    <div class="page-header">
-        <h1>🎯 AMPL Profit Panel</h1>
-        <p>Single Panel - Blue Theme - Real KuCoin Integration</p>
+    <div class="test-info">
+        <h3>🎯 AMPL Profit Panel - Dark Theme Test</h3>
+        <p><strong>Styling:</strong> Dark theme matching screenshot 230833.png</p>
+        
+        <div class="warning">
+            ⚠️ <strong>Test Mode:</strong> This is a standalone test. Real API calls will fail without proper backend setup.
+        </div>
+        
+        <h4>🧪 Test Features:</h4>
+        <ul>
+            <li><strong>Dark theme</strong> - Matches main app styling</li>
+            <li><strong>Real-time price simulation</strong> - Auto-starts after 3 seconds</li>
+            <li><strong>Demo position</strong> - Added automatically for testing</li>
+            <li><strong>Profit calculations</strong> - Live updates with price changes</li>
+            <li><strong>Responsive design</strong> - Works on mobile and desktop</li>
+        </ul>
+        
+        <h4>🎮 Manual Controls:</h4>
+        <ul>
+            <li><strong>Start/Pause buttons</strong> - Control system state</li>
+            <li><strong>Profit threshold buttons</strong> - Change profit targets (1.25% to 10%)</li>
+            <li><strong>Clear log button</strong> - Clear activity console</li>
+        </ul>
+        
+        <h4>📱 Integration Ready:</h4>
+        <ul>
+            <li><strong>Call from main app:</strong> <code>amplProfitPanelDark.show()</code></li>
+            <li><strong>Add positions:</strong> <code>amplProfitPanelDark.onBuyOrderFilled(id, qty, price, total)</code></li>
+            <li><strong>Hide panel:</strong> <code>amplProfitPanelDark.hide()</code></li>
+        </ul>
     </div>
+
+    <!-- AMPL Profit Panel will be inserted here -->
     
-    <!-- The AMPL Profit Panel will be inserted here automatically -->
-    
-    <!-- Load the final profit panel -->
-    <script src="ampl-profit-panel-final.js"></script>
+    <script src="ampl-profit-panel-dark-theme.js"></script>
     
     <script>
-        // Simple initialization
-        window.addEventListener('load', function() {
-            console.log('🚀 AMPL Profit Panel loaded successfully');
+        // Test automation
+        setTimeout(() => {
+            console.log('🧪 Starting automated test...');
             
-            // Auto-start after 2 seconds for demo
-            setTimeout(() => {
-                if (window.amplProfitPanelFinal) {
-                    window.amplProfitPanelFinal.start();
+            // Add a test position
+            amplProfitPanelDark.addPosition(
+                'TEST_001',
+                100.000,  // 100 AMPL
+                1.285,    // Purchased at $1.285
+                128.50    // Total USD invested
+            );
+            
+            // Start the system
+            amplProfitPanelDark.start();
+            
+            // Simulate price updates
+            let currentPrice = 1.285;
+            let priceDirection = 1;
+            
+            setInterval(() => {
+                // Simulate price movement
+                const change = (Math.random() - 0.5) * 0.02; // ±1% random change
+                currentPrice += change;
+                
+                // Keep price in reasonable range
+                if (currentPrice < 1.200) currentPrice = 1.200;
+                if (currentPrice > 1.500) currentPrice = 1.500;
+                
+                amplProfitPanelDark.updatePrice(currentPrice);
+                
+                // Occasionally add more test positions
+                if (Math.random() < 0.05) { // 5% chance every update
+                    const testId = 'TEST_' + Date.now().toString().slice(-6);
+                    const quantity = 50 + Math.random() * 100;
+                    const price = currentPrice * (0.95 + Math.random() * 0.1);
                     
-                    // Add a demo position after 3 seconds
-                    setTimeout(() => {
-                        window.amplProfitPanelFinal.addPosition(
-                            'DEMO_001',
-                            100.0,
-                            1.200,
-                            120.00
-                        );
-                    }, 3000);
+                    amplProfitPanelDark.addPosition(
+                        testId,
+                        quantity,
+                        price,
+                        quantity * price
+                    );
                 }
-            }, 2000);
-        });
+                
+            }, 2000); // Update every 2 seconds
+            
+        }, 3000); // Start after 3 seconds
         
         // Keyboard shortcuts for testing
-        document.addEventListener('keydown', function(e) {
-            if (!window.amplProfitPanelFinal) return;
-            
+        document.addEventListener('keydown', (e) => {
             if (e.ctrlKey) {
                 switch(e.key) {
                     case 's':
                         e.preventDefault();
-                        window.amplProfitPanelFinal.start();
+                        amplProfitPanelDark.start();
                         break;
                     case 'p':
                         e.preventDefault();
-                        window.amplProfitPanelFinal.togglePause();
+                        amplProfitPanelDark.togglePause();
                         break;
                     case 't':
                         e.preventDefault();
-                        // Add test position
-                        const positionId = `TEST_${Date.now()}`;
-                        window.amplProfitPanelFinal.addPosition(
-                            positionId,
-                            Math.floor(Math.random() * 200) + 50,
-                            1.150 + Math.random() * 0.100,
-                            Math.floor(Math.random() * 200) + 100
+                        const testId = 'MANUAL_' + Date.now().toString().slice(-6);
+                        amplProfitPanelDark.addPosition(
+                            testId,
+                            75 + Math.random() * 50,
+                            1.200 + Math.random() * 0.200,
+                            100 + Math.random() * 50
                         );
                         break;
                 }
             }
         });
+        
+        console.log('🎯 AMPL Profit Panel Dark Theme Test Ready!');
+        console.log('📋 Keyboard shortcuts: Ctrl+S (start), Ctrl+P (pause), Ctrl+T (add position)');
     </script>
 </body>
 </html>
+
