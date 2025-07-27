@@ -14,10 +14,12 @@
     <!-- Supabase JS Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="simple-panel-backing.css">
-    
+    <link rel="stylesheet" href="panel.css">
+
 
 </head>
 <body>
+    
     <!-- Header (Your Preferred Style) -->
     <header class="main-header">
         <div class="header-content">
@@ -206,8 +208,52 @@
                     </div>
                 </div>
             </div>
-            
-            <!-- Enhanced Integrated Ladder Panel -->
+
+
+            <!-- Third Row Panel (Rebuilt) -->
+	   <!-- <div class="rebuild-panels-row">-->
+	    <div class="rebuild-panels-row" id="third-row-panel" style="display:none;">
+
+  <section class="panel panel-system" id="rebalancing-system">
+    <div class="panel-header">
+      <h2><i class="fas fa-sync-alt"></i> Rebalancing System</h2>
+    </div>
+    <div class="panel-content">
+      <div class="stat-pair"><span>Total Invested:</span><span id="invested-amount">$0.00</span></div>
+      <div class="stat-pair"><span>Portfolio Value:</span><span id="portfolio-value">$0.00</span></div>
+      <div class="stat-pair"><span>Total Profit:</span><span id="total-profit">$0.00 (0.00%)</span></div>
+    </div>
+  </section>
+
+  <section class="panel panel-protection" id="rebase-protection">
+    <div class="panel-header">
+      <h2><i class="fas fa-shield-alt"></i> Rebase Monitor</h2>
+    </div>
+    <div class="panel-content">
+      <div class="stat-pair"><span>AMPL Quantity:</span><span id="ampl-qty">0.000</span></div>
+      <div class="stat-pair"><span>Current Price:</span><span id="current-price">$0.000</span></div>
+      <div class="stat-pair"><span>Next Rebase:</span><span id="next-rebase">--h --m</span></div>
+    </div>
+  </section>
+
+  <section class="panel panel-ladder" id="smart-ladder">
+    <div class="panel-header">
+      <h2><i class="fas fa-layer-group"></i> Ladder Trap System</h2>
+    </div>
+    <div class="panel-content">
+      <div class="stat-pair"><span>Orders Open:</span><span id="orders-open">0</span></div>
+      <div class="stat-pair"><span>Pending:</span><span id="orders-pending">0</span></div>
+      <div class="stat-pair"><span>Total Trapped:</span><span id="trapped-value">$0.00</span></div>
+      <div id="current-ampl-price">1.205</div>
+
+    </div>
+  </section>
+</div>
+
+
+
+
+         <!--   <!-- Enhanced Integrated Ladder Panel -->
             <div class="integrated-ladder-panel" id="integrated-ladder-panel" style="display: none;">
                 <div class="ladder-panel-grid">
                     <!-- Enhanced Limit Orders Section -->
@@ -236,25 +282,66 @@
                                 </label>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
                     
-                    <!-- Enhanced AMPL Rebase Protection Section -->
-                    <div class="ladder-section rebase-section">
-                        <div class="section-header">
-                            <h3><i class="fas fa-shield-alt"></i> AMPL Rebase Protection Monitor</h3>
-                        </div>
-                        <div class="section-content">
-                            <div class="rebase-content">
-                                <!-- Progress Bar -->
-                                <div class="progress-container">
-                                    <div class="progress-label">Rebase Protection Status</div>
-                                    <div class="progress-bar-container">
-                                        <div class="progress-bar" style="width: 0%;"></div>
-                                    </div>
-                                    <div class="progress-percentage">0% Safe</div>
-                                </div>
+
+              
+                    <!-- Integrated AMPL Management Panel -->
+<div class="ampl-management-panel">
+  <!-- Header -->
+  <div class="panel-header">
+    <h2><i class="fas fa-cogs"></i> AMPL Management Console</h2>
+  </div>
+
+  <div class="panel-body">
+    <!-- Left Column: Rebalancing + Rebase Buffer -->
+    <div class="half-panel ampl-logic-block">
+      <div class="sub-system-section" id="rebalancing-system">
+        <h3><i class="fas fa-sync-alt"></i> AMPL Rebalancing System</h3>
+        <div class="system-content">
+          <!-- Live metrics, coin prices, thresholds, etc. injected here -->
+        </div>
+      </div>
+
+      <div class="sub-system-section" id="rebase-buffer">
+        <h3><i class="fas fa-shield-alt"></i> Rebase Profit Buffer</h3>
+        <div class="system-content">
+          <!-- Display rebasing count, profit % triggers, simulation logs -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Smart Ladder (Traps) -->
+    <div class="half-panel smart-ladder-block">
+      <div class="sub-system-section ladder-section order-ladder-section">
+        <h3><i class="fas fa-layer-group"></i> Smart Order Ladder</h3>
+        <div class="section-content">
+          <div class="order-ladder-grid">
+            <!-- Eight traps visually represented -->
+            <div class="price-level-badge empty">1.1600</div>
+            <div class="price-level-badge empty">1.1212</div>
+            <div class="price-level-badge empty">1.0838</div>
+            <div class="price-level-badge empty">1.0126</div>
+            <div class="price-level-badge empty">0.9788</div>
+            <div class="price-level-badge empty">0.9461</div>
+            <div class="price-level-badge empty">0.9145</div>
+            <div class="price-level-badge empty">0.8545</div>
+          </div>
+
+          <div class="order-status-display">
+            <strong>0 orders open, 0 pending</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+           
                                 
-                                <!-- Holdings Tracker -->
+                                <!-- Holdings Tracker --> <!--
                                 <div class="holdings-tracker">
                                     <div class="holdings-row">
                                         <span class="holdings-label">Original Purchase:</span>
@@ -271,36 +358,9 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
                     
-                    <!-- Smart Order Ladder Section -->
-                    <div class="ladder-section order-ladder-section">
-                        <div class="section-header">
-                            <h3><i class="fas fa-layer-group"></i> Smart Order Ladder</h3>
-                        </div>
-                        <div class="section-content">
-                            <!-- 8 Price Level Badges -->
-                            <div class="order-ladder-grid">
-                                <div class="price-level-badge empty">1.1600</div>
-                                <div class="price-level-badge empty">1.1212</div>
-                                <div class="price-level-badge empty">1.0838</div>
-                                <div class="price-level-badge empty">1.0126</div>
-                                <div class="price-level-badge empty">0.9788</div>
-                                <div class="price-level-badge empty">0.9461</div>
-                                <div class="price-level-badge empty">0.9145</div>
-                                <div class="price-level-badge empty">0.8545</div>
-                            </div>
-                            
-                            <!-- Order Status Display -->
-                            <div class="order-status-display">
-                                <strong>0 orders open, 0 pending</strong>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </main>
-    </div>
+              
 
     <!-- Footer -->
     <footer class="footer">
@@ -334,27 +394,26 @@
     <!-- <script src="ampl-manager-persistence.js"></script> 
     <script src="ampl-activity-feed-integrated.js"></script>
     <script src="ampl-rebalancing-system-new.js"></script>
+    <script src="ampl-rebalancing-system-fixed.js"></script> 
     <script src="ampl-rebase-protection-fixed.js"></script> 
+    <script src="ampl-rebase-protection-clean.js"></script>
     <script src="https://s3.tradingview.com/tv.js"></script> 
     <script src="dynamic-transparency.js"></script>
     <script src="supabase.js"></script>
-    <script src="script.js"></script> 
+    <script src="script.js"></script>
+    <script src="ampl-activity-feed-fixed.js"></script>
+
+    <script src="consolidated-panel.js"></script>
     <script src="kucoin-order-api.js"></script>  -->
 
     <script src="ampl-activity-feed-integrated.js"></script>
     <script src="ampl-manager-persistence.js"></script> 
-    <script src="ampl-rebalancing-system-fixed.js"></script> 
-    <script src="ampl-rebase-protection-clean.js"></script>
-    <script src="ampl-activity-feed-fixed.js"></script>
     <script src="kucoin-order-api.js"></script>  
     <script src="dynamic-transparency.js"></script>
     <script src="script.js"></script> 
-    <script src="supabase.js"></script> 
-
-
-
-    <script src="ampl-profit-panel-dark-theme.js"></script> 
-
+    <script src="supabase.js"></script>
+    <script src="panel.js"></script>
+    <script src="trap-ladder.js"></script>
 
 
 
