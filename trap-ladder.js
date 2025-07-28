@@ -54,7 +54,7 @@ async fetchAmplPrice() {
 }
 
 
-  async placeTrapBuy(level) {
+async placeTrapBuy(level) {
   const order = {
     symbol: 'AMPL-USDT',
     side: 'buy',
@@ -66,16 +66,28 @@ async fetchAmplPrice() {
   // Simulate order
   console.log(`📬 Placing buy order: ${JSON.stringify(order)}`);
 
- await fetch("/api/log-trap", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    price: level,
-    status: "filled",
-    time_stamp: new Date().toISOString()
-  })
-});
+  // Log to Supabase
+  const response = await fetch("https://fbkcdirkshubectuvxzi.supabase.co/rest/v1/trap_orders", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": "YOUR_SUPABASE_API_KEY", // 🔐 Replace with your project key
+      "Authorization": "Bearer YOUR_SUPABASE_API_KEY"
+    },
+    body: JSON.stringify({
+      price: level,
+      status: "filled",
+      time_stamp: new Date().toISOString()
+    })
+  });
 
+  if (response.ok) {
+    console.log(`✅ Trap logged successfully at $${level.toFixed(4)}`);
+    this.updateTrapBadge(level.toFixed(4));
+  } else {
+    console.warn("⚠️ Supabase log failed", await response.text());
+  }
+}
 
 
 
