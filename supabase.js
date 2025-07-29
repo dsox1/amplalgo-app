@@ -237,6 +237,26 @@ async function deleteAllOrders() {
   }
 }
 
+
+// Function to get trap status from the database
+async function getTrapOrders() {
+  try {
+    const { data, error } = await supabase
+      .from('trap_orders')
+      .select('price, status');
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error getting trap orders from Supabase:', error);
+    return supabase.from("trap_orders").select("price, status")
+    //return [];
+  }
+}
+
+
+
+
 // Export all functions so they can be used in other files
 window.db = {
   saveWebhook,
@@ -248,5 +268,6 @@ window.db = {
   deleteLastWebhook,
   deleteAllWebhooks,
   deleteLastOrder,
-  deleteAllOrders
+  deleteAllOrders,
+  getTrapOrders  
 };

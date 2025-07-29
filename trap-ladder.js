@@ -4,42 +4,51 @@ class AmplTrapLadder {
       1.1600, 1.1212, 1.0838, 1.0126,
       0.9788, 0.9461, 0.9145, 0.8545
     ];
-    this.trapStatus = {}; // Keeps track of which traps are filled
-    this.cooldownMs = 120000; // Optional: prevent rapid rebuys
+    this.trapStatus = {};
+    this.cooldownMs = 60000; // reduced to 1 minute
     this.lastTriggeredAt = null;
 
     this.init();
   }
 
   init() {
-    // Mark all traps as unfilled initially
     this.trapLevels.forEach(level => {
-      this.trapStatus[level.toFixed(4)] = false;
+      const key = level.toFixed(4);
+      this.trapStatus[key] = false;
     });
 
-    // Start monitoring
-    this.monitorAMPL();
+    this.syncTrapHistory();        // ✅ Sync trap history from Supabase
+    this.monitorAMPL();           // ✅ Start periodic trap check
+    this.monitorAMPLTick();       // ✅ Run check immediately
   }
 
-  async monitorAMPL() {
-    setInterval(async () => {
-      const currentPrice = await this.fetchAmplPrice();
-      if (!currentPrice) return;
+  async monitorAMPLTick() {
+    const price = window.currentAmplPrice;
+    if (!price || isNaN(price)) return;
+    this.checkTrapsAgainstPrice(price);
+  }
 
-      this.trapLevels.forEach(level => {
-        const priceKey = level.toFixed(4);
-        if (
-          currentPrice <= level &&
-          !this.trapStatus[priceKey] &&
-          this.cooldownPassed()
-        ) {
-          this.placeTrapBuy(level);
-          this.trapStatus[priceKey] = true;
-          this.lastTriggeredAt = Date.now();
-          console.log(`💸 Trap triggered at $${priceKey}`);
-        }
-      });
-    }, 5000);
+  monitorAMPL() {
+    setInterval(() => {
+      const price = window.currentAmplPrice;
+      if (!price || isNaN(price)) return;
+      this.checkTrapsAgainstPrice(price);
+    }, 60000); // check every 60 seconds
+  }
+
+  checkTrapsAgainstPrice(price) {
+    this.trapLevels.forEach(level => {
+      const key = level.toFixed(4);
+      if (
+        price <= level &&
+        !this.trapStatus[key] &&
+        this.cooldownPassed()
+      ) {
+        this.placeTrapBuy(level);
+        this.trapStatus[key] = true;
+        this.lastTriggeredAt = Date.now();
+      }
+    });
   }
 
   cooldownPassed() {
@@ -47,54 +56,63 @@ class AmplTrapLadder {
     return (Date.now() - this.lastTriggeredAt) > this.cooldownMs;
   }
 
-async fetchAmplPrice() {
-  const price = window.currentAmplPrice;
-  if (!price || isNaN(price)) return null;
-  return parseFloat(price);
-}
+  updateTrapBadge(priceKey, status = "filled") {
+    const badge = document.querySelector(`.price-level-badge[data-price="${priceKey}"]`);
+    if (badge) {
+      badge.classList.remove("filled", "engaged", "vacant");
+      badge.classList.add(status);
+    }
+  }
 
+  async syncTrapHistory() {
+    try {
+      const traps = await window.db.getTrapOrders();
+      const res = await fetch("/api/get-traps");
+      const traps = await res.json();
 
-async placeTrapBuy(level) {
-  const order = {
-    symbol: 'AMPL-USDT',
-    side: 'buy',
-    type: 'limit',
-    price: level.toFixed(4),
-    size: 0.1
-  };
+      this.trapLevels.forEach((price) => {
+        const priceKey = price.toFixed(4);
+        const trap = traps.find((t) => t.price === price);
+        const status = trap?.status || "vacant";
+        this.updateTrapBadge(priceKey, status);
+      });
 
-  // Simulate order
-  console.log(`📬 Placing buy order: ${JSON.stringify(order)}`);
+      console.log("🧠 Trap history synced.");
+    } catch (err) {
+      console.warn("⚠️ Failed to sync trap history:", err);
+    }
+  }
 
-  // Log to Supabase
-  const response = await fetch("https://fbkcdirkshubectuvxzi.supabase.co/rest/v1/trap_orders", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "apikey": "YOUR_SUPABASE_API_KEY", // 🔐 Replace with your project key
-      "Authorization": "Bearer YOUR_SUPABASE_API_KEY"
-    },
-    body: JSON.stringify({
-      price: level,
-      status: "filled",
-      time_stamp: new Date().toISOString()
-    })
-  });
+  async placeTrapBuy(level) {
+    const order = {
+      symbol: "AMPL-USDT",
+      side: "buy",
+      type: "limit",
+      price: level.toFixed(4),
+      size: 0.1
+    };
 
-  if (response.ok) {
-    console.log(`✅ Trap logged successfully at $${level.toFixed(4)}`);
-    this.updateTrapBadge(level.toFixed(4));
-  } else {
-    console.warn("⚠️ Supabase log failed", await response.text());
+    console.log(`📬 Placing buy order: ${JSON.stringify(order)}`);
+
+    const response = await fetch("/api/log-trap", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        price: level,
+        status: "filled",
+        time_stamp: new Date().toISOString()
+      })
+    });
+
+    if (response.ok) {
+      console.log(`✅ Trap logged successfully at $${level.toFixed(4)}`);
+      this.updateTrapBadge(level.toFixed(4), "filled");
+    } else {
+      console.warn("⚠️ Supabase trap log failed", await response.text());
+    }
   }
 }
 
-
-
-
-
-
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
   window.amplTrapLadder = new AmplTrapLadder();
 });

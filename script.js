@@ -849,7 +849,7 @@ let tradingState = {
     ladderDeployed: false,
     rebaseProtectionActive: true,
     tradingHistory: [],
-    activeTrades: 0,
+    active_trades: 0,
     pendingTrades: 0,
     accumulatedBuyOrders: 0,
     currentRebaseValue: 0
@@ -963,7 +963,7 @@ function cancelAllOrders() {
         }
     });
     
-    tradingState.activeTrades = 0;
+    tradingState.active_trades = 0;
     tradingState.pendingTrades = 0;
     updateLargeDigits();
 }
@@ -976,7 +976,7 @@ function placeLimitBuyOrder(order) {
     console.log(`Placed buy order: ${order.size.toFixed(2)} USDT at $${order.price.toFixed(4)}`);
     
     // Update trading state
-    tradingState.activeTrades++;
+    tradingState.active_trades++;
     tradingState.accumulatedBuyOrders += order.size;
     
     updateLargeDigits();
@@ -988,7 +988,7 @@ function handleOrderFill(order) {
     
     // Update trading state
     tradingState.lastTradePrice = order.price;
-    tradingState.activeTrades--;
+    tradingState.active_trades--;
     tradingState.tradingHistory.push({
         type: 'buy',
         price: order.price,
@@ -1046,7 +1046,7 @@ function updateLargeDigits() {
     // Update Active Trades count
     const activeTradesEl = document.getElementById('active-trades-count');
     if (activeTradesEl) {
-        activeTradesEl.textContent = tradingState.activeTrades;
+        activeTradesEl.textContent = tradingState.active_trades;
     }
     
     // Update Pending Trades count
@@ -1176,7 +1176,7 @@ window.checkTradingState = function() {
         // Update Active Trades count from real trading state
         const activeTradesElement = document.getElementById('active-trades-count');
         if (activeTradesElement) {
-            activeTradesElement.textContent = tradingState.activeTrades || 0;
+            activeTradesElement.textContent = tradingState.active_trades || 0;
         }
         
         // Update Pending Trades count from real trading state
@@ -1399,6 +1399,12 @@ socket.on('balance_update', function(data) {
         balanceElement.textContent = data.balance;
     }
 });
+
+
+
+
+
+
 
 function updateLadderPanelData(data) {
     // Update active trades count

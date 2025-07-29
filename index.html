@@ -241,10 +241,19 @@
       <h2><i class="fas fa-layer-group"></i> Ladder Trap System</h2>
     </div>
     <div class="panel-content">
-      <div class="stat-pair"><span>Orders Open:</span><span id="orders-open">0</span></div>
-      <div class="stat-pair"><span>Pending:</span><span id="orders-pending">0</span></div>
-      <div class="stat-pair"><span>Total Trapped:</span><span id="trapped-value">$0.00</span></div>
-      <div id="current-ampl-price">1.205</div>
+    
+
+      <div class="trap-status">
+  <div class="pulse-indicator"></div>
+  <div class="status-text">Scanning traps... AMPL @ $1.089</div>
+  <div class="signal-strength">Proximity: <span class="level">87%</span></div>
+  <div class="log-feed">
+    <p>[11:48] Checked $1.1712 — not triggered</p>
+    <p>[11:49] Trap filled @ $1.0838 ✅</p>
+  </div>
+  </div>
+
+  
 
     </div>
   </section>
@@ -253,112 +262,29 @@
 
 
 
-         <!--   <!-- Enhanced Integrated Ladder Panel -->
-            <div class="integrated-ladder-panel" id="integrated-ladder-panel" style="display: none;">
-                <div class="ladder-panel-grid">
-                    <!-- Enhanced Limit Orders Section -->
-                    <div class="ladder-section limit-orders-section">
-                        <div class="section-header">
-                            <h3><i class="fas fa-list-ol"></i> Limit Orders</h3>
-                        </div>
-                        <div class="section-content">
-                            <div class="stylish-digit-grid">
-                                <div class="digit-box active-trades-box">
-                                    <div class="digit-label">ACTIVE TRADES</div>
-                                    <div class="stylish-digit active-digit" id="active-trades-count">0</div>
-                                </div>
-                                <div class="digit-box pending-trades-box">
-                                    <div class="digit-label">PENDING TRADES</div>
-                                    <div class="stylish-digit pending-digit" id="pending-trades-count">0</div>
-                                </div>
-                            </div>
-                            
-                            <!-- AMPL Manager Pause Control -->
-                            <div class="ampl-manager-control">
-                                <label class="checkbox-item">
-                                    <input type="checkbox" id="ampl-pause-toggle">
-                                    <span>Pause AMPL Manager</span>
-                                    <span class="pause-led-indicator"></span>
-                                </label>
-                            </div>
-                        </div>
-                    </div> -->
-                    
+       
 
-              
-                    <!-- Integrated AMPL Management Panel -->
-<div class="ampl-management-panel">
-  <!-- Header -->
-  <div class="panel-header">
-    <h2><i class="fas fa-cogs"></i> AMPL Management Console</h2>
-  </div>
 
-  <div class="panel-body">
-    <!-- Left Column: Rebalancing + Rebase Buffer -->
-    <div class="half-panel ampl-logic-block">
-      <div class="sub-system-section" id="rebalancing-system">
-        <h3><i class="fas fa-sync-alt"></i> AMPL Rebalancing System</h3>
-        <div class="system-content">
-          <!-- Live metrics, coin prices, thresholds, etc. injected here -->
-        </div>
-      </div>
+		   <div id="trap-ladder-row" class="trap-ladder-row">
+  		    <div class="trap-badge filled" data-price="1.1600">1.1600 </div>
+  		    <div class="trap-badge empty" data-price="1.1212">1.1212 </div>
+  		    <div class="trap-badge filled" data-price="1.0838">1.0838 </div>
+  		    <div class="trap-badge empty" data-price="1.0542">1.0542 </div>
+		    <div class="trap-badge filled" data-price="1.0126">1.0126 </div>
+  		    <div class="trap-badge empty" data-price="0.9788">0.9788 </div>
+  		    <div class="trap-badge filled" data-price="0.946">0.946 </div>
+  		    <div class="trap-badge empty" data-price="0.9145">0.9145 </div>
+  		    <div class="trap-badge filled" data-price="0.8545">0.8545 </div>
 
-      <div class="sub-system-section" id="rebase-buffer">
-        <h3><i class="fas fa-shield-alt"></i> Rebase Profit Buffer</h3>
-        <div class="system-content">
-          <!-- Display rebasing count, profit % triggers, simulation logs -->
-        </div>
-      </div>
-    </div>
+		   </div>
 
-    <!-- Right Column: Smart Ladder (Traps) -->
-    <div class="half-panel smart-ladder-block">
-      <div class="sub-system-section ladder-section order-ladder-section">
-        <h3><i class="fas fa-layer-group"></i> Smart Order Ladder</h3>
-        <div class="section-content">
-          <div class="order-ladder-grid">
-            <!-- Eight traps visually represented -->
-            <div class="price-level-badge empty">1.1600</div>
-            <div class="price-level-badge empty">1.1212</div>
-            <div class="price-level-badge empty">1.0838</div>
-            <div class="price-level-badge empty">1.0126</div>
-            <div class="price-level-badge empty">0.9788</div>
-            <div class="price-level-badge empty">0.9461</div>
-            <div class="price-level-badge empty">0.9145</div>
-            <div class="price-level-badge empty">0.8545</div>
-          </div>
+		   
 
-          <div class="order-status-display">
-            <strong>0 orders open, 0 pending</strong>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+
+                  
 
 
 
-           
-                                
-                                <!-- Holdings Tracker --> <!--
-                                <div class="holdings-tracker">
-                                    <div class="holdings-row">
-                                        <span class="holdings-label">Original Purchase:</span>
-                                        <span class="holdings-value original">$0.00</span>
-                                    </div>
-                                    <div class="holdings-row">
-                                        <span class="holdings-label">Current Value:</span>
-                                        <span class="holdings-value current">$0.00</span>
-                                    </div>
-                                    <div class="holdings-row">
-                                        <span class="holdings-label">Difference:</span>
-                                        <span class="holdings-value difference">$0.00</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div> -->
                     
               
 
