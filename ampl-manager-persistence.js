@@ -47,9 +47,9 @@ class AMPLManagerPersistenceFixed {
                     } else {
                         console.log('⚠️ AMPL Manager checkbox (#ampl-manager) not found - will retry...');
                         // Retry after more time for elements to load
-                        setTimeout(() => this.loadAMPLManagerPersistence(), 2000);
+                        setTimeout(() => this.loadAMPLManagerPersistence(), 20000);
                     }
-                }, 500);
+                }, 5000);
             }
         } catch (error) {
             console.log('⚠️ Error loading AMPL Manager persistence:', error.message);
@@ -99,9 +99,9 @@ class AMPLManagerPersistenceFixed {
                 if (thresholdButtons.length === 0) {
                     console.log('⚠️ Sell Price Target buttons (.threshold-btn) not found - will retry...');
                     // Retry after more time for elements to load
-                    setTimeout(() => this.loadSellPriceTargetsPersistence(), 2000);
+                    setTimeout(() => this.loadSellPriceTargetsPersistence(), 20000);
                 }
-            }, 500);
+            }, 5000);
         } catch (error) {
             console.log('⚠️ Error loading Sell Price Targets persistence:', error.message);
         }
@@ -177,7 +177,7 @@ class AMPLManagerPersistenceFixed {
             // Retry watching after delay
             setTimeout(() => {
                 this.watchForPersistenceChanges();
-            }, 2000);
+            }, 20000);
         }
         
         // Watch sell price target button changes - using code-based detection from script.js
@@ -189,7 +189,7 @@ class AMPLManagerPersistenceFixed {
                     // Small delay to ensure the active class has been applied
                     setTimeout(() => {
                         this.saveSellPriceTargetsPersistence();
-                    }, 100);
+                    }, 1000);
                 });
             });
             console.log(`👀 Watching ${thresholdButtons.length} sell price target buttons (.threshold-btn) for changes`);
@@ -197,7 +197,7 @@ class AMPLManagerPersistenceFixed {
             // Retry watching after delay
             setTimeout(() => {
                 this.watchForPersistenceChanges();
-            }, 2000);
+            }, 20000);
         }
         
         // Also watch for any changes to the current threshold display
@@ -207,7 +207,7 @@ class AMPLManagerPersistenceFixed {
             const observer = new MutationObserver(() => {
                 setTimeout(() => {
                     this.saveSellPriceTargetsPersistence();
-                }, 100);
+                }, 1000;
             });
             
             observer.observe(currentThresholdDisplay, {
