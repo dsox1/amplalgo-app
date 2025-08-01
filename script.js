@@ -1261,8 +1261,8 @@ window.checkTradingState = function() {
         });
     }
     
-    // Initialize theme on page load
-    document.addEventListener('DOMContentLoaded', initializeTheme);
+// Initialize theme on page load
+document.addEventListener('DOMContentLoaded', initializeTheme);
 // ===== SOCKET.IO CONNECTION AND AMPL MANAGER INTEGRATION =====
 
 // Initialize Socket.io connection
@@ -1273,15 +1273,15 @@ let amplManagerEnabled = false;
 
 // Socket connection events
 socket.on('connect', function() {
-    console.log('Connected to server via Socket.io');
+	console.log('Connected to server via Socket.io');
     
-    // Request initial AMPL Manager status
-    socket.emit('get_ampl_manager_status');
-});
+	// Request initial AMPL Manager status
+	socket.emit('get_ampl_manager_status');
+	});
 
 socket.on('disconnect', function() {
-    console.log('Disconnected from server');
-});
+	console.log('Disconnected from server');
+	});
 
 // AMPL Manager event handlers
 socket.on('ampl_manager_status', function(data) {
