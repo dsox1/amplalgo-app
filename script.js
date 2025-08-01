@@ -1282,165 +1282,88 @@ window.checkTradingState = function() {
         });
     }
     
-    // Initialize theme on page load
-    document.addEventListener('DOMContentLoaded', initializeTheme);
-// ===== SOCKET.IO CONNECTION AND AMPL MANAGER INTEGRATION =====
 
-// Initialize Socket.io connection
-const socket = io();
 
-// AMPL Manager state
-let amplManagerEnabled = false;
+document.addEventListener("DOMContentLoaded", function () {
+  initializeTheme();
 
-// Socket connection events
-socket.on('connect', function() {
-    console.log('Connected to server via Socket.io');
-    
-    // Request initial AMPL Manager status
-    socket.emit('get_ampl_manager_status');
-});
+  // ===== SOCKET.IO CONNECTION AND AMPL MANAGER INTEGRATION =====
+  if (typeof io !== "undefined") {
+    const socket = io();
 
-socket.on('disconnect', function() {
-    console.log('Disconnected from server');
-});
+    let amplManagerEnabled = false;
 
-// AMPL Manager event handlers
-socket.on('ampl_manager_status', function(data) {
-    console.log('AMPL Manager status update:', data);
-    
-    // Update the checkbox state
-    updateAmplManagerUI(data.enabled);
-    
-    if (data.message) {
-        console.log('AMPL Manager message:', data.message);
-    }
-});
+    socket.on("connect", () => {
+      console.log("✅ Connected to server via Socket.io");
+      socket.emit("get_ampl_manager_status");
+    });
 
-socket.on('ampl_manager_toggle_result', function(data) {
-    console.log('AMPL Manager toggle result:', data);
-    
-    if (data.success) {
+    socket.on("disconnect", () => {
+      console.log("❌ Disconnected from server");
+    });
+
+    socket.on("ampl_manager_status", (data) => {
+      console.log("Status update:", data);
+      updateAmplManagerUI(data.enabled);
+      if (data.message) console.log("Message:", data.message);
+    });
+
+    socket.on("ampl_manager_toggle_result", (data) => {
+      if (data.success) {
         amplManagerEnabled = data.enabled;
         updateAmplManagerUI(data.enabled);
-        
-        // Show notification
-        if (data.message) {
-            console.log('AMPL Manager:', data.message);
-        }
-    } else {
-        console.error('AMPL Manager toggle failed:', data.error);
-        
-        // Revert checkbox state on error
-        const checkbox = document.getElementById('ampl-manager-toggle');
-        if (checkbox) {
-            checkbox.checked = amplManagerEnabled;
-        }
-    }
-});
+        console.log("Toggle successful:", data.message);
+      } else {
+        console.error("Toggle failed:", data.error);
+        const checkbox = document.getElementById("ampl-manager-toggle");
+        if (checkbox) checkbox.checked = amplManagerEnabled;
+      }
+    });
 
-// AMPL Manager UI functions
-function updateAmplManagerUI(enabled) {
-    amplManagerEnabled = enabled;
-    
-    const checkbox = document.getElementById('ampl-manager-toggle');
-    if (checkbox) {
-        checkbox.checked = enabled;
-    }
-    
-    console.log(`AMPL Manager UI updated: ${enabled ? 'ENABLED' : 'DISABLED'}`);
-}
+    socket.on("ampl_order_update", (data) => {
+      console.log("Order update:", data);
+      updateLadderPanelData(data);
+    });
 
-// AMPL Manager toggle event listener
-document.addEventListener('DOMContentLoaded', function() {
-    const amplManagerCheckbox = document.getElementById('ampl-manager-toggle');
-    
-    if (amplManagerCheckbox) {
-        amplManagerCheckbox.addEventListener('change', function() {
-            const enable = this.checked;
-            
-            console.log(`AMPL Manager toggle clicked: ${enable ? 'ENABLE' : 'DISABLE'}`);
-            
-            // Send toggle request via Socket.io
-            socket.emit('toggle_ampl_manager', { enable: enable });
-        });
-    }
-    
-    // Request initial status when page loads
-    if (socket.connected) {
-        socket.emit('get_ampl_manager_status');
-    }
-});
+    socket.on("price_update", (data) => {
+      const el = document.getElementById("current-ampl-price");
+      if (el && data.symbol === "AMPL-USDT") {
+        el.textContent = `$${data.price}`;
+      }
+    });
 
-// AMPL Manager status monitoring
-socket.on('ampl_order_update', function(data) {
-    console.log('AMPL order update:', data);
-    
-    // Update ladder panel if visible
-    updateLadderPanelData(data);
-});
+    socket.on("balance_update", (data) => {
+      const el = document.getElementById("usdt-balance");
+      if (el && data.currency === "USDT") {
+        el.textContent = data.balance;
+      }
+    });
 
-// Real-time price and balance updates
-socket.on('price_update', function(data) {
-    console.log('Price update:', data);
-    
-    // Update AMPL price in footer
-    const priceElement = document.getElementById('current-ampl-price');
-    if (priceElement && data.symbol === 'AMPL-USDT') {
-        priceElement.textContent = `$${data.price}`;
-    }
-});
-
-socket.on('balance_update', function(data) {
-    console.log('Balance update:', data);
-    
-    // Update USDT balance in header
-    const balanceElement = document.getElementById('usdt-balance');
-    if (balanceElement && data.currency === 'USDT') {
-        balanceElement.textContent = data.balance;
-    }
-});
-
-
-
-
-
-
-
-function updateLadderPanelData(data) {
-    // Update active trades count
-    const activeTradesElement = document.getElementById('active-trades-count');
-    if (activeTradesElement && data.active_trades !== undefined) {
-        activeTradesElement.textContent = data.active_trades;
-    }
-    
-    // Update pending trades count
-    const pendingTradesElement = document.getElementById('pending-trades-count');
-    if (pendingTradesElement && data.pending_trades !== undefined) {
-        pendingTradesElement.textContent = data.pending_trades;
-    }
-    
-    // Update buy orders total
-    const buyOrdersTotalElement = document.getElementById('buy-orders-total');
-    if (buyOrdersTotalElement && data.buy_orders_total !== undefined) {
-        buyOrdersTotalElement.textContent = `$${data.buy_orders_total}`;
-    }
-    
-    // Update current rebase value
-    const currentRebaseValueElement = document.getElementById('current-rebase-value');
-    if (currentRebaseValueElement && data.current_value !== undefined) {
-        currentRebaseValueElement.textContent = `$${data.current_value}`;
-    }
-}
-
-// Auto-detection on page load
-socket.on('ampl_auto_detection', function(data) {
-    console.log('AMPL auto-detection result:', data);
-    
-    if (data.system_detected) {
-        console.log(`AMPL Manager auto-enabled with ${data.buy_orders_count} existing buy orders`);
+    socket.on("ampl_auto_detection", (data) => {
+      if (data.system_detected) {
+        console.log(`Auto-enabled with ${data.buy_orders_count} orders`);
         updateAmplManagerUI(true);
+      }
+    });
+
+    const amplManagerCheckbox = document.getElementById("ampl-manager-toggle");
+    if (amplManagerCheckbox) {
+      amplManagerCheckbox.addEventListener("change", function () {
+        const enable = this.checked;
+        console.log("Toggle clicked:", enable ? "ENABLE" : "DISABLE");
+        socket.emit("toggle_ampl_manager", { enable });
+      });
+
+      if (socket.connected) {
+        socket.emit("get_ampl_manager_status");
+      }
     }
+  } else {
+    console.error("❌ Socket.IO library not loaded.");
+  }
+
+  console.log("🔄 AMPL Manager Socket.IO integration initialized");
+
+  // You can reattach your other logic blocks below this line:
+  // TradingView widget, zoom controls, threshold setup, ladder UI, etc.
 });
-
-console.log('AMPL Manager Socket.io integration loaded');
-
