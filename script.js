@@ -1266,7 +1266,7 @@ document.addEventListener('DOMContentLoaded', initializeTheme);
 // ===== SOCKET.IO CONNECTION AND AMPL MANAGER INTEGRATION =====
 
 // Initialize Socket.io connection
-const socket = io();
+//const socket = io();
 
 // AMPL Manager state
 let amplManagerEnabled = false;
