@@ -915,22 +915,43 @@ function initializeLadderControls() {
     }
 }
 
-
-
 // Smart Ladder Deployment (8 levels, 3.34% spacing)
 function deployFreshLadder() {
-    const balanceDisplay = document.getElementById('balance-display');
-    const totalBalance = parseFloat(balanceDisplay?.textContent || '1000');
+    console.log('Deploying fresh ladder...');
     
-    // Use the enhanced ladder system
-    if (window.deployEnhancedLadder) {
-        return window.deployEnhancedLadder(totalBalance);
-    } else {
-        console.error('Enhanced ladder system not loaded');
+    // Cancel existing orders first
+    cancelAllOrders();
+    
+    // Calculate ladder levels
+    const startPrice = 1.16;
+    const spacing = 0.0334; // 3.34%
+    const balancePerOrder = parseFloat(balanceDisplay.textContent) / 8;
+    
+    ladderOrders = [];
+    
+    for (let i = 0; i < 8; i++) {
+        const price = startPrice * Math.pow(1 - spacing, i);
+        const order = {
+            level: i + 1,
+            price: price,
+            size: balancePerOrder,
+            status: 'pending',
+            orderId: null
+        };
+        
+        ladderOrders.push(order);
+        
+        // Place the actual order (simulated for now)
+        setTimeout(() => {
+            placeLimitBuyOrder(order);
+        }, i * 500);
     }
+    
+    tradingState.ladderDeployed = true;
+    updateLargeDigits();
+    
+    console.log('Fresh ladder deployed with 8 levels');
 }
-
-
 
 function cancelAllOrders() {
     console.log('Cancelling all orders...');
@@ -1261,35 +1282,34 @@ window.checkTradingState = function() {
         });
     }
     
-// Initialize theme on page load
-document.addEventListener('DOMContentLoaded', initializeTheme);
+    // Initialize theme on page load
+    document.addEventListener('DOMContentLoaded', initializeTheme);
 // ===== SOCKET.IO CONNECTION AND AMPL MANAGER INTEGRATION =====
 
 // Initialize Socket.io connection
-//const socket = io();
+const socket = io();
 
 // AMPL Manager state
 let amplManagerEnabled = false;
 
 // Socket connection events
 socket.on('connect', function() {
-	console.log('Connected to server via Socket.io');
+    console.log('Connected to server via Socket.io');
     
-	// Request initial AMPL Manager status
-	socket.emit('get_ampl_manager_status');
-	});
+    // Request initial AMPL Manager status
+    socket.emit('get_ampl_manager_status');
+});
 
 socket.on('disconnect', function() {
-	console.log('Disconnected from server');
-	});
+    console.log('Disconnected from server');
+});
 
 // AMPL Manager event handlers
 socket.on('ampl_manager_status', function(data) {
     console.log('AMPL Manager status update:', data);
     
-// Update the checkbox state
-
-updateAmplManagerUI(data.enabled);
+    // Update the checkbox state
+    updateAmplManagerUI(data.enabled);
     
     if (data.message) {
         console.log('AMPL Manager message:', data.message);
