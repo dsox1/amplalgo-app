@@ -915,43 +915,22 @@ function initializeLadderControls() {
     }
 }
 
+
+
 // Smart Ladder Deployment (8 levels, 3.34% spacing)
 function deployFreshLadder() {
-    console.log('Deploying fresh ladder...');
+    const balanceDisplay = document.getElementById('balance-display');
+    const totalBalance = parseFloat(balanceDisplay?.textContent || '1000');
     
-    // Cancel existing orders first
-    cancelAllOrders();
-    
-    // Calculate ladder levels
-    const startPrice = 1.16;
-    const spacing = 0.0334; // 3.34%
-    const balancePerOrder = parseFloat(balanceDisplay.textContent) / 8;
-    
-    ladderOrders = [];
-    
-    for (let i = 0; i < 8; i++) {
-        const price = startPrice * Math.pow(1 - spacing, i);
-        const order = {
-            level: i + 1,
-            price: price,
-            size: balancePerOrder,
-            status: 'pending',
-            orderId: null
-        };
-        
-        ladderOrders.push(order);
-        
-        // Place the actual order (simulated for now)
-        setTimeout(() => {
-            placeLimitBuyOrder(order);
-        }, i * 500);
+    // Use the enhanced ladder system
+    if (window.deployEnhancedLadder) {
+        return window.deployEnhancedLadder(totalBalance);
+    } else {
+        console.error('Enhanced ladder system not loaded');
     }
-    
-    tradingState.ladderDeployed = true;
-    updateLargeDigits();
-    
-    console.log('Fresh ladder deployed with 8 levels');
 }
+
+
 
 function cancelAllOrders() {
     console.log('Cancelling all orders...');
@@ -1308,8 +1287,9 @@ socket.on('disconnect', function() {
 socket.on('ampl_manager_status', function(data) {
     console.log('AMPL Manager status update:', data);
     
-    // Update the checkbox state
-    updateAmplManagerUI(data.enabled);
+// Update the checkbox state
+
+updateAmplManagerUI(data.enabled);
     
     if (data.message) {
         console.log('AMPL Manager message:', data.message);
