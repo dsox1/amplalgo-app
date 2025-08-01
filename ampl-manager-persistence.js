@@ -207,7 +207,7 @@ class AMPLManagerPersistenceFixed {
             const observer = new MutationObserver(() => {
                 setTimeout(() => {
                     this.saveSellPriceTargetsPersistence();
-                }, 100;
+                }, 1000;
             });
             
             observer.observe(currentThresholdDisplay, {
