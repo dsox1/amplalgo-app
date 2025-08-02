@@ -1309,7 +1309,7 @@ document.addEventListener("DOMContentLoaded", function() {
             // Find the AMPL Ladder View section
             const amplLadderView = document.querySelector('.ampl-ladder-view .section-content');
             if (!amplLadderView) {
-                console.warn("AMPL Ladder View section not found");
+                //console.warn("AMPL Ladder View section not found");
                 return;
             }
 
