@@ -1,3 +1,21 @@
+// Make all element updates safer with null checks
+const originalSetTextContent = function(elementId, text) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.textContent = text;
+    } else {
+        console.log(`⚠️ Element '${elementId}' not found, skipping update`);
+    }
+};
+
+// Override the problematic function
+window.safeUpdateElement = originalSetTextContent;
+
+console.log('✅ Added safe element update function');
+
+
+
+
 document.addEventListener("DOMContentLoaded", function() {
   function updateStats() {
     // Mock values (replace with real APIs or Supabase queries)
