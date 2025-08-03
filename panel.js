@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", function() {
     document.getElementById("current-price").textContent = "$1.192";
     document.getElementById("next-rebase").textContent = "2h 10m";
 
-    document.getElementById("orders-open").textContent = "4";
+    //document.getElementById("orders-open").textContent = "4";
     document.getElementById("orders-pending").textContent = "2";
     document.getElementById("trapped-value").textContent = "$95.20";
   }
