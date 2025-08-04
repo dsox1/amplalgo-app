@@ -1507,7 +1507,6 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
 
-// Around line 1510-1525, replace the existing code with:
 async function getOrders() {
     try {
         const response = await fetch(`${SUPABASE_URL}/rest/v1/orders?order=created_at.desc`, {
