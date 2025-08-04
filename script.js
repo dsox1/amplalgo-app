@@ -1353,8 +1353,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
         updateTargetModeDisplay() {
             const currentModeSpan = document.querySelector('.current-mode');
-            if (currentModeSpan) {
-                currentModeSpan.textContent = this.currentTargetMode;
+            if (currentModeSpan) {                currentModeSpan.textContent = this.currentTargetMode;
+
             }
 
             // Update button states
@@ -1506,25 +1506,34 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
-    async function getOrders() {
-        try {
-            const response = await fetch(`${SUPABASE_URL}/rest/v1/orders?order=created_at.desc&limit=50`, {
-                headers: {
-                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                    'apikey': SUPABASE_ANON_KEY
-                }
-            });
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+// Around line 1510-1525, replace the existing code with:
+async function getOrders() {
+    try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/orders?order=created_at.desc`, {
+            headers: {
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                'apikey': SUPABASE_ANON_KEY
             }
-
-            return await response.json();
-        } catch (error) {
-            console.error('Error fetching orders from Supabase:', error);
-            return [];
+        });
+        
+        // Check if response is OK before parsing JSON
+        if (!response.ok) {
+            console.warn(`Orders fetch failed: ${response.status} ${response.statusText}`);
+            return []; // Return empty array instead of failing
         }
+        
+        const data = await response.json();
+        return data || [];
+        
+    } catch (error) {
+        console.error('Error fetching orders from Supabase:', error);
+        return []; // Return empty array on error
     }
+}
+
+
+
 
     async function saveSettings(settings) {
         try {
