@@ -1,0 +1,7 @@
+{
+  "token_symbol": "AMPL",
+  "min_price": 0.85,
+  "max_price": 1.20,
+  "trading_enabled": true,
+  "profit_targets": [3.25, 5, 13]
+}
