@@ -1,6 +1,4 @@
-curl -X POST https://your-project.supabase.co/functions/v1/config-sync \
-  -H "Content-Type: application/json" \
-  -d '{
+{
     "token_symbol": "AMPL",
     "min_price": 0.85,
     "max_price": 1.20,
