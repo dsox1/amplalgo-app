@@ -14,5 +14,5 @@
       { "price": 1.20, "quantity": 100 }
     ],
     "profit_targets": [1.25, 5, 13]
-  }'
+  }
 
