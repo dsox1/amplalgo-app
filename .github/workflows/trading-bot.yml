@@ -1,0 +1,62 @@
+name: Trading Bot Configuration Update
+
+on:
+  # Manual trigger
+  workflow_dispatch:
+    inputs:
+      token_symbol:
+        description: 'Token Symbol'
+        required: true
+      min_price:
+        description: 'Minimum Price'
+        required: true
+      max_price:
+        description: 'Maximum Price'
+        required: true
+      trading_enabled:
+        description: 'Trading Enabled'
+        required: false
+        default: 'true'
+        type: boolean
+
+  # Optional: Scheduled trigger
+  schedule:
+    # Run every 1 hours
+    - cron: '0 */1 * * *'
+
+jobs:
+  update-trading-config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+
+      - name: Update Supabase Trading Configuration
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          # Check if input is triggered
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            payload=$(cat <<EOF
+            {
+              "token_symbol": "${{ github.event.inputs.token_symbol }}",
+              "min_price": ${{ github.event.inputs.min_price }},
+              "max_price": ${{ github.event.inputs.max_price }},
+              "trading_enabled": ${{ github.event.inputs.trading_enabled }}
+            }
+            EOF
+            )
+          else
+            # If scheduled, read from default configuration file
+            payload=$(cat trading_config.json)
+          fi
+
+          # Call Supabase Edge Function
+          curl -X POST "https://$SUPABASE_PROJECT_ID.supabase.co/functions/v1/trading-bot" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Content-Type: application/json" \
+            -d "$payload"
