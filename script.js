@@ -1,6 +1,6 @@
-const API_KEY = "your_api_key";
-const API_SECRET = "your_api_secret";
-const PASSPHRASE = "your_passphrase";
+const API_KEY = "680577fd26d5c60001c64761";
+const API_SECRET = "407053e3-0d5a-491b-ae02-f168021b0e86";
+const PASSPHRASE = "Dsox1234";
 
 function base64Hmac(message, secret) {
   const encoder = new TextEncoder();
