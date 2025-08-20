@@ -3,36 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AMPL Trading Dashboard</title>
+  <title>AMPL Algo Dashboard</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="dashboard">
-    <h1>AMPL Trading Dashboard</h1>
-
-    <section id="price-panel">
-      <h2>Current AMPL Price</h2>
-      <div id="ampl-price">$--</div>
-    </section>
-
-    <section id="balance-panel">
-      <h2>Balances</h2>
-      <div>USDT: <span id="usdt-balance">--</span></div>
-      <div>AMPL: <span id="ampl-balance">--</span></div>
-    </section>
-
-    <section id="rebase-panel">
-      <h2>Rebase Monitor</h2>
-      <div>Next Rebase: <span id="next-rebase">--</span></div>
-      <div>Probability: <span id="rebase-probability">--</span></div>
-    </section>
-
-    <section id="chart-panel">
-      <h2>AMPL-USDT Chart</h2>
-      <a href="https://www.tradingview.com/chart/WvWEiXsp/" target="_blank">View Chart on TradingView</a>
-    </section>
+  <h1>AMPL Algo Dashboard</h1>
+  <div id="status">
+    <p><strong>AMPL Price:</strong> <span id="price">Loading...</span></p>
+    <p><strong>USDT Balance:</strong> <span id="usdt">Loading...</span></p>
+    <p><strong>AMPL Balance:</strong> <span id="ampl">Loading...</span></p>
   </div>
-
+  <div id="actions">
+    <h2>Trade Actions</h2>
+    <ul id="action-list"></ul>
+  </div>
   <script src="script.js"></script>
 </body>
 </html>
