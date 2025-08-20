@@ -1,46 +1,30 @@
-const supabaseBaseURL = "https://yalzpcvh.manus.space/functions/v1/rebase-monitor";
+const API_URL = "https://your-supabase-edge-function-url"; // Replace with actual endpoint
 
-async function fetchAMPLPrice() {
+async function fetchTradingData() {
   try {
-    const res = await fetch(`${supabaseBaseURL}?action=price`);
+    const res = await fetch(API_URL);
     const data = await res.json();
-    document.getElementById("ampl-price").textContent = `$${data.price?.toFixed(4) || "0.0000"}`;
+
+    document.getElementById("price").textContent = data.amplPrice.toFixed(4);
+    document.getElementById("usdt").textContent = data.usdtBalance.toFixed(2);
+    document.getElementById("ampl").textContent = data.amplBalance.toFixed(2);
+
+    const actionsList = document.getElementById("action-list");
+    actionsList.innerHTML = "";
+
+    if (data.actions && data.actions.length > 0) {
+      data.actions.forEach(action => {
+        const li = document.createElement("li");
+        li.textContent = `Order placed at $${action.level.price} for ${action.level.quantity} AMPL (ID: ${action.orderId})`;
+        actionsList.appendChild(li);
+      });
+    } else {
+      actionsList.innerHTML = "<li>No new orders placed.</li>";
+    }
   } catch (err) {
-    console.error("AMPL price fetch error:", err);
-    document.getElementById("ampl-price").textContent = "$0.0000";
+    console.error("Error fetching trading data:", err);
+    document.getElementById("status").innerHTML = "<p>Error loading data.</p>";
   }
 }
 
-async function fetchBalances() {
-  try {
-    const res = await fetch(`${supabaseBaseURL}?action=balance`);
-    const data = await res.json();
-    document.getElementById("usdt-balance").textContent = data.usdt || "0.00";
-    document.getElementById("ampl-balance").textContent = data.ampl || "0.00";
-  } catch (err) {
-    console.error("Balance fetch error:", err);
-    document.getElementById("usdt-balance").textContent = "0.00";
-    document.getElementById("ampl-balance").textContent = "0.00";
-  }
-}
-
-async function fetchRebaseStatus() {
-  try {
-    const res = await fetch(`${supabaseBaseURL}?action=rebase`);
-    const data = await res.json();
-    document.getElementById("next-rebase").textContent = data.nextRebase || "--";
-    document.getElementById("rebase-probability").textContent = data.probability || "--";
-  } catch (err) {
-    console.error("Rebase fetch error:", err);
-    document.getElementById("next-rebase").textContent = "--";
-    document.getElementById("rebase-probability").textContent = "--";
-  }
-}
-
-async function initDashboard() {
-  await fetchAMPLPrice();
-  await fetchBalances();
-  await fetchRebaseStatus();
-}
-
-initDashboard();
+fetchTradingData();
