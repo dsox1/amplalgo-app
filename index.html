@@ -1,32 +1,32 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>BTC Price</title>
+  <title>USDT Balance</title>
 </head>
 <body>
-  <h1>BTC Price:</h1>
-  <div id="btc-price">Loading...</div>
+  <h1>USDT Balance:</h1>
+  <div id="usdt-balance">Loading...</div>
 
   <script>
-    async function getBTCPrice() {
-      const url = "https://fbkcdirkshubectuvxzi.supabase.co/functions/v1/get-btc-price";
+    async function getUSDTBalance() {
+      const url = "https://fbkcdirkshubectuvxzi.supabase.co/functions/v1/get-usdt-balance";
       try {
         const response = await fetch(url);
         const data = await response.json();
 
-        if (data.price) {
-          document.getElementById("btc-price").textContent = `$${data.price}`;
+        if (data.balance) {
+          document.getElementById("usdt-balance").textContent = `${data.balance} USDT`;
         } else {
           console.error("Unexpected response:", data);
-          document.getElementById("btc-price").textContent = "Error: Invalid data.";
+          document.getElementById("usdt-balance").textContent = "Error: Balance not found.";
         }
       } catch (error) {
         console.error("Fetch error:", error);
-        document.getElementById("btc-price").textContent = "Failed to load price.";
+        document.getElementById("usdt-balance").textContent = "Failed to load balance.";
       }
     }
 
-    getBTCPrice();
+    getUSDTBalance();
   </script>
 </body>
 </html>
