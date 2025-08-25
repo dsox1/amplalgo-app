@@ -1,33 +1,32 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>BTC Price from Supabase Proxy</title>
+  <title>BTC Price</title>
 </head>
 <body>
   <h1>BTC Price:</h1>
   <div id="btc-price">Loading...</div>
 
   <script>
-  async function getBTCPriceFromSupabase() {
-  const url = "https://<your-project-ref>.functions.supabase.co/get-btc-price";
-  try {
-    const response = await fetch(url);
-    const data = await response.json();
+    async function getBTCPrice() {
+      const url = "https://fbkcdirkshubectuvxzi.supabase.co/functions/v1/get-btc-price";
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
 
-    if (data.price) {
-      document.getElementById("btc-price").textContent = `$${data.price}`;
-    } else {
-      console.error("Unexpected response:", data);
-      document.getElementById("btc-price").textContent = "Error: Invalid data.";
+        if (data.price) {
+          document.getElementById("btc-price").textContent = `$${data.price}`;
+        } else {
+          console.error("Unexpected response:", data);
+          document.getElementById("btc-price").textContent = "Error: Invalid data.";
+        }
+      } catch (error) {
+        console.error("Fetch error:", error);
+        document.getElementById("btc-price").textContent = "Failed to load price.";
+      }
     }
-  } catch (error) {
-    console.error("Fetch error:", error);
-    document.getElementById("btc-price").textContent = "Failed to load price.";
-  }
-}
 
-
-    getBTCPriceFromSupabase();
+    getBTCPrice();
   </script>
 </body>
 </html>
