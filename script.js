@@ -1,5 +1,5 @@
 
-function Get_KuCoinPrice(market)
+function Get_KuCoinPrice1(market)
 {
 // example HST-BTC
 var url = "https://api.kucoin.com/v1/open/tick?symbol="+market;
@@ -14,10 +14,10 @@ return price;
 
 
 
-function Get_KuCoinPrice(market)
+function Get_KuCoinPrice2(market)
 {
 // example HST-BTC
-var url = "https://api.kucoin.com/v1/open/tick?symbol="+market;
+var url = "https://api.kucoin.com/api/v1/market/orderbook/level1?symbol=BTC-USDT"
 var response = UrlFetchApp.fetch(url);
 var text = response.getContentText();
 var myjson = JSON.parse(text);
