@@ -1,27 +1,26 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>BTC Price from KuCoin</title>
+  <title>BTC Price from Supabase Proxy</title>
 </head>
 <body>
   <h1>BTC Price:</h1>
   <div id="btc-price">Loading...</div>
 
   <script>
-    async function getKuCoinBTCPrice() {
-      const url = "https://api.kucoin.com/api/v1/market/orderbook/level1?symbol=BTC-USDT";
+    async function getBTCPriceFromSupabase() {
+      const url = "https://<your-project-ref>.functions.supabase.co/get-btc-price"; // Replace with your actual function URL
       try {
         const response = await fetch(url);
         const data = await response.json();
-        const price = data.data.price;
-        document.getElementById("btc-price").textContent = `$${price}`;
+        document.getElementById("btc-price").textContent = `$${data.price}`;
       } catch (error) {
         console.error("Error fetching BTC price:", error);
         document.getElementById("btc-price").textContent = "Failed to load price.";
       }
     }
 
-    getKuCoinBTCPrice();
+    getBTCPriceFromSupabase();
   </script>
 </body>
 </html>
