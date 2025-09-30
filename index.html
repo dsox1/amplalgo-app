@@ -5,163 +5,51 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Backyard Black Jack</title>
   <link rel="stylesheet" href="style.css" />
-  <link rel="manifest" href="manifest.json" />
 </head>
 <body>
-  <!-- Top navigation -->
-  <header class="nav">
-    <div class="brand">
-      <h1>Backyard Black Jack</h1>
-      <span class="mode-tag">CHAOS MODE</span>
-    </div>
-    <nav class="nav-actions">
-      <button id="btn-play" class="btn primary">Play</button>
-      <button id="btn-rules" class="btn">Rules</button>
-      <button id="btn-themes" class="btn">Themes</button>
-      <button id="btn-stats" class="btn">Scores</button>
-    </nav>
-  </header>
-
-  <!-- Daytime scene background with billboards -->
-  <div class="scene">
-    <div class="sky"></div>
-    <div class="houses"></div>
-    <div class="fence"></div>
-
-    <!-- Billboards (ad zones) -->
-    <aside class="billboard billboard-left">
-      <div class="marquee">
-        <span>PLAY NOW!</span>
-      </div>
-    </aside>
-    <aside class="billboard billboard-right">
-      <div class="screen">
-        <div class="line">UPGRADE NOW!</div>
-        <div class="line">BONUS</div>
-      </div>
-    </aside>
-
-    <!-- Main table -->
-    <main class="table-area">
-      <section class="table">
-        <!-- Center deck/discard -->
-        <div class="center-stacks">
-          <div class="stack">
-            <div id="deck-card" class="card back" title="Draw card">🂠</div>
-            <div class="stack-label">
-              Deck (<span id="deck-count">0</span>)
-            </div>
-          </div>
-          <div class="stack">
-            <div id="discard-card" class="card" title="Top discard">--</div>
-            <div class="stack-label">Discard</div>
-          </div>
-        </div>
-
-        <!-- Avatars (abstract, no life forms) -->
-        <div class="avatars">
-          <div class="avatar top" id="avatar-ai" title="AI">
-            <div class="shape pentagon"></div>
-            <div class="avatar-label">AI • <span id="ai-count">0</span></div>
-          </div>
-          <div class="avatar left">
-            <div class="shape star"></div>
-          </div>
-          <div class="avatar right">
-            <div class="shape hexagon"></div>
-          </div>
-          <div class="avatar bottom" id="avatar-player" title="You">
-            <div class="shape circle"></div>
-            <div class="avatar-label">You • <span id="player-count">0</span></div>
-          </div>
-        </div>
-
-        <!-- Player hand -->
-        <section class="hand player-hand" id="player-hand"></section>
-
-        <!-- AI hand (backs only) -->
-        <section class="hand ai-hand" id="ai-hand"></section>
-
-        <!-- Status/message -->
-        <div id="status" class="status">Welcome! Tap Play to start.</div>
-
-        <!-- Controls -->
-        <div class="controls">
-          <button id="btn-play-selected" class="btn primary" disabled>
-            Play selected
-          </button>
-          <button id="btn-clear" class="btn">Clear selection</button>
-          <button id="btn-draw" class="btn">Draw card</button>
-          <button id="btn-last-card" class="btn warn" style="display:none;">
-            Last Card!
-          </button>
-        </div>
-      </section>
-    </main>
+  <!-- Floating button bar -->
+  <div class="nav-actions">
+    <button id="btn-play" class="btn primary">Play</button>
+    <button id="btn-rules" class="btn">Rules</button>
+    <button id="btn-themes" class="btn">Themes</button>
+    <button id="btn-stats" class="btn">Scores</button>
   </div>
 
-  <!-- Panels -->
-  <dialog id="rules-dialog">
-    <h2>How to play Backyard Black Jack</h2>
-    <p><strong>Objective:</strong> Be the first to shed all your cards.</p>
-    <ul>
-      <li>Play a card that matches rank or suit of the discard, or play an Ace.</li>
-      <li>Stack penalties: 2 adds +2; Black Jack (♠/♣) adds +6; Red Jack (♥/♦) cancels Black Jack.</li>
-      <li>King reverses direction of play.</li>
-      <li>8 skips the next player's turn.</li>
-      <li>Ace changes suit to the suit of the Ace played.</li>
-      <li>Joker is wild (can mimic any card; optional toggle to exclude mimicking Black Jack).</li>
-      <li>Declare “Last Card!” when you have one card left or take a 2-card penalty.</li>
-    </ul>
-    <div class="dialog-actions">
-      <button class="btn" id="close-rules">Close</button>
-    </div>
-  </dialog>
+  <!-- Game table -->
+  <main class="table-area">
+    <section class="table">
+      <div class="center-stacks">
+        <div class="stack">
+          <div id="deck-card" class="card back" title="Draw card">🂠</div>
+          <div class="stack-label">Deck (<span id="deck-count">0</span>)</div>
+        </div>
+        <div class="stack">
+          <div id="discard-card" class="card" title="Top discard">--</div>
+          <div class="stack-label">Discard</div>
+        </div>
+      </div>
 
-  <dialog id="themes-dialog">
-    <h2>Themes</h2>
-    <p>Default: Daytime backyard. Optional packs can recolor the scene and cards without human/animal imagery.</p>
-    <ul>
-      <li>Backyard Classic (default)</li>
-      <li>Calligraphy (geometric motifs, elegant gold/blue)</li>
-      <li>Retro Arcade (brighter palettes, pixel accents)</li>
-    </ul>
-    <div class="dialog-actions">
-      <button class="btn" id="close-themes">Close</button>
-    </div>
-  </dialog>
+      <div class="avatars">
+        <div class="avatar top" id="avatar-ai"><div class="shape pentagon"></div><div class="avatar-label">AI • <span id="ai-count">0</span></div></div>
+        <div class="avatar left"><div class="shape star"></div></div>
+        <div class="avatar right"><div class="shape hexagon"></div></div>
+        <div class="avatar bottom" id="avatar-player"><div class="shape circle"></div><div class="avatar-label">You • <span id="player-count">0</span></div></div>
+      </div>
 
-  <dialog id="stats-dialog">
-    <h2>Session stats</h2>
-    <div class="stats-grid">
-      <div>
-        <div class="stat-value" id="session-games">0</div>
-        <div class="stat-label">Games played</div>
+      <section class="hand player-hand" id="player-hand"></section>
+      <section class="hand ai-hand" id="ai-hand"></section>
+
+      <div id="status" class="status">Welcome! Tap Play to start.</div>
+
+      <div class="controls">
+        <button id="btn-play-selected" class="btn primary" disabled>Play selected</button>
+        <button id="btn-clear" class="btn">Clear selection</button>
+        <button id="btn-draw" class="btn">Draw card</button>
+        <button id="btn-last-card" class="btn warn" style="display:none;">Last Card!</button>
       </div>
-      <div>
-        <div class="stat-value" id="session-wins">0</div>
-        <div class="stat-label">Wins</div>
-      </div>
-      <div>
-        <div class="stat-value" id="session-losses">0</div>
-        <div class="stat-label">Losses</div>
-      </div>
-      <div>
-        <div class="stat-value" id="session-winrate">0%</div>
-        <div class="stat-label">Win rate</div>
-      </div>
-    </div>
-    <div class="dialog-actions">
-      <button class="btn" id="close-stats">Close</button>
-    </div>
-  </dialog>
+    </section>
+  </main>
 
   <script src="game.js"></script>
-  <script>
-    // PWA install (optional). If you add service-worker.js, uncomment to register.
-    // if ('serviceWorker' in navigator) {
-    //   navigator.serviceWorker.register('./service-worker.js');
-    // }
-  </script>
 </body>
 </html>
