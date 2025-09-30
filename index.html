@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Imperial Black - Backyard Card Game</title>
+    <title>Imperial Black - Complete Edition</title>
     <style>
         * {
             margin: 0;
@@ -13,27 +13,27 @@
 
         body {
             font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #87CEEB 0%, #98FB98 100%);
+            background: linear-gradient(to bottom, #87CEEB 0%, #87CEEB 40%, #228B22 40%, #228B22 100%);
             min-height: 100vh;
             overflow-x: hidden;
         }
 
-        /* Navigation Bar */
+        /* Navigation */
         .nav-bar {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 10px 20px;
+            padding: 10px;
+            z-index: 1000;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            z-index: 1000;
         }
 
         .nav-title {
+            color: white;
             font-size: 18px;
             font-weight: bold;
         }
@@ -44,25 +44,29 @@
         }
 
         .nav-btn {
-            background: #4CAF50;
-            color: white;
-            border: none;
             padding: 8px 16px;
+            border: none;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 12px;
-            transition: background 0.3s;
-        }
-
-        .nav-btn:hover {
-            background: #45a049;
+            font-weight: bold;
+            transition: all 0.3s;
         }
 
         .nav-btn.active {
-            background: #FF6B6B;
+            background: #4CAF50;
+            color: white;
         }
 
-        /* Screen Container */
+        .nav-btn:not(.active) {
+            background: #666;
+            color: white;
+        }
+
+        .nav-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* Screens */
         .screen {
             display: none;
             padding-top: 60px;
@@ -79,68 +83,96 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
             text-align: center;
+            padding: 20px;
         }
 
-        .title {
+        .game-title {
             font-size: 4rem;
             font-weight: bold;
             color: #FFD700;
             text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
-            margin-bottom: 2rem;
-            text-align: center;
+            margin-bottom: 50px;
+            line-height: 1.2;
+        }
+
+        .menu-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
         }
 
         .menu-btn {
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border: 3px solid #333;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-width: 200px;
+        }
+
+        .menu-btn.play {
             background: linear-gradient(45deg, #4CAF50, #45a049);
             color: white;
-            border: none;
-            padding: 20px 40px;
-            margin: 10px;
-            border-radius: 15px;
-            font-size: 18px;
-            cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            transition: all 0.3s;
+        }
+
+        .menu-btn.log {
+            background: linear-gradient(45deg, #2196F3, #1976D2);
+            color: white;
+        }
+
+        .menu-btn.scores {
+            background: linear-gradient(45deg, #FF9800, #F57C00);
+            color: white;
+        }
+
+        .menu-btn.help {
+            background: linear-gradient(45deg, #9C27B0, #7B1FA2);
+            color: white;
         }
 
         .menu-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
 
         /* Game Screen */
-        .game-container {
+        .game-screen {
             padding: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
         }
 
         .game-message {
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0,0,0,0.8);
             color: white;
-            padding: 15px;
+            padding: 10px 20px;
             border-radius: 10px;
             text-align: center;
-            margin-bottom: 20px;
-            font-size: 16px;
-            min-height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            margin: 0 auto 20px;
+            max-width: 600px;
+            font-weight: bold;
         }
 
         .ai-section {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
+        }
+
+        .ai-label {
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-bottom: 10px;
         }
 
         .ai-cards {
             display: flex;
             justify-content: center;
             gap: 5px;
-            margin-top: 10px;
             flex-wrap: wrap;
         }
 
@@ -148,26 +180,30 @@
             width: 60px;
             height: 84px;
             background: linear-gradient(45deg, #1e3c72, #2a5298);
-            border: 2px solid #FFD700;
+            border: 2px solid #333;
             border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #FFD700;
             font-size: 24px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
 
-        .play-area {
-            background: rgba(139, 69, 19, 0.8);
-            border-radius: 50px;
-            padding: 30px;
-            margin: 30px auto;
-            width: fit-content;
+        .game-area {
             display: flex;
-            gap: 30px;
+            justify-content: center;
             align-items: center;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            margin: 30px 0;
+        }
+
+        .deck-area {
+            background: rgba(139, 69, 19, 0.8);
+            border: 3px solid #8B4513;
+            border-radius: 50px;
+            padding: 20px 40px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
         }
 
         .deck, .discard {
@@ -177,14 +213,15 @@
         .deck-card, .discard-card {
             width: 80px;
             height: 112px;
+            border: 2px solid #333;
             border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            margin-bottom: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 14px;
             font-weight: bold;
+            margin-bottom: 5px;
+            cursor: pointer;
         }
 
         .deck-card {
@@ -194,23 +231,31 @@
 
         .discard-card {
             background: white;
-            border: 2px solid #333;
+            color: black;
         }
 
         .player-section {
             text-align: center;
-            margin-top: 30px;
         }
 
-        .player-hand {
+        .player-label {
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+
+        .player-cards {
             display: flex;
             justify-content: center;
-            gap: 5px;
-            margin: 20px 0;
+            gap: 10px;
             flex-wrap: wrap;
+            margin-bottom: 20px;
             max-width: 100%;
+            overflow-x: auto;
             padding: 10px;
-            min-height: 120px;
         }
 
         .card {
@@ -225,165 +270,113 @@
             justify-content: center;
             cursor: pointer;
             transition: all 0.3s;
-            font-size: 14px;
             font-weight: bold;
             position: relative;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            flex-shrink: 0;
         }
 
         .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            transform: translateY(-10px);
         }
 
         .card.selected {
             border-color: #FFD700;
-            background: #FFFACD;
-            transform: translateY(-10px);
-            box-shadow: 0 6px 12px rgba(255, 215, 0, 0.5);
+            box-shadow: 0 0 15px #FFD700;
+            transform: translateY(-15px);
         }
 
-        .card.playable {
-            border-color: #4CAF50;
-            background: #F0FFF0;
+        .card.red {
+            color: red;
         }
 
-        .card.unplayable {
-            opacity: 0.5;
-            cursor: not-allowed;
+        .card.black {
+            color: black;
         }
-
-        .red { color: red; }
-        .black { color: black; }
 
         .game-controls {
             display: flex;
             justify-content: center;
             gap: 15px;
-            margin: 20px 0;
             flex-wrap: wrap;
+            margin-top: 20px;
         }
 
-        .control-btn {
+        .game-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .play-btn {
             background: linear-gradient(45deg, #4CAF50, #45a049);
             color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 14px;
-            cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-            transition: all 0.3s;
-            min-width: 120px;
         }
 
-        .control-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
-        }
-
-        .control-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .control-btn.danger {
-            background: linear-gradient(45deg, #FF6B6B, #FF5252);
-        }
-
-        .control-btn.warning {
-            background: linear-gradient(45deg, #FFA726, #FF9800);
-        }
-
-        .control-btn.last-card {
+        .last-card-btn {
             background: linear-gradient(45deg, #9C27B0, #7B1FA2);
-            font-size: 16px;
-            padding: 15px 30px;
-            animation: pulse 1s infinite;
+            color: white;
+            animation: pulse 1.5s infinite;
         }
 
         @keyframes pulse {
             0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+            50% { transform: scale(1.1); }
             100% { transform: scale(1); }
         }
 
-        .penalty-counter {
-            background: #FF6B6B;
+        .clear-btn {
+            background: linear-gradient(45deg, #FF5722, #D84315);
             color: white;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-weight: bold;
-            margin: 10px 0;
-            animation: shake 0.5s ease-in-out;
         }
 
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
+        .draw-btn {
+            background: linear-gradient(45deg, #2196F3, #1976D2);
+            color: white;
         }
 
-        /* Win Message */
-        .win-message {
-            position: fixed;
-            top: 20%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: linear-gradient(45deg, #FFD700, #FFA500);
-            color: #333;
-            padding: 30px 50px;
-            border-radius: 20px;
-            font-size: 24px;
-            font-weight: bold;
-            text-align: center;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.5);
-            z-index: 999;
-            animation: winPop 0.5s ease-out;
-            max-width: 400px;
+        .menu-btn-game {
+            background: linear-gradient(45deg, #FF9800, #F57C00);
+            color: white;
         }
 
-        @keyframes winPop {
-            0% { transform: translateX(-50%) scale(0); }
-            100% { transform: translateX(-50%) scale(1); }
+        .game-btn:hover {
+            transform: scale(1.05);
         }
 
-        .win-close {
-            position: absolute;
-            top: 10px;
-            right: 15px;
-            background: none;
-            border: none;
-            font-size: 20px;
-            cursor: pointer;
-            color: #333;
+        .game-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
-        /* Game Log Screen */
+        /* Log Screen */
         .log-screen {
-            background: #000;
-            color: #00FF00;
-            font-family: 'Courier New', monospace;
-            padding: 20px;
-            min-height: 100vh;
-        }
-
-        .log-container {
             display: flex;
+            padding: 20px;
             gap: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
         }
 
         .log-content {
-            flex: 1;
-            background: rgba(0, 50, 0, 0.8);
+            flex: 2;
+            background: black;
             border: 2px solid #00FF00;
             border-radius: 10px;
             padding: 20px;
-            height: 80vh;
+            color: #00FF00;
+            font-family: 'Courier New', monospace;
+            height: 70vh;
             overflow-y: auto;
+        }
+
+        .log-title {
+            color: #00FF00;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
         }
 
         .log-entry {
@@ -399,92 +392,177 @@
         }
 
         .ad-space {
-            width: 200px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px dashed #666;
+            flex: 1;
+            background: #f0f0f0;
+            border: 2px dashed #ccc;
             border-radius: 10px;
             padding: 20px;
             text-align: center;
-            color: #666;
+            height: 70vh;
             display: flex;
-            align-items: center;
-            justify-content: center;
             flex-direction: column;
+            justify-content: center;
         }
 
-        /* Score Screen */
-        .score-screen {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .ad-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #666;
+        }
+
+        .sample-ad {
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
             color: white;
             padding: 20px;
-            min-height: 100vh;
-        }
-
-        .score-container {
-            display: flex;
-            gap: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .score-content {
-            flex: 1;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 30px;
-        }
-
-        .score-section {
-            background: rgba(255, 255, 255, 0.1);
             border-radius: 10px;
-            padding: 20px;
             margin-bottom: 20px;
         }
 
-        .score-title {
-            font-size: 24px;
+        /* Scores Screen */
+        .scores-screen {
+            display: flex;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        .scores-content {
+            flex: 2;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 30px;
+            color: white;
+        }
+
+        .scores-title {
+            font-size: 28px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .stats-section {
+            margin-bottom: 30px;
+        }
+
+        .stats-header {
+            font-size: 20px;
             font-weight: bold;
             margin-bottom: 15px;
+            border-bottom: 2px solid rgba(255,255,255,0.3);
+            padding-bottom: 5px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .stat-item {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
             text-align: center;
         }
 
-        .score-stat {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            font-size: 18px;
-        }
-
-        .score-value {
+        .stat-value {
+            font-size: 24px;
             font-weight: bold;
             color: #FFD700;
         }
 
-        /* Responsive Design */
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .reset-btn {
+            background: linear-gradient(45deg, #FF5722, #D84315);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .reset-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* Win Message */
+        .win-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            color: black;
+            padding: 20px 40px;
+            border-radius: 15px;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            z-index: 2000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            max-width: 400px;
+            border: 3px solid #333;
+        }
+
+        .win-close {
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* Penalty Counter */
+        .penalty-counter {
+            position: fixed;
+            top: 120px;
+            right: 20px;
+            background: linear-gradient(45deg, #FF5722, #D84315);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            z-index: 1500;
+            animation: pulse 1s infinite;
+        }
+
+        /* Responsive */
         @media (max-width: 768px) {
-            .title {
+            .game-title {
                 font-size: 2.5rem;
             }
             
-            .card {
-                width: 50px;
-                height: 70px;
-                font-size: 12px;
+            .player-cards {
+                gap: 5px;
             }
             
-            .deck-card, .discard-card {
+            .card {
                 width: 60px;
                 height: 84px;
-                font-size: 18px;
             }
             
-            .log-container, .score-container {
+            .log-screen, .scores-screen {
                 flex-direction: column;
             }
             
-            .ad-space {
-                width: 100%;
-                height: 100px;
+            .nav-buttons {
+                flex-wrap: wrap;
+                gap: 5px;
+            }
+            
+            .nav-btn {
+                padding: 6px 12px;
+                font-size: 12px;
             }
         }
     </style>
@@ -494,174 +572,197 @@
     <div class="nav-bar">
         <div class="nav-title">Imperial Black</div>
         <div class="nav-buttons">
-            <button class="nav-btn" id="menuNavBtn" onclick="showScreen('menu')">Menu</button>
-            <button class="nav-btn" id="gameNavBtn" onclick="showScreen('game')">Game</button>
-            <button class="nav-btn" id="logNavBtn" onclick="showScreen('log')">Log</button>
-            <button class="nav-btn" id="scoresNavBtn" onclick="showScreen('scores')">Scores</button>
+            <button class="nav-btn active" onclick="showScreen('menu')">Menu</button>
+            <button class="nav-btn" onclick="showScreen('game')">Game</button>
+            <button class="nav-btn" onclick="showScreen('log')">Log</button>
+            <button class="nav-btn" onclick="showScreen('scores')">Scores</button>
         </div>
     </div>
 
     <!-- Menu Screen -->
-    <div id="menu" class="screen active menu-screen">
-        <h1 class="title">Backyard<br>Black Jack</h1>
-        <button class="menu-btn" onclick="startNewGame()">💎 PLAY GAME</button>
-        <button class="menu-btn" onclick="showScreen('log')">📊 GAME LOG</button>
-        <button class="menu-btn" onclick="showScreen('scores')">🏆 SCORES</button>
-        <button class="menu-btn" onclick="showRules()">📖 HOW TO PLAY</button>
+    <div id="menu-screen" class="screen active menu-screen">
+        <div class="game-title">
+            Backyard<br>
+            Black Jack
+        </div>
+        <div class="menu-buttons">
+            <button class="menu-btn play" onclick="startNewGame()">💎 PLAY GAME</button>
+            <button class="menu-btn log" onclick="showScreen('log')">📊 GAME LOG</button>
+            <button class="menu-btn scores" onclick="showScreen('scores')">🏆 SCORES</button>
+            <button class="menu-btn help" onclick="showScreen('help')">📖 HOW TO PLAY</button>
+        </div>
     </div>
 
     <!-- Game Screen -->
-    <div id="game" class="screen">
-        <div class="game-container">
-            <div class="game-message" id="gameMessage">Welcome to Imperial Black!</div>
-            
-            <div class="ai-section">
-                <div>🤖 AI Player - <span id="aiCardCount">7</span> cards</div>
-                <div class="ai-cards" id="aiCards"></div>
-            </div>
+    <div id="game-screen" class="screen game-screen">
+        <div id="game-message" class="game-message">Welcome to Imperial Black!</div>
+        
+        <div class="ai-section">
+            <div class="ai-label">🤖 AI Player - <span id="ai-card-count">7</span> cards</div>
+            <div id="ai-cards" class="ai-cards"></div>
+        </div>
 
-            <div class="play-area">
+        <div class="game-area">
+            <div class="deck-area">
                 <div class="deck">
-                    <div class="deck-card">🂠</div>
-                    <div>Deck (<span id="deckCount">37</span>)</div>
+                    <div class="deck-card" onclick="drawCard()">🂠</div>
+                    <div>Deck (<span id="deck-count">37</span>)</div>
                 </div>
                 <div class="discard">
-                    <div class="discard-card" id="discardCard">🂡</div>
+                    <div id="discard-card" class="discard-card">🂠</div>
                     <div>Discard</div>
                 </div>
             </div>
+        </div>
 
-            <div id="penaltyCounter" class="penalty-counter" style="display: none;"></div>
+        <div class="player-section">
+            <div class="player-label">💎 Your Hand - <span id="player-card-count">7</span> cards</div>
+            <div id="player-cards" class="player-cards"></div>
+        </div>
 
-            <div class="player-section">
-                <div>💎 Your Hand - <span id="playerCardCount">7</span> cards</div>
-                <div class="player-hand" id="playerHand"></div>
-            </div>
-
-            <div class="game-controls">
-                <button class="control-btn last-card" id="lastCardBtn" onclick="declareLastCard()" style="display: none;">
-                    🗣️ LAST CARD!
-                </button>
-                <button class="control-btn" id="playBtn" onclick="playSelectedCards()" style="display: none;">
-                    🎯 Play Selected (<span id="selectedCount">0</span>)
-                </button>
-                <button class="control-btn warning" id="clearBtn" onclick="clearSelection()" style="display: none;">
-                    ❌ Clear Selection
-                </button>
-                <button class="control-btn" id="drawBtn" onclick="drawCard()">
-                    🃏 Draw Card
-                </button>
-                <button class="control-btn danger" id="pickupBtn" onclick="pickupPenalty()" style="display: none;">
-                    ⚠️ Pick Up <span id="pickupCount">0</span>
-                </button>
-                <button class="control-btn warning" onclick="showScreen('menu')">
-                    🏠 Back to Menu
-                </button>
-            </div>
+        <div class="game-controls">
+            <button id="play-btn" class="game-btn play-btn" onclick="playSelectedCards()" style="display: none;">🎯 Play Selected</button>
+            <button id="last-card-btn" class="game-btn last-card-btn" onclick="declareLastCard()" style="display: none;">🗣️ Last Card!</button>
+            <button class="game-btn clear-btn" onclick="clearSelection()">❌ Clear Selection</button>
+            <button class="game-btn draw-btn" onclick="drawCard()">🃏 Draw Card</button>
+            <button class="game-btn menu-btn-game" onclick="showScreen('menu')">🏠 Back to Menu</button>
         </div>
     </div>
 
-    <!-- Game Log Screen -->
-    <div id="log" class="screen log-screen">
-        <div class="log-container">
-            <div class="log-content">
-                <h2 style="color: #00FF00; text-align: center; margin-bottom: 20px;">GAME ACTION LOG</h2>
-                <div id="logEntries">
-                    <div class="log-entry">
-                        <div class="log-timestamp">[System]</div>
-                        <div>Game log initialized. Ready to track all actions.</div>
-                    </div>
-                </div>
+    <!-- Log Screen -->
+    <div id="log-screen" class="screen log-screen">
+        <div class="log-content">
+            <div class="log-title">GAME ACTION LOG</div>
+            <div id="game-log"></div>
+        </div>
+        <div class="ad-space">
+            <div class="ad-title">Advertisement Space</div>
+            <div class="sample-ad">
+                <h3>Sample Ad</h3>
+                <p>Play More Games!</p>
+                <p>Visit our game portal</p>
             </div>
-            <div class="ad-space">
-                <h3>Advertisement Space</h3>
-                <p>Rotating ads will appear here</p>
-                <div style="margin-top: 20px; padding: 20px; background: rgba(255,255,255,0.1); border-radius: 5px;">
-                    <strong>Sample Ad</strong><br>
-                    Play More Games!<br>
-                    <small>Visit our game portal</small>
-                </div>
-            </div>
+            <p>Rotating ads will appear here</p>
         </div>
     </div>
 
-    <!-- Score Screen -->
-    <div id="scores" class="screen score-screen">
-        <div class="score-container">
-            <div class="score-content">
-                <h2 class="score-title">🏆 GAME STATISTICS</h2>
-                
-                <div class="score-section">
-                    <h3 style="color: #FFD700; margin-bottom: 15px;">Current Session</h3>
-                    <div class="score-stat">
-                        <span>Games Played:</span>
-                        <span class="score-value" id="sessionGames">0</span>
+    <!-- Scores Screen -->
+    <div id="scores-screen" class="screen scores-screen">
+        <div class="scores-content">
+            <div class="scores-title">🏆 GAME STATISTICS</div>
+            
+            <div class="stats-section">
+                <div class="stats-header">Current Session</div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="session-games">0</div>
+                        <div class="stat-label">Games Played</div>
                     </div>
-                    <div class="score-stat">
-                        <span>Wins:</span>
-                        <span class="score-value" id="sessionWins">0</span>
+                    <div class="stat-item">
+                        <div class="stat-value" id="session-wins">0</div>
+                        <div class="stat-label">Wins</div>
                     </div>
-                    <div class="score-stat">
-                        <span>Losses:</span>
-                        <span class="score-value" id="sessionLosses">0</span>
+                    <div class="stat-item">
+                        <div class="stat-value" id="session-losses">0</div>
+                        <div class="stat-label">Losses</div>
                     </div>
-                    <div class="score-stat">
-                        <span>Win Rate:</span>
-                        <span class="score-value" id="sessionWinRate">0%</span>
+                    <div class="stat-item">
+                        <div class="stat-value" id="session-winrate">0%</div>
+                        <div class="stat-label">Win Rate</div>
                     </div>
-                </div>
-
-                <div class="score-section">
-                    <h3 style="color: #FFD700; margin-bottom: 15px;">All Time</h3>
-                    <div class="score-stat">
-                        <span>Total Games:</span>
-                        <span class="score-value" id="totalGames">0</span>
-                    </div>
-                    <div class="score-stat">
-                        <span>Total Wins:</span>
-                        <span class="score-value" id="totalWins">0</span>
-                    </div>
-                    <div class="score-stat">
-                        <span>Total Losses:</span>
-                        <span class="score-value" id="totalLosses">0</span>
-                    </div>
-                    <div class="score-stat">
-                        <span>Overall Win Rate:</span>
-                        <span class="score-value" id="totalWinRate">0%</span>
-                    </div>
-                </div>
-
-                <div class="score-section">
-                    <h3 style="color: #FFD700; margin-bottom: 15px;">Game Records</h3>
-                    <div class="score-stat">
-                        <span>Fastest Win:</span>
-                        <span class="score-value" id="fastestWin">--</span>
-                    </div>
-                    <div class="score-stat">
-                        <span>Longest Game:</span>
-                        <span class="score-value" id="longestGame">--</span>
-                    </div>
-                    <div class="score-stat">
-                        <span>Best Streak:</span>
-                        <span class="score-value" id="bestStreak">0</span>
-                    </div>
-                </div>
-
-                <div style="text-align: center; margin-top: 30px;">
-                    <button class="control-btn danger" onclick="resetStats()">Reset All Statistics</button>
                 </div>
             </div>
-            <div class="ad-space">
-                <h3>Premium Features</h3>
-                <p>Upgrade for advanced statistics and ad-free experience</p>
-                <div style="margin-top: 20px; padding: 20px; background: rgba(255,255,255,0.1); border-radius: 5px;">
-                    <strong>Upgrade Now!</strong><br>
-                    • Detailed analytics<br>
-                    • No advertisements<br>
-                    • Custom themes<br>
-                    <button class="control-btn" style="margin-top: 10px;">Upgrade</button>
+
+            <div class="stats-section">
+                <div class="stats-header">All Time</div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="total-games">0</div>
+                        <div class="stat-label">Total Games</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="total-wins">0</div>
+                        <div class="stat-label">Total Wins</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="total-losses">0</div>
+                        <div class="stat-label">Total Losses</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="overall-winrate">0%</div>
+                        <div class="stat-label">Overall Win Rate</div>
+                    </div>
                 </div>
             </div>
+
+            <div class="stats-section">
+                <div class="stats-header">Game Records</div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="fastest-win">--</div>
+                        <div class="stat-label">Fastest Win</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="longest-game">--</div>
+                        <div class="stat-label">Longest Game</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="best-streak">0</div>
+                        <div class="stat-label">Best Streak</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="current-streak">0</div>
+                        <div class="stat-label">Current Streak</div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="reset-btn" onclick="resetStatistics()">Reset All Statistics</button>
+        </div>
+        <div class="ad-space">
+            <div class="ad-title">Premium Features</div>
+            <div class="sample-ad">
+                <h3>UPGRADE NOW!</h3>
+                <p>⭐ Premium Bonus</p>
+                <p>🎯 Advanced Stats</p>
+                <p>🎨 Custom Themes</p>
+            </div>
+            <p>Unlock premium features for enhanced gameplay experience</p>
+        </div>
+    </div>
+
+    <!-- Help Screen -->
+    <div id="help-screen" class="screen">
+        <div style="padding: 20px; max-width: 800px; margin: 0 auto; background: rgba(255,255,255,0.9); border-radius: 15px; margin-top: 20px;">
+            <h1>How to Play Imperial Black</h1>
+            <h2>🎯 Objective</h2>
+            <p><strong>Be the first player to discard all your cards!</strong></p>
+            
+            <h2>💎 How to Play</h2>
+            <ul>
+                <li>Match the <strong>suit</strong> or <strong>rank</strong> of the top card</li>
+                <li>Click cards to select them (yellow glow), then click "Play Selected"</li>
+                <li>Play <strong>runs</strong> - multiple cards of the same rank (any suits)</li>
+                <li>Click "Last Card!" when you have one card left</li>
+                <li>Click "Clear Selection" to deselect cards</li>
+                <li>If you can't play, click "Draw Card"</li>
+            </ul>
+
+            <h2>💥 Power Cards</h2>
+            <ul>
+                <li><strong>2:</strong> Next player picks up 2 cards (stackable up to 8!)</li>
+                <li><strong>Black Jack (J♠/J♣):</strong> Next player picks up 6 cards (stackable up to 24!)</li>
+                <li><strong>Red Jack (J♥/J♦):</strong> Cancels Black Jack pickup (must be played immediately)</li>
+                <li><strong>King:</strong> Reverses direction of play</li>
+                <li><strong>8:</strong> Skips next player's turn</li>
+                <li><strong>Ace:</strong> Changes suit to suit of Ace played</li>
+            </ul>
+
+            <h2>⚠️ Last Card Rule</h2>
+            <p><strong>Must declare "Last Card!"</strong> when you have one card left, or pick up 2 penalty cards!</p>
+
+            <h2>🔥 Penalty Stacking</h2>
+            <p><strong>Stack penalties!</strong> Play a 2 on a 2 to make opponent pick up 4 cards! Stack Black Jacks for up to 24 cards!</p>
         </div>
     </div>
 
@@ -674,501 +775,206 @@
             discardPile: [],
             selectedCards: [],
             currentPlayer: 'player',
-            direction: 1,
+            gameStarted: false,
             penaltyCount: 0,
             penaltyType: '',
             gameStartTime: null,
-            lastCardDeclared: false,
-            gameLog: [],
-            sessionStats: { games: 0, wins: 0, losses: 0 },
-            totalStats: { games: 0, wins: 0, losses: 0, fastestWin: null, longestGame: null, bestStreak: 0, currentStreak: 0 }
+            lastCardDeclared: false
         };
 
-        // Card definitions
-        const suits = ['♠', '♥', '♦', '♣'];
-        const ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
-        const suitColors = { '♠': 'black', '♣': 'black', '♥': 'red', '♦': 'red' };
+        // Statistics
+        let stats = {
+            session: { games: 0, wins: 0, losses: 0 },
+            allTime: { games: 0, wins: 0, losses: 0 },
+            records: { fastestWin: null, longestGame: null, bestStreak: 0, currentStreak: 0 }
+        };
 
-        // Screen management
+        // Game Log
+        let gameLog = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStatistics();
+            updateStatisticsDisplay();
+            showScreen('menu');
+        });
+
+        // Screen Management
         function showScreen(screenName) {
-            console.log('Switching to screen:', screenName);
-            
             // Hide all screens
             document.querySelectorAll('.screen').forEach(screen => {
                 screen.classList.remove('active');
             });
-            
-            // Show selected screen
-            const targetScreen = document.getElementById(screenName);
-            if (targetScreen) {
-                targetScreen.classList.add('active');
-            }
             
             // Update nav buttons
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
             
-            const navBtn = document.getElementById(screenName + 'NavBtn');
-            if (navBtn) {
-                navBtn.classList.add('active');
-            }
+            // Show selected screen
+            document.getElementById(screenName + '-screen').classList.add('active');
             
-            // Update displays based on screen
-            if (screenName === 'log') {
-                updateLogDisplay();
-            } else if (screenName === 'scores') {
-                updateStatsDisplay();
+            // Update active nav button
+            event.target.classList.add('active');
+            
+            // Special handling for game screen
+            if (screenName === 'game' && !gameState.gameStarted) {
+                startNewGame();
             }
         }
 
-        function startNewGame() {
-            showScreen('game');
-            initializeGame();
-        }
-
-        // Initialize game
-        function initializeGame() {
-            console.log('Initializing game...');
-            loadStats();
-            createDeck();
-            dealCards();
-            updateDisplay();
-            logAction('Game started', 'system');
-            gameState.gameStartTime = Date.now();
-            showMessage('Game Started! Match suit or rank, or play power cards!');
-        }
-
+        // Card Creation
         function createDeck() {
-            gameState.deck = [];
+            const suits = ['♠', '♥', '♦', '♣'];
+            const ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+            const deck = [];
+            
             for (let suit of suits) {
                 for (let rank of ranks) {
-                    gameState.deck.push({ rank, suit });
+                    deck.push({ rank, suit });
                 }
             }
-            shuffleDeck();
-            console.log('Deck created with', gameState.deck.length, 'cards');
-        }
-
-        function shuffleDeck() {
-            for (let i = gameState.deck.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [gameState.deck[i], gameState.deck[j]] = [gameState.deck[j], gameState.deck[i]];
-            }
-        }
-
-        function dealCards() {
-            gameState.playerHand = [];
-            gameState.aiHand = [];
-            gameState.discardPile = [];
-            gameState.selectedCards = [];
-            gameState.penaltyCount = 0;
-            gameState.lastCardDeclared = false;
-            gameState.currentPlayer = 'player';
-
-            // Deal 7 cards to each player
-            for (let i = 0; i < 7; i++) {
-                gameState.playerHand.push(gameState.deck.pop());
-                gameState.aiHand.push(gameState.deck.pop());
-            }
-
-            // Start discard pile
-            gameState.discardPile.push(gameState.deck.pop());
             
-            console.log('Cards dealt. Player hand:', gameState.playerHand.length, 'AI hand:', gameState.aiHand.length);
+            return shuffleDeck(deck);
         }
 
+        function shuffleDeck(deck) {
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+            return deck;
+        }
+
+        // Game Initialization
+        function startNewGame() {
+            gameState.deck = createDeck();
+            gameState.playerHand = gameState.deck.splice(0, 7);
+            gameState.aiHand = gameState.deck.splice(0, 7);
+            gameState.discardPile = [gameState.deck.pop()];
+            gameState.selectedCards = [];
+            gameState.currentPlayer = 'player';
+            gameState.gameStarted = true;
+            gameState.penaltyCount = 0;
+            gameState.penaltyType = '';
+            gameState.gameStartTime = Date.now();
+            gameState.lastCardDeclared = false;
+            
+            addToLog('Game started! Match suit or rank, or play power cards!');
+            updateDisplay();
+            showScreen('game');
+        }
+
+        // Display Updates
         function updateDisplay() {
-            // Update card counts
-            document.getElementById('playerCardCount').textContent = gameState.playerHand.length;
-            document.getElementById('aiCardCount').textContent = gameState.aiHand.length;
-            document.getElementById('deckCount').textContent = gameState.deck.length;
-
-            // Update AI cards display
-            const aiCardsContainer = document.getElementById('aiCards');
-            aiCardsContainer.innerHTML = '';
-            for (let i = 0; i < gameState.aiHand.length; i++) {
-                const cardBack = document.createElement('div');
-                cardBack.className = 'card-back';
-                cardBack.textContent = '🂠';
-                aiCardsContainer.appendChild(cardBack);
-            }
-
-            // Update discard pile
-            if (gameState.discardPile.length > 0) {
-                const topCard = gameState.discardPile[gameState.discardPile.length - 1];
-                const discardElement = document.getElementById('discardCard');
-                discardElement.textContent = `${topCard.rank}${topCard.suit}`;
-                discardElement.className = `discard-card ${suitColors[topCard.suit]}`;
-            }
-
-            // Update player hand
             updatePlayerHand();
-
-            // Update controls
-            updateControls();
-
-            // Check for Last Card button
-            updateLastCardButton();
+            updateAIHand();
+            updateDiscardPile();
+            updateDeckCount();
+            updateGameControls();
+            updateGameMessage();
         }
 
         function updatePlayerHand() {
-            const handContainer = document.getElementById('playerHand');
-            handContainer.innerHTML = '';
-
+            const container = document.getElementById('player-cards');
+            container.innerHTML = '';
+            
             gameState.playerHand.forEach((card, index) => {
                 const cardElement = document.createElement('div');
-                cardElement.className = `card ${suitColors[card.suit]}`;
-                cardElement.textContent = `${card.rank}${card.suit}`;
+                cardElement.className = `card ${card.suit === '♥' || card.suit === '♦' ? 'red' : 'black'}`;
+                cardElement.innerHTML = `<div>${card.rank}</div><div>${card.suit}</div>`;
                 cardElement.onclick = () => toggleCardSelection(index);
-
-                // Check if card is selected
+                
                 if (gameState.selectedCards.includes(index)) {
                     cardElement.classList.add('selected');
                 }
-
-                // Check if card is playable
-                if (isCardPlayable(card)) {
-                    cardElement.classList.add('playable');
-                } else if (gameState.penaltyCount === 0) {
-                    cardElement.classList.add('unplayable');
-                }
-
-                handContainer.appendChild(cardElement);
+                
+                container.appendChild(cardElement);
             });
+            
+            document.getElementById('player-card-count').textContent = gameState.playerHand.length;
         }
 
-        function updateControls() {
-            const playBtn = document.getElementById('playBtn');
-            const clearBtn = document.getElementById('clearBtn');
-            const selectedCount = document.getElementById('selectedCount');
-            const pickupBtn = document.getElementById('pickupBtn');
-            const pickupCount = document.getElementById('pickupCount');
-            const penaltyCounter = document.getElementById('penaltyCounter');
+        function updateAIHand() {
+            const container = document.getElementById('ai-cards');
+            container.innerHTML = '';
+            
+            for (let i = 0; i < gameState.aiHand.length; i++) {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'card-back';
+                cardElement.innerHTML = '🂠';
+                container.appendChild(cardElement);
+            }
+            
+            document.getElementById('ai-card-count').textContent = gameState.aiHand.length;
+        }
 
-            // Update selected count
-            selectedCount.textContent = gameState.selectedCards.length;
+        function updateDiscardPile() {
+            const topCard = gameState.discardPile[gameState.discardPile.length - 1];
+            const discardElement = document.getElementById('discard-card');
+            discardElement.innerHTML = `<div>${topCard.rank}</div><div>${topCard.suit}</div>`;
+            discardElement.className = `discard-card ${topCard.suit === '♥' || topCard.suit === '♦' ? 'red' : 'black'}`;
+        }
 
-            // Show/hide play and clear buttons
-            if (gameState.selectedCards.length > 0) {
+        function updateDeckCount() {
+            document.getElementById('deck-count').textContent = gameState.deck.length;
+        }
+
+        function updateGameControls() {
+            const playBtn = document.getElementById('play-btn');
+            const lastCardBtn = document.getElementById('last-card-btn');
+            
+            // Show/hide play button
+            if (gameState.selectedCards.length > 0 && gameState.currentPlayer === 'player' && gameState.penaltyCount === 0) {
                 playBtn.style.display = 'inline-block';
-                clearBtn.style.display = 'inline-block';
+                playBtn.textContent = `🎯 Play Selected (${gameState.selectedCards.length})`;
+            } else if (gameState.selectedCards.length > 0 && gameState.penaltyCount > 0) {
+                // Allow playing penalty cards during penalty
+                const selectedCard = gameState.playerHand[gameState.selectedCards[0]];
+                if (canStackPenalty(selectedCard)) {
+                    playBtn.style.display = 'inline-block';
+                    playBtn.textContent = `🎯 Play Selected (${gameState.selectedCards.length})`;
+                } else {
+                    playBtn.style.display = 'none';
+                }
             } else {
                 playBtn.style.display = 'none';
-                clearBtn.style.display = 'none';
             }
-
-            // Handle penalty state
-            if (gameState.penaltyCount > 0) {
-                pickupBtn.style.display = 'inline-block';
-                pickupCount.textContent = gameState.penaltyCount;
-                penaltyCounter.style.display = 'block';
-                penaltyCounter.textContent = `Pick up ${gameState.penaltyCount} cards`;
-            } else {
-                pickupBtn.style.display = 'none';
-                penaltyCounter.style.display = 'none';
-            }
-        }
-
-        function updateLastCardButton() {
-            const lastCardBtn = document.getElementById('lastCardBtn');
             
-            if (gameState.playerHand.length === 1 && !gameState.lastCardDeclared && gameState.penaltyCount === 0) {
+            // Show/hide last card button
+            if (gameState.playerHand.length === 1 && gameState.currentPlayer === 'player' && !gameState.lastCardDeclared) {
                 lastCardBtn.style.display = 'inline-block';
             } else {
                 lastCardBtn.style.display = 'none';
             }
         }
 
-        function toggleCardSelection(index) {
-            if (gameState.penaltyCount > 0 && !canStackPenalty(gameState.playerHand[index])) {
-                return; // Can't select cards during penalty unless stacking
+        function updateGameMessage() {
+            const messageElement = document.getElementById('game-message');
+            
+            if (gameState.penaltyCount > 0) {
+                messageElement.innerHTML = `⚠️ Penalty! Pick up ${gameState.penaltyCount} cards or play a ${gameState.penaltyType}!`;
+                messageElement.style.background = 'linear-gradient(45deg, #FF5722, #D84315)';
+            } else if (gameState.currentPlayer === 'ai') {
+                messageElement.innerHTML = 'AI is thinking...';
+                messageElement.style.background = 'rgba(0,0,0,0.8)';
+            } else {
+                messageElement.innerHTML = 'Your turn! Match suit or rank, or play power cards!';
+                messageElement.style.background = 'rgba(0,0,0,0.8)';
             }
+        }
 
-            const selectedIndex = gameState.selectedCards.indexOf(index);
-            if (selectedIndex > -1) {
-                gameState.selectedCards.splice(selectedIndex, 1);
+        // Card Selection
+        function toggleCardSelection(index) {
+            if (gameState.currentPlayer !== 'player') return;
+            
+            const cardIndex = gameState.selectedCards.indexOf(index);
+            if (cardIndex > -1) {
+                gameState.selectedCards.splice(cardIndex, 1);
             } else {
                 gameState.selectedCards.push(index);
             }
-            updateDisplay();
-        }
-
-        function isCardPlayable(card) {
-            if (gameState.discardPile.length === 0) return false;
             
-            const topCard = gameState.discardPile[gameState.discardPile.length - 1];
-            
-            // Aces are always playable
-            if (card.rank === 'A') return true;
-            
-            // During penalty, only stacking cards are playable
-            if (gameState.penaltyCount > 0) {
-                return canStackPenalty(card);
-            }
-            
-            // Normal matching rules
-            return card.suit === topCard.suit || card.rank === topCard.rank;
-        }
-
-        function canStackPenalty(card) {
-            if (gameState.penaltyType === '2' && card.rank === '2') return true;
-            if (gameState.penaltyType === 'blackjack' && isBlackJack(card)) return true;
-            if (gameState.penaltyType === 'blackjack' && isRedJack(card)) return true;
-            return false;
-        }
-
-        function isBlackJack(card) {
-            return card.rank === 'J' && (card.suit === '♠' || card.suit === '♣');
-        }
-
-        function isRedJack(card) {
-            return card.rank === 'J' && (card.suit === '♥' || card.suit === '♦');
-        }
-
-        function playSelectedCards() {
-            if (gameState.selectedCards.length === 0) return;
-
-            const selectedCardObjects = gameState.selectedCards.map(index => gameState.playerHand[index]);
-            
-            // Validate the play
-            if (!isValidPlay(selectedCardObjects)) {
-                showMessage("Cannot play selected cards - invalid combination or doesn't match top card");
-                return;
-            }
-
-            // Check Last Card rule
-            if (gameState.playerHand.length - gameState.selectedCards.length === 1 && !gameState.lastCardDeclared) {
-                // Apply penalty for not declaring Last Card
-                applyLastCardPenalty();
-                return;
-            }
-
-            // Remove cards from hand (in reverse order to maintain indices)
-            gameState.selectedCards.sort((a, b) => b - a);
-            const playedCards = [];
-            for (let index of gameState.selectedCards) {
-                playedCards.unshift(gameState.playerHand.splice(index, 1)[0]);
-            }
-
-            // Add to discard pile
-            gameState.discardPile.push(...playedCards);
-
-            // Log the play
-            const cardNames = playedCards.map(card => `${card.rank}${card.suit}`).join(', ');
-            logAction(`Player played: ${cardNames}`, 'player');
-
-            // Handle power card effects
-            const lastPlayedCard = playedCards[playedCards.length - 1];
-            handlePowerCard(lastPlayedCard, 'player');
-
-            // Clear selection
-            gameState.selectedCards = [];
-
-            // Check for win
-            if (gameState.playerHand.length === 0) {
-                endGame('player');
-                return;
-            }
-
-            // Switch to AI turn if no skip effect
-            if (gameState.currentPlayer === 'player') {
-                gameState.currentPlayer = 'ai';
-                setTimeout(aiTurn, 1000);
-            }
-
-            updateDisplay();
-        }
-
-        function isValidPlay(cards) {
-            if (cards.length === 0) return false;
-
-            // Check if it's a valid run (same rank)
-            if (cards.length > 1) {
-                const rank = cards[0].rank;
-                if (!cards.every(card => card.rank === rank)) {
-                    return false;
-                }
-            }
-
-            // Check if first card matches top card
-            if (gameState.discardPile.length === 0) return false;
-            
-            const topCard = gameState.discardPile[gameState.discardPile.length - 1];
-            const firstCard = cards[0];
-
-            // During penalty, check stacking rules
-            if (gameState.penaltyCount > 0) {
-                return canStackPenalty(firstCard);
-            }
-
-            // Aces are always playable
-            if (firstCard.rank === 'A') return true;
-
-            // Normal matching
-            return firstCard.suit === topCard.suit || firstCard.rank === topCard.rank;
-        }
-
-        function handlePowerCard(card, player) {
-            const opponent = player === 'player' ? 'ai' : 'player';
-
-            switch (card.rank) {
-                case '2':
-                    if (gameState.penaltyType === '2') {
-                        gameState.penaltyCount += 2;
-                    } else {
-                        gameState.penaltyCount = 2;
-                        gameState.penaltyType = '2';
-                    }
-                    logAction(`${player} played 2 - ${opponent} must pick up ${gameState.penaltyCount} cards!`, 'system');
-                    gameState.currentPlayer = opponent;
-                    break;
-
-                case 'J':
-                    if (isBlackJack(card)) {
-                        if (gameState.penaltyType === 'blackjack') {
-                            gameState.penaltyCount += 6;
-                        } else {
-                            gameState.penaltyCount = 6;
-                            gameState.penaltyType = 'blackjack';
-                        }
-                        logAction(`${player} played Black Jack - ${opponent} must pick up ${gameState.penaltyCount} cards!`, 'system');
-                        gameState.currentPlayer = opponent;
-                    } else if (isRedJack(card)) {
-                        if (gameState.penaltyType === 'blackjack') {
-                            logAction(`${player} played Red Jack - Black Jack penalty cancelled!`, 'system');
-                            gameState.penaltyCount = 0;
-                            gameState.penaltyType = '';
-                        }
-                        gameState.currentPlayer = opponent;
-                    }
-                    break;
-
-                case '8':
-                    logAction(`${player} played 8 - ${opponent}'s turn skipped!`, 'system');
-                    // Keep current player for another turn
-                    break;
-
-                case 'K':
-                    gameState.direction *= -1;
-                    logAction(`${player} played King - direction reversed!`, 'system');
-                    gameState.currentPlayer = opponent;
-                    break;
-
-                case 'A':
-                    logAction(`${player} played Ace - suit changed to ${card.suit}!`, 'system');
-                    gameState.currentPlayer = opponent;
-                    break;
-
-                default:
-                    gameState.currentPlayer = opponent;
-                    break;
-            }
-        }
-
-        function aiTurn() {
-            if (gameState.currentPlayer !== 'ai') return;
-
-            // Handle penalty
-            if (gameState.penaltyCount > 0) {
-                // Check if AI can stack
-                const stackingCard = gameState.aiHand.find(card => canStackPenalty(card));
-                if (stackingCard) {
-                    // AI stacks the penalty
-                    const index = gameState.aiHand.indexOf(stackingCard);
-                    gameState.aiHand.splice(index, 1);
-                    gameState.discardPile.push(stackingCard);
-                    
-                    logAction(`AI played ${stackingCard.rank}${stackingCard.suit} to stack penalty`, 'ai');
-                    handlePowerCard(stackingCard, 'ai');
-                    updateDisplay();
-                    return;
-                } else {
-                    // AI picks up penalty cards
-                    for (let i = 0; i < gameState.penaltyCount; i++) {
-                        if (gameState.deck.length === 0) reshuffleDeck();
-                        gameState.aiHand.push(gameState.deck.pop());
-                    }
-                    logAction(`AI picked up ${gameState.penaltyCount} cards!`, 'ai');
-                    gameState.penaltyCount = 0;
-                    gameState.penaltyType = '';
-                    gameState.currentPlayer = 'player';
-                    updateDisplay();
-                    return;
-                }
-            }
-
-            // Find playable cards
-            const playableCards = gameState.aiHand.filter(card => isCardPlayable(card));
-            
-            if (playableCards.length > 0) {
-                // AI plays a card (simple strategy - play first playable card)
-                const cardToPlay = playableCards[0];
-                const index = gameState.aiHand.indexOf(cardToPlay);
-                gameState.aiHand.splice(index, 1);
-                gameState.discardPile.push(cardToPlay);
-                
-                logAction(`AI played ${cardToPlay.rank}${cardToPlay.suit}`, 'ai');
-                
-                // Check for AI win
-                if (gameState.aiHand.length === 0) {
-                    endGame('ai');
-                    return;
-                }
-                
-                handlePowerCard(cardToPlay, 'ai');
-            } else {
-                // AI draws a card
-                if (gameState.deck.length === 0) reshuffleDeck();
-                gameState.aiHand.push(gameState.deck.pop());
-                logAction('AI drew a card', 'ai');
-                gameState.currentPlayer = 'player';
-            }
-
-            updateDisplay();
-        }
-
-        function drawCard() {
-            if (gameState.penaltyCount > 0) return;
-            
-            if (gameState.deck.length === 0) reshuffleDeck();
-            gameState.playerHand.push(gameState.deck.pop());
-            logAction('Player drew a card', 'player');
-            
-            gameState.currentPlayer = 'ai';
-            setTimeout(aiTurn, 1000);
-            updateDisplay();
-        }
-
-        function pickupPenalty() {
-            for (let i = 0; i < gameState.penaltyCount; i++) {
-                if (gameState.deck.length === 0) reshuffleDeck();
-                gameState.playerHand.push(gameState.deck.pop());
-            }
-            
-            logAction(`Player picked up ${gameState.penaltyCount} cards`, 'player');
-            gameState.penaltyCount = 0;
-            gameState.penaltyType = '';
-            gameState.currentPlayer = 'ai';
-            setTimeout(aiTurn, 1000);
-            updateDisplay();
-        }
-
-        function declareLastCard() {
-            gameState.lastCardDeclared = true;
-            logAction('Player declared "Last Card!"', 'player');
-            showMessage('Last Card declared! 🗣️');
-            updateDisplay();
-        }
-
-        function applyLastCardPenalty() {
-            if (gameState.deck.length === 0) reshuffleDeck();
-            gameState.playerHand.push(gameState.deck.pop());
-            if (gameState.deck.length === 0) reshuffleDeck();
-            gameState.playerHand.push(gameState.deck.pop());
-            logAction('⚠️ Penalty! Player must declare "Last Card!" - Picked up 2 cards!', 'system');
-            showMessage('⚠️ Penalty! You must declare "Last Card!" - Picked up 2 cards!');
-            gameState.selectedCards = [];
             updateDisplay();
         }
 
@@ -1177,184 +983,431 @@
             updateDisplay();
         }
 
-        function reshuffleDeck() {
-            if (gameState.discardPile.length <= 1) return;
+        // Card Playing Logic
+        function playSelectedCards() {
+            if (gameState.selectedCards.length === 0 || gameState.currentPlayer !== 'player') return;
             
-            const topCard = gameState.discardPile.pop();
-            gameState.deck = [...gameState.discardPile];
-            gameState.discardPile = [topCard];
-            shuffleDeck();
-            logAction('Deck reshuffled', 'system');
+            const selectedCards = gameState.selectedCards.map(index => gameState.playerHand[index]);
+            
+            if (gameState.penaltyCount > 0) {
+                // Handle penalty stacking
+                if (selectedCards.length === 1 && canStackPenalty(selectedCards[0])) {
+                    playPenaltyStack(selectedCards[0]);
+                    return;
+                } else {
+                    addToLog('Cannot play - must pick up penalty or play valid penalty card!');
+                    return;
+                }
+            }
+            
+            if (isValidPlay(selectedCards)) {
+                // Remove cards from hand
+                gameState.selectedCards.sort((a, b) => b - a);
+                gameState.selectedCards.forEach(index => {
+                    const card = gameState.playerHand.splice(index, 1)[0];
+                    gameState.discardPile.push(card);
+                });
+                
+                const lastPlayedCard = gameState.discardPile[gameState.discardPile.length - 1];
+                addToLog(`You played ${formatCards(selectedCards)}`);
+                
+                // Handle power cards
+                handlePowerCard(lastPlayedCard, selectedCards.length > 1);
+                
+                gameState.selectedCards = [];
+                
+                // Check for win
+                if (gameState.playerHand.length === 0) {
+                    playerWins();
+                    return;
+                }
+                
+                // Check last card rule
+                if (gameState.playerHand.length === 1 && !gameState.lastCardDeclared) {
+                    addToLog('⚠️ Penalty! You must declare "Last Card!" - Picked up 2 cards!');
+                    gameState.playerHand.push(gameState.deck.pop(), gameState.deck.pop());
+                    gameState.lastCardDeclared = false;
+                }
+                
+                updateDisplay();
+                
+                // AI turn
+                setTimeout(() => {
+                    if (gameState.currentPlayer === 'player') {
+                        gameState.currentPlayer = 'ai';
+                        aiTurn();
+                    }
+                }, 1000);
+            } else {
+                addToLog('Cannot play - cards don\'t match current selection or top card!');
+            }
         }
 
-        function endGame(winner) {
-            const gameTime = Date.now() - gameState.gameStartTime;
-            const gameTimeSeconds = Math.floor(gameTime / 1000);
+        function isValidPlay(cards) {
+            if (cards.length === 0) return false;
             
-            logAction(`🎉 ${winner.toUpperCase()} WINS! Game duration: ${gameTimeSeconds}s`, 'system');
+            const topCard = gameState.discardPile[gameState.discardPile.length - 1];
+            
+            // Check if it's a run (same rank)
+            if (cards.length > 1) {
+                const rank = cards[0].rank;
+                return cards.every(card => card.rank === rank);
+            }
+            
+            // Single card - check suit or rank match, or if it's an Ace (wild)
+            const card = cards[0];
+            return card.suit === topCard.suit || card.rank === topCard.rank || card.rank === 'A';
+        }
+
+        function canStackPenalty(card) {
+            if (gameState.penaltyType === '2' && card.rank === '2') return true;
+            if (gameState.penaltyType === 'Black Jack' && (card.rank === 'J' && (card.suit === '♠' || card.suit === '♣'))) return true;
+            if (gameState.penaltyType === 'Black Jack' && (card.rank === 'J' && (card.suit === '♥' || card.suit === '♦'))) return true; // Red Jack cancels
+            return false;
+        }
+
+        function playPenaltyStack(card) {
+            gameState.playerHand.splice(gameState.selectedCards[0], 1);
+            gameState.discardPile.push(card);
+            gameState.selectedCards = [];
+            
+            if (card.rank === '2') {
+                gameState.penaltyCount += 2;
+                addToLog(`You played ${card.rank}${card.suit} - penalty stacked to ${gameState.penaltyCount} cards!`);
+            } else if (card.rank === 'J' && (card.suit === '♠' || card.suit === '♣')) {
+                gameState.penaltyCount += 6;
+                addToLog(`You played ${card.rank}${card.suit} - penalty stacked to ${gameState.penaltyCount} cards!`);
+            } else if (card.rank === 'J' && (card.suit === '♥' || card.suit === '♦')) {
+                gameState.penaltyCount = 0;
+                gameState.penaltyType = '';
+                addToLog(`You played ${card.rank}${card.suit} - Red Jack cancels the penalty!`);
+            }
+            
+            updateDisplay();
+            
+            setTimeout(() => {
+                gameState.currentPlayer = 'ai';
+                aiTurn();
+            }, 1000);
+        }
+
+        // Power Card Handling
+        function handlePowerCard(card, isInRun) {
+            if (isInRun) return; // Power cards in runs are covered
+            
+            switch (card.rank) {
+                case '2':
+                    gameState.penaltyCount = 2;
+                    gameState.penaltyType = '2';
+                    addToLog(`${card.rank}${card.suit} played - next player must pick up 2 cards!`);
+                    break;
+                case 'J':
+                    if (card.suit === '♠' || card.suit === '♣') {
+                        gameState.penaltyCount = 6;
+                        gameState.penaltyType = 'Black Jack';
+                        addToLog(`${card.rank}${card.suit} played - Black Jack! Next player must pick up 6 cards!`);
+                    }
+                    break;
+                case '8':
+                    addToLog(`${card.rank}${card.suit} played - next player's turn is skipped!`);
+                    // Skip will be handled in AI turn
+                    break;
+                case 'A':
+                    addToLog(`${card.rank}${card.suit} played - suit changed to ${card.suit}!`);
+                    break;
+            }
+        }
+
+        // AI Logic
+        function aiTurn() {
+            if (gameState.currentPlayer !== 'ai') return;
+            
+            updateDisplay();
+            
+            setTimeout(() => {
+                // Handle penalty
+                if (gameState.penaltyCount > 0) {
+                    // AI picks up penalty cards
+                    for (let i = 0; i < gameState.penaltyCount; i++) {
+                        if (gameState.deck.length > 0) {
+                            gameState.aiHand.push(gameState.deck.pop());
+                        }
+                    }
+                    addToLog(`AI picked up ${gameState.penaltyCount} cards!`);
+                    gameState.penaltyCount = 0;
+                    gameState.penaltyType = '';
+                    gameState.currentPlayer = 'player';
+                    updateDisplay();
+                    return;
+                }
+                
+                // Check for 8 skip
+                const topCard = gameState.discardPile[gameState.discardPile.length - 1];
+                if (topCard.rank === '8') {
+                    addToLog('AI\'s turn was skipped! Your turn.');
+                    gameState.currentPlayer = 'player';
+                    updateDisplay();
+                    return;
+                }
+                
+                // AI plays a card
+                const playableCard = findAIPlayableCard();
+                if (playableCard) {
+                    const cardIndex = gameState.aiHand.indexOf(playableCard);
+                    gameState.aiHand.splice(cardIndex, 1);
+                    gameState.discardPile.push(playableCard);
+                    
+                    addToLog(`AI played ${playableCard.rank}${playableCard.suit}`);
+                    
+                    // Handle AI power cards
+                    handleAIPowerCard(playableCard);
+                    
+                    // Check AI win
+                    if (gameState.aiHand.length === 0) {
+                        aiWins();
+                        return;
+                    }
+                } else {
+                    // AI draws a card
+                    if (gameState.deck.length > 0) {
+                        gameState.aiHand.push(gameState.deck.pop());
+                        addToLog('AI drew a card');
+                    }
+                }
+                
+                gameState.currentPlayer = 'player';
+                updateDisplay();
+            }, 1500);
+        }
+
+        function findAIPlayableCard() {
+            const topCard = gameState.discardPile[gameState.discardPile.length - 1];
+            
+            // Find matching cards
+            for (let card of gameState.aiHand) {
+                if (card.suit === topCard.suit || card.rank === topCard.rank || card.rank === 'A') {
+                    return card;
+                }
+            }
+            
+            return null;
+        }
+
+        function handleAIPowerCard(card) {
+            switch (card.rank) {
+                case '2':
+                    gameState.penaltyCount = 2;
+                    gameState.penaltyType = '2';
+                    addToLog(`AI played ${card.rank}${card.suit} - You must pick up 2 cards!`);
+                    break;
+                case 'J':
+                    if (card.suit === '♠' || card.suit === '♣') {
+                        gameState.penaltyCount = 6;
+                        gameState.penaltyType = 'Black Jack';
+                        addToLog(`AI played ${card.rank}${card.suit} - Black Jack! You must pick up 6 cards!`);
+                    }
+                    break;
+                case '8':
+                    addToLog(`AI played ${card.rank}${card.suit} - Your turn is skipped!`);
+                    setTimeout(() => {
+                        gameState.currentPlayer = 'ai';
+                        aiTurn();
+                    }, 1000);
+                    return;
+                case 'A':
+                    addToLog(`AI played ${card.rank}${card.suit} - Suit changed to ${card.suit}!`);
+                    break;
+            }
+        }
+
+        // Game Actions
+        function drawCard() {
+            if (gameState.currentPlayer !== 'player') return;
+            
+            if (gameState.penaltyCount > 0) {
+                // Pick up penalty cards
+                for (let i = 0; i < gameState.penaltyCount; i++) {
+                    if (gameState.deck.length > 0) {
+                        gameState.playerHand.push(gameState.deck.pop());
+                    }
+                }
+                addToLog(`You picked up ${gameState.penaltyCount} penalty cards!`);
+                gameState.penaltyCount = 0;
+                gameState.penaltyType = '';
+                
+                gameState.currentPlayer = 'ai';
+                updateDisplay();
+                setTimeout(() => aiTurn(), 1000);
+            } else {
+                // Normal draw
+                if (gameState.deck.length > 0) {
+                    gameState.playerHand.push(gameState.deck.pop());
+                    addToLog('You drew a card');
+                    updateDisplay();
+                }
+            }
+        }
+
+        function declareLastCard() {
+            if (gameState.playerHand.length === 1) {
+                gameState.lastCardDeclared = true;
+                addToLog('You declared "Last Card!"');
+                updateDisplay();
+            }
+        }
+
+        // Win Conditions
+        function playerWins() {
+            const gameTime = Math.floor((Date.now() - gameState.gameStartTime) / 1000);
+            addToLog(`🎉 You win! Game completed in ${gameTime} seconds!`);
             
             // Update statistics
-            gameState.sessionStats.games++;
-            gameState.totalStats.games++;
+            stats.session.games++;
+            stats.session.wins++;
+            stats.allTime.games++;
+            stats.allTime.wins++;
+            stats.records.currentStreak++;
             
-            if (winner === 'player') {
-                gameState.sessionStats.wins++;
-                gameState.totalStats.wins++;
-                gameState.totalStats.currentStreak++;
-                if (gameState.totalStats.currentStreak > gameState.totalStats.bestStreak) {
-                    gameState.totalStats.bestStreak = gameState.totalStats.currentStreak;
-                }
-                if (!gameState.totalStats.fastestWin || gameTimeSeconds < gameState.totalStats.fastestWin) {
-                    gameState.totalStats.fastestWin = gameTimeSeconds;
-                }
-            } else {
-                gameState.sessionStats.losses++;
-                gameState.totalStats.losses++;
-                gameState.totalStats.currentStreak = 0;
+            if (stats.records.currentStreak > stats.records.bestStreak) {
+                stats.records.bestStreak = stats.records.currentStreak;
             }
             
-            if (!gameState.totalStats.longestGame || gameTimeSeconds > gameState.totalStats.longestGame) {
-                gameState.totalStats.longestGame = gameTimeSeconds;
+            if (!stats.records.fastestWin || gameTime < stats.records.fastestWin) {
+                stats.records.fastestWin = gameTime;
             }
             
-            saveStats();
+            saveStatistics();
+            updateStatisticsDisplay();
             
-            // Show win message
-            showWinMessage(winner);
+            showWinMessage('🎉 YOU WIN! 🎉', `Game completed in ${gameTime} seconds!`);
         }
 
-        function showWinMessage(winner) {
-            const message = document.createElement('div');
-            message.className = 'win-message';
-            message.innerHTML = `
+        function aiWins() {
+            const gameTime = Math.floor((Date.now() - gameState.gameStartTime) / 1000);
+            addToLog(`⚡ AI wins! Game lasted ${gameTime} seconds.`);
+            
+            // Update statistics
+            stats.session.games++;
+            stats.session.losses++;
+            stats.allTime.games++;
+            stats.allTime.losses++;
+            stats.records.currentStreak = 0;
+            
+            if (!stats.records.longestGame || gameTime > stats.records.longestGame) {
+                stats.records.longestGame = gameTime;
+            }
+            
+            saveStatistics();
+            updateStatisticsDisplay();
+            
+            showWinMessage('⚡ AI WINS! ⚡', `Game lasted ${gameTime} seconds.`);
+        }
+
+        function showWinMessage(title, subtitle) {
+            const winDiv = document.createElement('div');
+            winDiv.className = 'win-message';
+            winDiv.innerHTML = `
                 <button class="win-close" onclick="this.parentElement.remove()">×</button>
-                <div>${winner === 'player' ? '🎉 YOU WIN! 🎉' : '⚡ AI WINS! ⚡'}</div>
-                <div style="font-size: 14px; margin-top: 10px;">
-                    Final card: ${gameState.discardPile[gameState.discardPile.length - 1].rank}${gameState.discardPile[gameState.discardPile.length - 1].suit}
+                <div>${title}</div>
+                <div style="font-size: 16px; margin-top: 10px;">${subtitle}</div>
+                <div style="margin-top: 15px;">
+                    <button onclick="startNewGame(); this.parentElement.parentElement.remove();" style="padding: 10px 20px; margin-right: 10px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">Play Again</button>
+                    <button onclick="showScreen('menu'); this.parentElement.parentElement.remove();" style="padding: 10px 20px; background: #FF9800; color: white; border: none; border-radius: 5px; cursor: pointer;">Menu</button>
                 </div>
-                <button class="control-btn" onclick="startNewGame(); this.parentElement.remove();" style="margin-top: 15px;">
-                    Play Again
-                </button>
             `;
-            document.body.appendChild(message);
+            document.body.appendChild(winDiv);
             
             // Auto-remove after 10 seconds
             setTimeout(() => {
-                if (message.parentElement) {
-                    message.remove();
+                if (winDiv.parentElement) {
+                    winDiv.remove();
                 }
             }, 10000);
         }
 
-        function showMessage(text) {
-            document.getElementById('gameMessage').textContent = text;
-        }
-
-        function logAction(action, type) {
+        // Logging
+        function addToLog(message) {
             const timestamp = new Date().toLocaleTimeString();
-            const entry = { timestamp, action, type };
-            gameState.gameLog.push(entry);
+            gameLog.push({ time: timestamp, message });
             
-            // Update log display if visible
-            if (document.getElementById('log').classList.contains('active')) {
-                updateLogDisplay();
+            // Keep only last 100 entries
+            if (gameLog.length > 100) {
+                gameLog.shift();
             }
+            
+            updateLogDisplay();
         }
 
         function updateLogDisplay() {
-            const logEntries = document.getElementById('logEntries');
-            logEntries.innerHTML = '';
+            const logContainer = document.getElementById('game-log');
+            logContainer.innerHTML = '';
             
-            gameState.gameLog.forEach(entry => {
-                const entryDiv = document.createElement('div');
-                entryDiv.className = 'log-entry';
-                entryDiv.innerHTML = `
-                    <div class="log-timestamp">[${entry.timestamp}] ${entry.type.toUpperCase()}</div>
-                    <div>${entry.action}</div>
+            gameLog.slice(-20).forEach(entry => {
+                const logEntry = document.createElement('div');
+                logEntry.className = 'log-entry';
+                logEntry.innerHTML = `
+                    <div class="log-timestamp">[${entry.time}]</div>
+                    <div>${entry.message}</div>
                 `;
-                logEntries.appendChild(entryDiv);
+                logContainer.appendChild(logEntry);
             });
             
-            // Scroll to bottom
-            logEntries.scrollTop = logEntries.scrollHeight;
+            logContainer.scrollTop = logContainer.scrollHeight;
         }
 
-        function loadStats() {
+        // Statistics
+        function updateStatisticsDisplay() {
+            // Session stats
+            document.getElementById('session-games').textContent = stats.session.games;
+            document.getElementById('session-wins').textContent = stats.session.wins;
+            document.getElementById('session-losses').textContent = stats.session.losses;
+            document.getElementById('session-winrate').textContent = 
+                stats.session.games > 0 ? Math.round((stats.session.wins / stats.session.games) * 100) + '%' : '0%';
+            
+            // All time stats
+            document.getElementById('total-games').textContent = stats.allTime.games;
+            document.getElementById('total-wins').textContent = stats.allTime.wins;
+            document.getElementById('total-losses').textContent = stats.allTime.losses;
+            document.getElementById('overall-winrate').textContent = 
+                stats.allTime.games > 0 ? Math.round((stats.allTime.wins / stats.allTime.games) * 100) + '%' : '0%';
+            
+            // Records
+            document.getElementById('fastest-win').textContent = 
+                stats.records.fastestWin ? stats.records.fastestWin + 's' : '--';
+            document.getElementById('longest-game').textContent = 
+                stats.records.longestGame ? stats.records.longestGame + 's' : '--';
+            document.getElementById('best-streak').textContent = stats.records.bestStreak;
+            document.getElementById('current-streak').textContent = stats.records.currentStreak;
+        }
+
+        function saveStatistics() {
+            localStorage.setItem('imperialBlackStats', JSON.stringify(stats));
+        }
+
+        function loadStatistics() {
             const saved = localStorage.getItem('imperialBlackStats');
             if (saved) {
-                const stats = JSON.parse(saved);
-                gameState.totalStats = { ...gameState.totalStats, ...stats };
+                stats = JSON.parse(saved);
             }
         }
 
-        function saveStats() {
-            localStorage.setItem('imperialBlackStats', JSON.stringify(gameState.totalStats));
-            updateStatsDisplay();
-        }
-
-        function updateStatsDisplay() {
-            // Session stats
-            document.getElementById('sessionGames').textContent = gameState.sessionStats.games;
-            document.getElementById('sessionWins').textContent = gameState.sessionStats.wins;
-            document.getElementById('sessionLosses').textContent = gameState.sessionStats.losses;
-            document.getElementById('sessionWinRate').textContent = 
-                gameState.sessionStats.games > 0 ? 
-                Math.round((gameState.sessionStats.wins / gameState.sessionStats.games) * 100) + '%' : '0%';
-            
-            // Total stats
-            document.getElementById('totalGames').textContent = gameState.totalStats.games;
-            document.getElementById('totalWins').textContent = gameState.totalStats.wins;
-            document.getElementById('totalLosses').textContent = gameState.totalStats.losses;
-            document.getElementById('totalWinRate').textContent = 
-                gameState.totalStats.games > 0 ? 
-                Math.round((gameState.totalStats.wins / gameState.totalStats.games) * 100) + '%' : '0%';
-            
-            document.getElementById('fastestWin').textContent = 
-                gameState.totalStats.fastestWin ? gameState.totalStats.fastestWin + 's' : '--';
-            document.getElementById('longestGame').textContent = 
-                gameState.totalStats.longestGame ? gameState.totalStats.longestGame + 's' : '--';
-            document.getElementById('bestStreak').textContent = gameState.totalStats.bestStreak;
-        }
-
-        function resetStats() {
+        function resetStatistics() {
             if (confirm('Are you sure you want to reset all statistics? This cannot be undone.')) {
-                gameState.sessionStats = { games: 0, wins: 0, losses: 0 };
-                gameState.totalStats = { games: 0, wins: 0, losses: 0, fastestWin: null, longestGame: null, bestStreak: 0, currentStreak: 0 };
-                localStorage.removeItem('imperialBlackStats');
-                updateStatsDisplay();
+                stats = {
+                    session: { games: 0, wins: 0, losses: 0 },
+                    allTime: { games: 0, wins: 0, losses: 0 },
+                    records: { fastestWin: null, longestGame: null, bestStreak: 0, currentStreak: 0 }
+                };
+                saveStatistics();
+                updateStatisticsDisplay();
+                addToLog('All statistics have been reset!');
             }
         }
 
-        function showRules() {
-            alert(`Imperial Black Rules:
-
-🎯 OBJECTIVE: Be the first to play all your cards
-
-🃏 POWER CARDS:
-• 2: Next player picks up 2 cards (stackable up to 8)
-• Black Jack (♠/♣): Next player picks up 6 cards (stackable up to 24)
-• Red Jack (♥/♦): Cancels Black Jack penalty
-• King: Reverses direction of play
-• 8: Skips next player's turn
-• Ace: Changes suit to suit of Ace played
-
-🗣️ LAST CARD RULE:
-Must declare "Last Card!" when down to one card or pick up 2 penalty cards
-
-🎮 HOW TO PLAY:
-• Match suit or rank of top card
-• Power cards can be played in runs
-• Click cards to select, then click "Play Selected"
-• Use "Last Card!" button when you have 1 card`);
+        // Utility Functions
+        function formatCards(cards) {
+            return cards.map(card => `${card.rank}${card.suit}`).join(', ');
         }
-
-        // Initialize on page load
-        window.onload = function() {
-            console.log('Page loaded, initializing...');
-            loadStats();
-            updateStatsDisplay();
-            showScreen('menu');
-        };
     </script>
 </body>
 </html>
