@@ -199,7 +199,7 @@
         .game-chaos-mode {
             background-color: #333;
             color: #FFD700;
-            padding: 5px 20px;
+            padding: 8px 20px;
             border-radius: 8px;
             font-size: 1rem;
             font-weight: bold;
@@ -207,10 +207,51 @@
             border: 2px solid #FFD700;
         }
 
+        .message {
+            position: absolute;
+            top: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 2px solid #FFD700;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            max-width: 400px;
+            z-index: 10;
+        }
+
+        .win-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 30px 50px;
+            border-radius: 20px;
+            font-size: 2rem;
+            font-weight: bold;
+            text-align: center;
+            border: 5px solid #FFD700;
+            z-index: 20;
+        }
+
+        .win-message.player-win {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .win-message.ai-win {
+            background-color: #dc3545;
+            color: white;
+        }
+
         .game-billboard {
             position: absolute;
-            width: 140px;
-            height: 90px;
+            width: 120px;
+            height: 80px;
             border: 4px solid #8B4513;
             border-radius: 10px;
             display: flex;
@@ -219,6 +260,7 @@
             justify-content: center;
             box-shadow: 0 4px 15px rgba(0,0,0,0.4);
             z-index: 5;
+            font-size: 12px;
         }
 
         .game-billboard-left {
@@ -243,6 +285,79 @@
             border-radius: 3px;
         }
 
+        .player-avatar {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            border: 3px solid #FFD700;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            z-index: 5;
+        }
+
+        .avatar-top {
+            top: 220px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #FF6B35;
+        }
+
+        .avatar-left {
+            top: 50%;
+            left: 80px;
+            transform: translateY(-50%);
+            background-color: #4ECDC4;
+        }
+
+        .avatar-right {
+            top: 50%;
+            right: 80px;
+            transform: translateY(-50%);
+            background-color: #45B7D1;
+        }
+
+        .avatar-bottom {
+            bottom: 200px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #96CEB4;
+        }
+
+        .ai-info {
+            position: absolute;
+            top: 150px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0,0,0,0.7);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 2px solid #007bff;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            z-index: 10;
+        }
+
+        .ai-cards {
+            position: absolute;
+            top: 180px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 5px;
+            z-index: 5;
+        }
+
+        .ai-card {
+            width: 25px;
+            height: 35px;
+        }
+
         .game-table {
             position: absolute;
             top: 50%;
@@ -250,15 +365,47 @@
             transform: translate(-50%, -50%);
             width: 400px;
             height: 250px;
-            background: radial-gradient(ellipse at center, #0d5016 0%, #0a4013 50%, #083010 100%);
-            border: 12px solid #8B4513;
+            background: radial-gradient(ellipse, #0D5016 0%, #0A4013 100%);
             border-radius: 50%;
+            border: 12px solid #8B4513;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 60px;
-            box-shadow: inset 0 0 40px rgba(0,0,0,0.4), 0 10px 30px rgba(0,0,0,0.3);
-            z-index: 5;
+            gap: 40px;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.5), 0 10px 30px rgba(0,0,0,0.3);
+            z-index: 3;
+        }
+
+        .penalty-counter {
+            position: absolute;
+            top: 50%;
+            left: -120px;
+            transform: translateY(-50%);
+            background-color: #dc3545;
+            color: white;
+            padding: 10px;
+            border-radius: 10px;
+            border: 3px solid #FFD700;
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            z-index: 10;
+        }
+
+        .coverage-warning {
+            position: absolute;
+            top: 50%;
+            right: -120px;
+            transform: translateY(-50%);
+            background-color: #ffc107;
+            color: #333;
+            padding: 10px;
+            border-radius: 10px;
+            border: 3px solid #FFD700;
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            z-index: 10;
         }
 
         .card {
@@ -271,83 +418,53 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
             font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
             transition: all 0.2s ease;
-            user-select: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            position: relative;
         }
 
         .card.back {
             background-color: #1a365d;
-            color: white;
+            color: #FFD700;
         }
 
         .card.red {
-            color: red;
+            color: #dc3545;
         }
 
         .card.black {
-            color: black;
-        }
-
-        .card.playable {
-            box-shadow: 0 4px 12px rgba(255,215,0,0.8);
-            transform: translateY(-4px);
+            color: #333;
         }
 
         .card.selected {
-            border: 3px solid #FFD700;
-            transform: translateY(-8px);
-            box-shadow: 0 6px 20px rgba(255,215,0,0.8);
+            border-color: #FFD700;
+            border-width: 3px;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+            transform: translateY(-5px);
+        }
+
+        .card.playable {
+            border-color: #28a745;
+            border-width: 2px;
+            box-shadow: 0 0 10px rgba(40, 167, 69, 0.4);
+        }
+
+        .card.playable:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.6);
         }
 
         .card-rank {
-            font-size: 16px;
+            font-size: 14px;
+            position: absolute;
+            top: 5px;
+            left: 5px;
         }
 
         .card-suit {
-            font-size: 20px;
-        }
-
-        .player-avatar {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            border: 4px solid #333;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             font-size: 24px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-            position: absolute;
-        }
-
-        .avatar-top {
-            top: 220px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: linear-gradient(45deg, #FFD700, #FFD700dd);
-        }
-
-        .avatar-left {
-            top: 300px;
-            left: 200px;
-            background: linear-gradient(45deg, #FF6B35, #FF6B35dd);
-        }
-
-        .avatar-right {
-            top: 300px;
-            right: 200px;
-            background: linear-gradient(45deg, #00BFFF, #00BFFFdd);
-        }
-
-        .avatar-bottom {
-            bottom: 200px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: linear-gradient(45deg, #32CD32, #32CD32dd);
         }
 
         .player-hand {
@@ -355,53 +472,63 @@
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
+            text-align: center;
             z-index: 10;
         }
 
         .hand-info {
-            background-color: rgba(255,255,255,0.95);
+            background-color: rgba(0,0,0,0.7);
+            color: white;
             padding: 8px 16px;
-            border-radius: 15px;
-            font-size: 12px;
-            font-weight: bold;
-            color: #333;
+            border-radius: 8px;
             border: 2px solid #28a745;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 10px;
         }
 
         .cards-container {
             display: flex;
             gap: 6px;
-            flex-wrap: wrap;
             justify-content: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
             max-width: 800px;
         }
 
         .controls {
             display: flex;
             gap: 10px;
-            flex-wrap: wrap;
             justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
         }
 
         .btn {
-            padding: 12px 20px;
-            border: 2px solid #333;
+            padding: 10px 20px;
+            border: none;
             border-radius: 8px;
-            cursor: pointer;
             font-size: 14px;
             font-weight: bold;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            cursor: pointer;
             transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .btn-primary {
             background-color: #28a745;
             color: white;
-            border-color: #FFD700;
         }
 
         .btn-secondary {
@@ -409,320 +536,144 @@
             color: white;
         }
 
-        .btn-warning {
-            background-color: #ffc107;
-            color: black;
-        }
-
         .btn-danger {
             background-color: #dc3545;
             color: white;
-            border-color: #FFD700;
         }
 
-        .btn:hover {
-            transform: translateY(-2px);
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .message {
-            position: absolute;
-            top: 100px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(0,0,0,0.9);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: bold;
-            z-index: 20;
-            border: 2px solid #FFD700;
-            max-width: 400px;
-            text-align: center;
-        }
-
-        .win-message {
-            position: absolute;
-            top: 30%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            padding: 30px 50px;
-            border-radius: 25px;
-            font-size: 3rem;
-            font-weight: bold;
-            z-index: 30;
-            border: 5px solid #FFD700;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
-        }
-
-        .win-message.player-win {
-            background-color: #28a745;
-            color: white;
-        }
-
-        .win-message.ai-win {
-            background-color: #dc3545;
-            color: white;
-        }
-
-        .penalty-counter {
-            position: absolute;
-            left: -120px;
-            top: 50%;
-            transform: translateY(-50%);
-            background-color: #dc3545;
-            color: white;
-            padding: 10px 15px;
-            border-radius: 15px;
-            font-size: 14px;
-            font-weight: bold;
-            border: 3px solid #FFD700;
-            text-align: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-            animation: pulse 1s infinite;
-        }
-
-        .coverage-warning {
-            position: absolute;
-            right: -140px;
-            top: 50%;
-            transform: translateY(-50%);
+        .btn-warning {
             background-color: #ffc107;
             color: #333;
-            padding: 10px 15px;
-            border-radius: 15px;
-            font-size: 12px;
-            font-weight: bold;
-            border: 2px solid #333;
-            text-align: center;
         }
 
         .last-card-bubble {
             position: absolute;
-            bottom: 250px;
-            right: 100px;
-            background-color: #FFD700;
-            color: #333;
-            padding: 15px 25px;
-            border-radius: 25px;
-            font-size: 18px;
-            font-weight: bold;
-            border: 3px solid #333;
-            z-index: 15;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        }
-
-        .last-card-bubble::after {
-            content: '';
-            position: absolute;
-            bottom: -10px;
-            left: 30px;
-            width: 0;
-            height: 0;
-            border-left: 10px solid transparent;
-            border-right: 10px solid transparent;
-            border-top: 10px solid #FFD700;
-        }
-
-        .ai-info {
-            position: absolute;
-            top: 250px;
+            bottom: 180px;
             left: 50%;
             transform: translateX(-50%);
-            background-color: rgba(255,255,255,0.95);
+            background-color: #dc3545;
+            color: white;
             padding: 8px 16px;
-            border-radius: 15px;
-            font-size: 12px;
+            border-radius: 20px;
+            font-size: 14px;
             font-weight: bold;
-            color: #333;
-            border: 2px solid #00BFFF;
+            border: 2px solid #FFD700;
+            animation: bounce 1s infinite;
+            z-index: 15;
         }
 
-        .ai-cards {
-            position: absolute;
-            top: 280px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 3px;
-            z-index: 8;
-        }
-
-        .ai-card {
-            width: 50px;
-            height: 70px;
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+            40% { transform: translateX(-50%) translateY(-10px); }
+            60% { transform: translateX(-50%) translateY(-5px); }
         }
 
         @keyframes pulse {
-            0% { transform: translateY(-50%) scale(1); }
-            50% { transform: translateY(-50%) scale(1.05); }
-            100% { transform: translateY(-50%) scale(1); }
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
 
-        /* Rules Screen Styles */
+        /* Rules Screen */
         .rules-screen {
-            background-color: #ffffff;
-            color: #000000;
+            background: linear-gradient(to bottom, #f8f9fa 0%, #e9ecef 100%);
             padding: 20px;
+            overflow-y: auto;
         }
 
-        .rules-container {
-            max-width: 1000px;
+        .rules-content {
+            max-width: 800px;
             margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
 
         .rules-title {
-            font-size: 3rem;
-            font-weight: bold;
             text-align: center;
-            margin-bottom: 30px;
             color: #333;
-        }
-
-        .rules-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 40px;
-            margin-bottom: 40px;
-        }
-
-        .rules-section h2 {
-            font-size: 1.5rem;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
             font-weight: bold;
+        }
+
+        .rules-section {
+            margin-bottom: 25px;
+        }
+
+        .rules-section h3 {
+            color: #28a745;
             margin-bottom: 15px;
+            font-size: 1.3rem;
+            border-bottom: 2px solid #28a745;
+            padding-bottom: 5px;
         }
 
-        .rules-section p, .rules-section li {
-            font-size: 1rem;
-            line-height: 1.6;
+        .rules-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .rules-list li {
             margin-bottom: 10px;
-        }
-
-        .rules-section ul {
-            padding-left: 20px;
+            padding: 8px 12px;
+            background-color: #f8f9fa;
+            border-left: 4px solid #28a745;
+            border-radius: 4px;
         }
 
         .power-card {
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 10px;
-            border: 1px solid;
-        }
-
-        .power-card.ace {
             background-color: #fff3cd;
-            border-color: #ffeaa7;
+            border-left-color: #ffc107;
         }
 
-        .power-card.two {
-            background-color: #d1ecf1;
-            border-color: #bee5eb;
-        }
-
-        .power-card.jack {
-            background-color: #f8d7da;
-            border-color: #f5c6cb;
-        }
-
-        .power-card.eight {
-            background-color: #d4edda;
-            border-color: #c3e6cb;
-        }
-
-        .power-card.king-queen {
-            background-color: #e2e3e5;
-            border-color: #d6d8db;
-        }
-
-        .back-button {
+        .back-btn {
+            display: block;
+            margin: 30px auto 0;
+            padding: 15px 30px;
             background-color: #6c757d;
             color: white;
             border: none;
-            padding: 12px 30px;
-            border-radius: 8px;
-            font-size: 1rem;
+            border-radius: 10px;
+            font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            display: block;
-            margin: 0 auto;
+            transition: all 0.2s ease;
         }
 
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .main-title h1 {
-                font-size: 3rem;
-            }
-            
-            .game-title h1 {
-                font-size: 2rem;
-            }
-            
-            .billboard, .game-billboard {
-                width: 120px;
-                height: 80px;
-            }
-            
-            .billboard-left, .game-billboard-left {
-                left: 20px;
-            }
-            
-            .billboard-right, .game-billboard-right {
-                right: 20px;
-            }
-            
-            .game-table {
-                width: 300px;
-                height: 200px;
-            }
-            
-            .card {
-                width: 60px;
-                height: 84px;
-                font-size: 12px;
-            }
-            
-            .rules-grid {
-                grid-template-columns: 1fr;
-            }
+        .back-btn:hover {
+            background-color: #5a6268;
+            transform: translateY(-2px);
         }
     </style>
 </head>
 <body>
     <!-- Home Screen -->
-    <div id="home-screen" class="screen home-screen active">
+    <div id="home-screen" class="screen active home-screen">
         <div class="cloud cloud1"></div>
         <div class="cloud cloud2"></div>
         <div class="houses"></div>
         
         <div class="main-title">
-            <h1>Backyard</h1>
-            <h1>Black Jack</h1>
+            <h1>Backyard<br>Black Jack</h1>
             <div class="chaos-mode">CHAOS MODE</div>
         </div>
         
         <div class="billboard billboard-left">
             <div class="billboard-lights"></div>
-            <div style="font-size: 24px; font-weight: bold; color: #8B0000;">PLAY</div>
-            <div style="font-size: 24px; font-weight: bold; color: #8B0000;">NOW!</div>
-            <div style="font-size: 12px; color: #333; margin-top: 5px;">Win Big!</div>
-            <div style="font-size: 16px; margin-top: 5px;">🎰</div>
-            <div style="font-size: 10px; color: #8B0000;">Casino</div>
+            <div style="font-size: 18px; font-weight: bold; color: #8B0000;">PLAY</div>
+            <div style="font-size: 18px; font-weight: bold; color: #8B0000;">NOW!</div>
+            <div style="font-size: 10px; color: #333;">Win Big!</div>
+            <div style="font-size: 12px;">🎰</div>
         </div>
         
         <div class="billboard billboard-right">
             <div class="billboard-lights"></div>
-            <div style="font-size: 20px; font-weight: bold; color: #FFD700;">UPGRADE</div>
-            <div style="font-size: 20px; font-weight: bold; color: #FFD700;">NOW!</div>
-            <div style="font-size: 16px; color: #FFD700; margin-top: 5px;">⭐</div>
-            <div style="font-size: 12px; color: #FFD700;">Premium</div>
-            <div style="background-color: #FF6B35; color: white; padding: 4px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; margin-top: 5px;">BONUS</div>
+            <div style="font-size: 16px; font-weight: bold; color: #FFD700;">UPGRADE</div>
+            <div style="font-size: 16px; font-weight: bold; color: #FFD700;">NOW!</div>
+            <div style="font-size: 12px; color: #FFD700;">⭐ Premium</div>
+            <div style="background-color: #FF6B35; color: white; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: bold; margin-top: 3px;">BONUS</div>
         </div>
         
         <button class="play-button" onclick="startNewGame()">💎 PLAY GAME</button>
@@ -731,72 +682,60 @@
 
     <!-- Rules Screen -->
     <div id="rules-screen" class="screen rules-screen">
-        <div class="rules-container">
+        <div class="rules-content">
             <h1 class="rules-title">How to Play Imperial Black</h1>
             
-            <div class="rules-grid">
-                <div class="rules-section">
-                    <h2 style="color: #dc3545;">🎯 Objective</h2>
-                    <p><strong>Be the first player to discard all your cards!</strong></p>
-                    
-                    <h2 style="color: #28a745; margin-top: 20px;">💎 How to Play</h2>
-                    <ul>
-                        <li>Match the <strong>suit</strong> or <strong>rank</strong> of the top card</li>
-                        <li>Click cards to select them (yellow glow), then click "Play Selected"</li>
-                        <li>Play <strong>runs</strong> - multiple cards of the same rank (any suits)</li>
-                        <li>Play <strong>suit sequences</strong> - K♥ → Q♥ → J♥ or 9♠ → 10♠ → J♠</li>
-                        <li>Click "Last Card!" when you have one card left</li>
-                        <li>Click "Clear Selection" to deselect cards</li>
-                        <li>If you can't play, click "Draw Card"</li>
-                    </ul>
-                </div>
-                
-                <div class="rules-section">
-                    <h2 style="color: #fd7e14;">💥 Power Cards</h2>
-                    
-                    <div class="power-card ace">
-                        <strong>Ace (A):</strong> Wild card - can be played on any card
-                    </div>
-                    <div class="power-card two">
-                        <strong>2:</strong> Next player MUST pick up 2 cards (can be stacked!)
-                    </div>
-                    <div class="power-card jack">
-                        <strong>Black Jack (J♠/J♣):</strong> Next player MUST pick up 5 cards (can be stacked!)
-                    </div>
-                    <div class="power-card eight">
-                        <strong>8:</strong> Must be covered with same suit or pick up 1 card
-                    </div>
-                    <div class="power-card king-queen">
-                        <strong>King/Queen:</strong> Must be covered with same suit or pick up 1 card
-                    </div>
-                    
-                    <h2 style="color: #6f42c1; margin-top: 20px;">🛡️ Power Card Protection</h2>
-                    <div class="power-card king-queen">
-                        <strong>Runs protect power cards!</strong> If you play a Black Jack or 2 as part of a run, it's covered - no penalty!
-                    </div>
-                    
-                    <h2 style="color: #6f42c1; margin-top: 20px;">⚠️ Last Card Rule</h2>
-                    <div class="power-card king-queen">
-                        <strong>Must declare "Last Card!"</strong> when you have one card left, or pick up 2 penalty cards!
-                    </div>
-                    
-                    <h2 style="color: #dc3545; margin-top: 20px;">🔥 Penalty Stacking</h2>
-                    <div class="power-card jack">
-                        <strong>Stack penalties!</strong> Play a 2 on a 2 to make opponent pick up 4 cards! Stack Black Jacks for 10 cards!
-                    </div>
-                </div>
+            <div class="rules-section">
+                <h3>🎯 Objective</h3>
+                <p><strong>Be the first player to discard all your cards!</strong></p>
             </div>
-            
-            <button class="back-button" onclick="showHome()">🏠 Back to Menu</button>
+
+            <div class="rules-section">
+                <h3>💎 How to Play</h3>
+                <ul class="rules-list">
+                    <li>Match the <strong>suit</strong> or <strong>rank</strong> of the top card</li>
+                    <li>Click cards to select them (yellow glow), then click "Play Selected"</li>
+                    <li>Play <strong>runs</strong> - multiple cards of the same rank (any suits)</li>
+                    <li>Play <strong>suit sequences</strong> - K♥ → Q♥ → J♥ or 9♠ → 10♠ → J♠</li>
+                    <li>Click "Last Card!" when you have one card left</li>
+                    <li>Click "Clear Selection" to deselect cards</li>
+                    <li>If you can't play, click "Draw Card"</li>
+                </ul>
+            </div>
+
+            <div class="rules-section">
+                <h3>💥 Power Cards</h3>
+                <ul class="rules-list">
+                    <li class="power-card"><strong>2:</strong> Next player picks up 2 cards (stackable up to 8!)</li>
+                    <li class="power-card"><strong>Black Jack (J♠/J♣):</strong> Next player picks up 6 cards (stackable up to 24!)</li>
+                    <li class="power-card"><strong>Red Jack (J♥/J♦):</strong> Cancels Black Jack pickup (must be played immediately)</li>
+                    <li class="power-card"><strong>King:</strong> Reverses direction of play</li>
+                    <li class="power-card"><strong>8:</strong> Skips next player's turn</li>
+                    <li class="power-card"><strong>Ace:</strong> Changes suit to suit of Ace played</li>
+                </ul>
+            </div>
+
+            <div class="rules-section">
+                <h3>🛡️ Power Card Protection</h3>
+                <p><strong>Runs protect power cards!</strong> If you play a Black Jack or 2 as part of a run, it's covered - no penalty!</p>
+            </div>
+
+            <div class="rules-section">
+                <h3>⚠️ Last Card Rule</h3>
+                <p><strong>Must declare "Last Card!"</strong> when you have one card left, or pick up 2 penalty cards!</p>
+            </div>
+
+            <div class="rules-section">
+                <h3>🔥 Penalty Stacking</h3>
+                <p><strong>Stack penalties!</strong> Play a 2 on a 2 to make opponent pick up 4 cards! Stack Black Jacks for up to 24 cards!</p>
+            </div>
+
+            <button class="back-btn" onclick="showHome()">🏠 Back to Menu</button>
         </div>
     </div>
 
     <!-- Game Screen -->
     <div id="game-screen" class="screen game-screen">
-        <div class="cloud cloud1"></div>
-        <div class="cloud cloud2"></div>
-        <div class="houses"></div>
-        
         <div class="game-title">
             <h1>Backyard Black Jack</h1>
             <div class="game-chaos-mode">CHAOS MODE</div>
@@ -839,9 +778,9 @@
             </div>
             
             <div id="coverage-warning" class="coverage-warning" style="display: none;">
-                <div>⚠️ COVERAGE ⚠️</div>
-                <div style="font-size: 14px; margin: 5px 0;">Play <span id="required-suit"></span></div>
-                <div>or pick up 1</div>
+                <div>⚠️ SKIP TURN ⚠️</div>
+                <div style="font-size: 14px; margin: 5px 0;">8 played!</div>
+                <div>Turn skipped</div>
             </div>
             
             <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
@@ -886,13 +825,15 @@
             currentPlayer: 'player',
             message: '',
             gameOver: false,
-            winner: null
+            winner: null,
+            direction: 1 // 1 for normal, -1 for reversed
         };
 
         let selectedCards = [];
         let lastCardDeclared = false;
         let mustPickupCards = 0;
-        let pendingCoverage = null;
+        let skipNextTurn = false;
+        let suitChanged = null; // For Ace suit changes
 
         // Card utilities
         const suits = ['♠', '♣', '♥', '♦'];
@@ -935,33 +876,54 @@
             gameState.discardPile = [topCard];
         }
 
+        function isBlackJack(card) {
+            return card.rank === 'J' && (card.suit === '♠' || card.suit === '♣');
+        }
+
+        function isRedJack(card) {
+            return card.rank === 'J' && (card.suit === '♥' || card.suit === '♦');
+        }
+
         function canPlayCard(card, topCard, selectedCards = []) {
-            if (pendingCoverage) {
-                if (pendingCoverage.type === 'KQ' && card.suit === pendingCoverage.suit) return true;
-                if (pendingCoverage.type === '8' && card.suit === pendingCoverage.suit) return true;
-                return false;
+            // Handle Red Jack cancellation of Black Jack penalty
+            if (mustPickupCards > 0 && isRedJack(card)) {
+                const lastCard = gameState.discardPile[gameState.discardPile.length - 1];
+                if (isBlackJack(lastCard)) {
+                    return true;
+                }
             }
 
+            // Handle penalty stacking
             if (mustPickupCards > 0) {
                 if (topCard.rank === '2' && card.rank === '2') return true;
-                if ((topCard.rank === 'J' && (topCard.suit === '♠' || topCard.suit === '♣')) &&
-                    (card.rank === 'J' && (card.suit === '♠' || card.suit === '♣'))) return true;
+                if (isBlackJack(topCard) && isBlackJack(card)) return true;
                 return false;
             }
             
-            if (card.suit === topCard.suit || card.rank === topCard.rank || card.rank === 'A') {
+            // Handle suit change from Ace
+            const effectiveSuit = suitChanged || topCard.suit;
+            
+            // Basic matching rules
+            if (card.suit === effectiveSuit || card.rank === topCard.rank || card.rank === 'A') {
                 return true;
             }
             
+            // Handle runs and sequences
             if (selectedCards.length > 0) {
                 const firstSelected = selectedCards[0];
                 
+                // Same rank run
                 if (card.rank === firstSelected.rank) return true;
                 
-                if ((firstSelected.rank === 'K' || firstSelected.rank === 'Q') && card.suit === firstSelected.suit) {
-                    return true;
+                // Suit sequences
+                if (selectedCards.length === 1 && card.suit === firstSelected.suit) {
+                    const firstRankIndex = ranks.indexOf(firstSelected.rank);
+                    const cardRankIndex = ranks.indexOf(card.rank);
+                    
+                    if (Math.abs(firstRankIndex - cardRankIndex) === 1) return true;
                 }
                 
+                // Continue suit sequence
                 if (selectedCards.length > 1) {
                     const allSameSuit = selectedCards.every(c => c.suit === firstSelected.suit);
                     if (allSameSuit && card.suit === firstSelected.suit) {
@@ -972,13 +934,6 @@
                         if (Math.abs(lastRankIndex - cardRankIndex) === 1) return true;
                     }
                 }
-                
-                if (selectedCards.length === 1 && card.suit === firstSelected.suit) {
-                    const firstRankIndex = ranks.indexOf(firstSelected.rank);
-                    const cardRankIndex = ranks.indexOf(card.rank);
-                    
-                    if (Math.abs(firstRankIndex - cardRankIndex) === 1) return true;
-                }
             }
             
             return false;
@@ -987,12 +942,10 @@
         function containsPowerCard(cards) {
             return cards.some(card => 
                 card.rank === '2' || 
-                (card.rank === 'J' && (card.suit === '♠' || card.suit === '♣'))
+                isBlackJack(card) ||
+                card.rank === '8' ||
+                card.rank === 'K'
             );
-        }
-
-        function needsCoverage(card) {
-            return card.rank === 'K' || card.rank === 'Q' || card.rank === '8';
         }
 
         // Screen management
@@ -1026,11 +979,13 @@
             gameState.message = 'Game Started! Match suit or rank, or play power cards!';
             gameState.gameOver = false;
             gameState.winner = null;
+            gameState.direction = 1;
             
             selectedCards = [];
             lastCardDeclared = false;
             mustPickupCards = 0;
-            pendingCoverage = null;
+            skipNextTurn = false;
+            suitChanged = null;
             
             showGame();
             updateDisplay();
@@ -1039,28 +994,17 @@
         function selectCard(cardIndex) {
             if (gameState.currentPlayer !== 'player' || gameState.gameOver) return;
             
-            if (pendingCoverage) {
-                const card = gameState.playerHand[cardIndex];
-                if (card.suit !== pendingCoverage.suit) {
-                    showMessage(`You must cover with a ${pendingCoverage.suit} card or pick up 1 card!`);
-                    return;
-                }
-            }
-            
-            if (mustPickupCards > 0) {
-                const card = gameState.playerHand[cardIndex];
-                const topCard = gameState.discardPile[gameState.discardPile.length - 1];
-                
-                if (!canPlayCard(card, topCard)) {
-                    showMessage(`You must pick up ${mustPickupCards} cards or stack a matching power card!`);
-                    return;
-                }
+            // Handle skip turn
+            if (skipNextTurn) {
+                showMessage('Your turn is skipped due to 8 card!');
+                return;
             }
             
             const card = gameState.playerHand[cardIndex];
             const isSelected = selectedCards.some(selected => selected.id === card.id);
             
             if (isSelected) {
+                // Deselect card
                 selectedCards = selectedCards.filter(selected => selected.id !== card.id);
             } else {
                 const topCard = gameState.discardPile[gameState.discardPile.length - 1];
@@ -1068,6 +1012,7 @@
                 if (canPlayCard(card, topCard, selectedCards)) {
                     selectedCards.push(card);
                 } else {
+                    // Try starting new selection
                     if (canPlayCard(card, topCard, [])) {
                         selectedCards = [card];
                     } else {
@@ -1082,6 +1027,17 @@
         function playSelectedCards() {
             if (selectedCards.length === 0 || gameState.currentPlayer !== 'player' || gameState.gameOver) return;
 
+            // Handle skip turn
+            if (skipNextTurn) {
+                skipNextTurn = false;
+                gameState.currentPlayer = 'ai';
+                showMessage('Your turn was skipped due to 8 card!');
+                selectedCards = [];
+                updateDisplay();
+                setTimeout(() => aiTurn(), 1500);
+                return;
+            }
+
             const topCard = gameState.discardPile[gameState.discardPile.length - 1];
             const firstCard = selectedCards[0];
             
@@ -1092,6 +1048,24 @@
                 return;
             }
 
+            // Handle Red Jack cancellation
+            if (mustPickupCards > 0 && selectedCards.length === 1 && isRedJack(selectedCards[0])) {
+                const lastCard = gameState.discardPile[gameState.discardPile.length - 1];
+                if (isBlackJack(lastCard)) {
+                    gameState.playerHand = gameState.playerHand.filter(card => 
+                        !selectedCards.some(selected => selected.id === card.id)
+                    );
+                    gameState.discardPile.push(...selectedCards);
+                    gameState.currentPlayer = 'ai';
+                    showMessage(`Red Jack cancels Black Jack penalty!`);
+                    selectedCards = [];
+                    mustPickupCards = 0;
+                    updateDisplay();
+                    setTimeout(() => aiTurn(), 1500);
+                    return;
+                }
+            }
+
             // Handle penalty stacking
             if (mustPickupCards > 0) {
                 const lastPlayedCard = selectedCards[selectedCards.length - 1];
@@ -1099,9 +1073,8 @@
                 
                 if (lastPlayedCard.rank === '2' && topCard.rank === '2') {
                     newPenalty += 2;
-                } else if (lastPlayedCard.rank === 'J' && (lastPlayedCard.suit === '♠' || lastPlayedCard.suit === '♣') &&
-                           topCard.rank === 'J' && (topCard.suit === '♠' || topCard.suit === '♣')) {
-                    newPenalty += 5;
+                } else if (isBlackJack(lastPlayedCard) && isBlackJack(topCard)) {
+                    newPenalty += 6;
                 }
                 
                 gameState.playerHand = gameState.playerHand.filter(card => 
@@ -1118,30 +1091,6 @@
                 
                 setTimeout(() => aiTurn(newPenalty), 1500);
                 return;
-            }
-
-            // Handle pending coverage
-            if (pendingCoverage) {
-                const lastPlayedCard = selectedCards[selectedCards.length - 1];
-                
-                if ((pendingCoverage.type === 'KQ' && lastPlayedCard.suit === pendingCoverage.suit) ||
-                    (pendingCoverage.type === '8' && lastPlayedCard.suit === pendingCoverage.suit)) {
-                    
-                    gameState.playerHand = gameState.playerHand.filter(card => 
-                        !selectedCards.some(selected => selected.id === card.id)
-                    );
-
-                    gameState.discardPile.push(...selectedCards);
-                    gameState.currentPlayer = 'ai';
-                    showMessage(`You covered ${pendingCoverage.type === 'KQ' ? 'King/Queen' : '8'} with ${lastPlayedCard.rank}${lastPlayedCard.suit}!`);
-
-                    selectedCards = [];
-                    pendingCoverage = null;
-                    updateDisplay();
-                    
-                    setTimeout(() => aiTurn(), 1500);
-                    return;
-                }
             }
 
             // Remove selected cards from hand
@@ -1178,40 +1127,63 @@
                 return;
             }
 
-            // Check if last played card needs coverage
-            if (selectedCards.length === 1 && needsCoverage(lastPlayedCard)) {
-                pendingCoverage = {
-                    type: lastPlayedCard.rank === '8' ? '8' : 'KQ',
-                    suit: lastPlayedCard.suit
-                };
-                
-                showMessage(`You played ${lastPlayedCard.rank}${lastPlayedCard.suit} - you must cover it with a ${lastPlayedCard.suit} or pick up 1 card!`);
-                selectedCards = [];
-                updateDisplay();
-                return;
-            }
-
-            // Handle power cards
+            // Handle power card effects (only if single card, not in run)
             let aiPenalty = 0;
+            let message = '';
+            
             if (selectedCards.length === 1) {
+                // Single card - power card effects apply
                 if (lastPlayedCard.rank === '2') {
                     aiPenalty = 2;
-                } else if (lastPlayedCard.rank === 'J' && (lastPlayedCard.suit === '♠' || lastPlayedCard.suit === '♣')) {
-                    aiPenalty = 5;
+                } else if (isBlackJack(lastPlayedCard)) {
+                    aiPenalty = 6;
+                } else if (lastPlayedCard.rank === '8') {
+                    skipNextTurn = true; // Skip AI's next turn
+                    message = `You played 8${lastPlayedCard.suit} - AI's turn is skipped!`;
+                } else if (lastPlayedCard.rank === 'K') {
+                    gameState.direction *= -1;
+                    message = `You played King - direction reversed!`;
+                } else if (lastPlayedCard.rank === 'A') {
+                    suitChanged = lastPlayedCard.suit;
+                    message = `You played Ace - suit changed to ${lastPlayedCard.suit}!`;
+                }
+            } else {
+                // Multiple cards (run) - power cards are covered
+                if (containsPowerCard(selectedCards)) {
+                    message = `You played a run of ${selectedCards.length} cards! Power cards covered!`;
+                } else {
+                    message = `You played a run of ${selectedCards.length} cards!`;
                 }
             }
 
+            if (!message) {
+                message = `You played ${lastPlayedCard.rank}${lastPlayedCard.suit}${aiPenalty > 0 ? ` - AI must pick up ${aiPenalty}!` : ''}`;
+            }
+
             gameState.currentPlayer = 'ai';
-            showMessage(selectedCards.length > 1 ? 
-                `You played a run of ${selectedCards.length} cards!${containsPowerCard(selectedCards) ? ' Power cards covered!' : ''}` :
-                `You played ${lastPlayedCard.rank}${lastPlayedCard.suit}${aiPenalty > 0 ? ` - AI must pick up ${aiPenalty}!` : ''}`
-            );
+            showMessage(message);
 
             selectedCards = [];
             lastCardDeclared = false;
+            
+            // Clear suit change after one turn (unless another Ace is played)
+            if (lastPlayedCard.rank !== 'A') {
+                suitChanged = null;
+            }
+            
             updateDisplay();
 
-            setTimeout(() => aiTurn(aiPenalty), 1500);
+            // Handle skip turn
+            if (skipNextTurn) {
+                skipNextTurn = false;
+                gameState.currentPlayer = 'player';
+                setTimeout(() => {
+                    showMessage('AI\'s turn was skipped! Your turn.');
+                    updateDisplay();
+                }, 1500);
+            } else {
+                setTimeout(() => aiTurn(aiPenalty), 1500);
+            }
         }
 
         function aiTurn(pickupPenalty = 0) {
@@ -1227,14 +1199,31 @@
                 
                 gameState.aiHand.push(...penaltyCards);
                 gameState.currentPlayer = 'player';
-                showMessage(`AI picked up ${pickupPenalty} cards and played! Your turn.`);
+                showMessage(`AI picked up ${pickupPenalty} cards! Your turn.`);
                 updateDisplay();
                 return;
             }
 
             const topCard = gameState.discardPile[gameState.discardPile.length - 1];
+            const effectiveSuit = suitChanged || topCard.suit;
+            
+            // Check for Red Jack to cancel Black Jack penalty
+            if (mustPickupCards > 0 && isBlackJack(topCard)) {
+                const redJacks = gameState.aiHand.filter(isRedJack);
+                if (redJacks.length > 0) {
+                    const cardToPlay = redJacks[0];
+                    gameState.aiHand = gameState.aiHand.filter(card => card.id !== cardToPlay.id);
+                    gameState.discardPile.push(cardToPlay);
+                    gameState.currentPlayer = 'player';
+                    showMessage(`AI played Red Jack to cancel Black Jack penalty!`);
+                    mustPickupCards = 0;
+                    updateDisplay();
+                    return;
+                }
+            }
+            
             const playableCards = gameState.aiHand.filter(card => 
-                card.suit === topCard.suit || card.rank === topCard.rank || card.rank === 'A'
+                card.suit === effectiveSuit || card.rank === topCard.rank || card.rank === 'A'
             );
 
             if (playableCards.length > 0) {
@@ -1242,10 +1231,21 @@
                 gameState.aiHand = gameState.aiHand.filter(card => card.id !== cardToPlay.id);
                 
                 let playerPenalty = 0;
+                let message = `AI played ${cardToPlay.rank}${cardToPlay.suit}`;
+                
                 if (cardToPlay.rank === '2') {
                     playerPenalty = 2;
-                } else if (cardToPlay.rank === 'J' && (cardToPlay.suit === '♠' || cardToPlay.suit === '♣')) {
-                    playerPenalty = 5;
+                } else if (isBlackJack(cardToPlay)) {
+                    playerPenalty = 6;
+                } else if (cardToPlay.rank === '8') {
+                    skipNextTurn = true;
+                    message += ' - Your turn is skipped!';
+                } else if (cardToPlay.rank === 'K') {
+                    gameState.direction *= -1;
+                    message += ' - Direction reversed!';
+                } else if (cardToPlay.rank === 'A') {
+                    suitChanged = cardToPlay.suit;
+                    message += ` - Suit changed to ${cardToPlay.suit}!`;
                 }
 
                 gameState.discardPile.push(cardToPlay);
@@ -1256,11 +1256,11 @@
                     gameState.winner = 'ai';
                     showMessage('⚡ AI WINS! Better luck next time!');
                 } else {
-                    showMessage(`AI played ${cardToPlay.rank}${cardToPlay.suit}${playerPenalty > 0 ? ` - You must pick up ${playerPenalty} cards!` : ''}`);
-                }
-
-                if (playerPenalty > 0) {
-                    mustPickupCards = playerPenalty;
+                    if (playerPenalty > 0) {
+                        message += ` You must pick up ${playerPenalty} cards!`;
+                        mustPickupCards = playerPenalty;
+                    }
+                    showMessage(message);
                 }
             } else {
                 reshuffleDiscardPile();
@@ -1269,7 +1269,7 @@
                     const drawnCard = gameState.deck.pop();
                     gameState.aiHand.push(drawnCard);
                     gameState.currentPlayer = 'player';
-                    showMessage('AI drew a card and played!');
+                    showMessage('AI drew a card! Your turn.');
                 } else {
                     gameState.currentPlayer = 'player';
                     showMessage('AI passes turn - no cards available!');
@@ -1282,25 +1282,18 @@
         function drawCard() {
             if (gameState.currentPlayer !== 'player' || gameState.gameOver) return;
             
-            if (mustPickupCards > 0) {
-                forcedPickupCards();
+            // Handle skip turn
+            if (skipNextTurn) {
+                skipNextTurn = false;
+                gameState.currentPlayer = 'ai';
+                showMessage('Your turn was skipped due to 8 card!');
+                updateDisplay();
+                setTimeout(() => aiTurn(), 1500);
                 return;
             }
-
-            if (pendingCoverage) {
-                reshuffleDiscardPile();
-                
-                if (gameState.deck.length > 0) {
-                    const drawnCard = gameState.deck.pop();
-                    gameState.playerHand.push(drawnCard);
-                    gameState.currentPlayer = 'ai';
-                    showMessage(`You picked up 1 card as penalty for not covering ${pendingCoverage.type === 'KQ' ? 'King/Queen' : '8'}!`);
-                    
-                    pendingCoverage = null;
-                    updateDisplay();
-                    
-                    setTimeout(() => aiTurn(), 1500);
-                }
+            
+            if (mustPickupCards > 0) {
+                forcedPickupCards();
                 return;
             }
 
@@ -1414,11 +1407,9 @@
                 penaltyCounterEl.style.display = 'none';
             }
 
-            // Update coverage warning
+            // Update coverage/skip warning
             const coverageWarningEl = document.getElementById('coverage-warning');
-            const requiredSuitEl = document.getElementById('required-suit');
-            if (pendingCoverage) {
-                requiredSuitEl.textContent = pendingCoverage.suit;
+            if (skipNextTurn && gameState.currentPlayer === 'player') {
                 coverageWarningEl.style.display = 'block';
             } else {
                 coverageWarningEl.style.display = 'none';
@@ -1427,16 +1418,18 @@
             // Update deck
             const deckLabelEl = document.getElementById('deck-label');
             deckLabelEl.textContent = mustPickupCards > 0 ? `Pick ${mustPickupCards}` : 
-                                     pendingCoverage ? 'Pick 1' :
+                                     skipNextTurn && gameState.currentPlayer === 'player' ? 'Turn Skipped' :
                                      `Deck (${gameState.deck.length})`;
 
             // Update discard pile
             const discardPileEl = document.getElementById('discard-pile');
             const topCard = gameState.discardPile[gameState.discardPile.length - 1];
-            discardPileEl.className = `card ${topCard.suit === '♥' || topCard.suit === '♦' ? 'red' : 'black'}`;
+            const effectiveSuit = suitChanged || topCard.suit;
+            
+            discardPileEl.className = `card ${effectiveSuit === '♥' || effectiveSuit === '♦' ? 'red' : 'black'}`;
             discardPileEl.innerHTML = `
                 <div class="card-rank">${topCard.rank}</div>
-                <div class="card-suit">${topCard.suit}</div>
+                <div class="card-suit">${suitChanged ? suitChanged : topCard.suit}</div>
             `;
 
             // Update AI info and cards
@@ -1470,12 +1463,12 @@
                 const isSelected = selectedCards.some(selected => selected.id === card.id);
                 const topCard = gameState.discardPile[gameState.discardPile.length - 1];
                 const isPlayable = gameState.currentPlayer === 'player' && !gameState.gameOver &&
-                    canPlayCard(card, topCard, selectedCards);
+                    !skipNextTurn && canPlayCard(card, topCard, selectedCards);
                 
                 if (isPlayable) cardEl.classList.add('playable');
                 if (isSelected) cardEl.classList.add('selected');
                 
-                if ((mustPickupCards > 0 || pendingCoverage) && !isPlayable) {
+                if ((mustPickupCards > 0 || skipNextTurn) && !isPlayable) {
                     cardEl.style.opacity = '0.5';
                 }
                 
@@ -1483,15 +1476,18 @@
                 playerCardsEl.appendChild(cardEl);
             });
 
-            // Update controls
+            // Update controls - FIXED: Always show Play Selected button when cards are selected
             const controlsEl = document.getElementById('game-controls');
             controlsEl.innerHTML = '';
 
-            if (selectedCards.length > 0 && gameState.currentPlayer === 'player' && !gameState.gameOver) {
+            // CRITICAL FIX: Show Play Selected button whenever cards are selected, regardless of other conditions
+            if (selectedCards.length > 0) {
                 const playBtn = document.createElement('button');
                 playBtn.className = 'btn btn-primary';
                 playBtn.textContent = `🎯 Play Selected (${selectedCards.length})`;
                 playBtn.onclick = playSelectedCards;
+                // Only disable if game is over, not for other conditions
+                playBtn.disabled = gameState.gameOver;
                 controlsEl.appendChild(playBtn);
 
                 const clearBtn = document.createElement('button');
@@ -1503,9 +1499,9 @@
 
             if (gameState.currentPlayer === 'player' && !gameState.gameOver) {
                 const drawBtn = document.createElement('button');
-                drawBtn.className = `btn ${mustPickupCards > 0 ? 'btn-danger' : pendingCoverage ? 'btn-warning' : 'btn-warning'}`;
+                drawBtn.className = `btn ${mustPickupCards > 0 ? 'btn-danger' : skipNextTurn ? 'btn-warning' : 'btn-warning'}`;
                 drawBtn.textContent = mustPickupCards > 0 ? `⚠️ Pick Up ${mustPickupCards}` : 
-                                     pendingCoverage ? '⚠️ Pick Up 1' :
+                                     skipNextTurn ? '⚠️ Turn Skipped' :
                                      '🃏 Draw Card';
                 drawBtn.onclick = mustPickupCards > 0 ? forcedPickupCards : drawCard;
                 drawBtn.disabled = gameState.deck.length === 0 && gameState.discardPile.length <= 1;
