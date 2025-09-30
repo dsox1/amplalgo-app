@@ -141,6 +141,7 @@
             justify-content: center;
             gap: 5px;
             margin-top: 10px;
+            flex-wrap: wrap;
         }
 
         .card-back {
@@ -208,8 +209,8 @@
             margin: 20px 0;
             flex-wrap: wrap;
             max-width: 100%;
-            overflow-x: auto;
             padding: 10px;
+            min-height: 120px;
         }
 
         .card {
@@ -493,10 +494,10 @@
     <div class="nav-bar">
         <div class="nav-title">Imperial Black</div>
         <div class="nav-buttons">
-            <button class="nav-btn" onclick="showScreen('menu')">Menu</button>
-            <button class="nav-btn" onclick="showScreen('game')">Game</button>
-            <button class="nav-btn" onclick="showScreen('log')">Log</button>
-            <button class="nav-btn" onclick="showScreen('scores')">Scores</button>
+            <button class="nav-btn" id="menuNavBtn" onclick="showScreen('menu')">Menu</button>
+            <button class="nav-btn" id="gameNavBtn" onclick="showScreen('game')">Game</button>
+            <button class="nav-btn" id="logNavBtn" onclick="showScreen('log')">Log</button>
+            <button class="nav-btn" id="scoresNavBtn" onclick="showScreen('scores')">Scores</button>
         </div>
     </div>
 
@@ -552,6 +553,9 @@
                 </button>
                 <button class="control-btn danger" id="pickupBtn" onclick="pickupPenalty()" style="display: none;">
                     ⚠️ Pick Up <span id="pickupCount">0</span>
+                </button>
+                <button class="control-btn warning" onclick="showScreen('menu')">
+                    🏠 Back to Menu
                 </button>
             </div>
         </div>
@@ -685,14 +689,54 @@
         const ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
         const suitColors = { '♠': 'black', '♣': 'black', '♥': 'red', '♦': 'red' };
 
+        // Screen management
+        function showScreen(screenName) {
+            console.log('Switching to screen:', screenName);
+            
+            // Hide all screens
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            
+            // Show selected screen
+            const targetScreen = document.getElementById(screenName);
+            if (targetScreen) {
+                targetScreen.classList.add('active');
+            }
+            
+            // Update nav buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            const navBtn = document.getElementById(screenName + 'NavBtn');
+            if (navBtn) {
+                navBtn.classList.add('active');
+            }
+            
+            // Update displays based on screen
+            if (screenName === 'log') {
+                updateLogDisplay();
+            } else if (screenName === 'scores') {
+                updateStatsDisplay();
+            }
+        }
+
+        function startNewGame() {
+            showScreen('game');
+            initializeGame();
+        }
+
         // Initialize game
         function initializeGame() {
+            console.log('Initializing game...');
             loadStats();
             createDeck();
             dealCards();
             updateDisplay();
             logAction('Game started', 'system');
             gameState.gameStartTime = Date.now();
+            showMessage('Game Started! Match suit or rank, or play power cards!');
         }
 
         function createDeck() {
@@ -703,6 +747,7 @@
                 }
             }
             shuffleDeck();
+            console.log('Deck created with', gameState.deck.length, 'cards');
         }
 
         function shuffleDeck() {
@@ -719,6 +764,7 @@
             gameState.selectedCards = [];
             gameState.penaltyCount = 0;
             gameState.lastCardDeclared = false;
+            gameState.currentPlayer = 'player';
 
             // Deal 7 cards to each player
             for (let i = 0; i < 7; i++) {
@@ -728,6 +774,8 @@
 
             // Start discard pile
             gameState.discardPile.push(gameState.deck.pop());
+            
+            console.log('Cards dealt. Player hand:', gameState.playerHand.length, 'AI hand:', gameState.aiHand.length);
         }
 
         function updateDisplay() {
@@ -747,10 +795,12 @@
             }
 
             // Update discard pile
-            const topCard = gameState.discardPile[gameState.discardPile.length - 1];
-            const discardElement = document.getElementById('discardCard');
-            discardElement.textContent = `${topCard.rank}${topCard.suit}`;
-            discardElement.className = `discard-card ${suitColors[topCard.suit]}`;
+            if (gameState.discardPile.length > 0) {
+                const topCard = gameState.discardPile[gameState.discardPile.length - 1];
+                const discardElement = document.getElementById('discardCard');
+                discardElement.textContent = `${topCard.rank}${topCard.suit}`;
+                discardElement.className = `discard-card ${suitColors[topCard.suit]}`;
+            }
 
             // Update player hand
             updatePlayerHand();
@@ -845,6 +895,8 @@
         }
 
         function isCardPlayable(card) {
+            if (gameState.discardPile.length === 0) return false;
+            
             const topCard = gameState.discardPile[gameState.discardPile.length - 1];
             
             // Aces are always playable
@@ -940,6 +992,8 @@
             }
 
             // Check if first card matches top card
+            if (gameState.discardPile.length === 0) return false;
+            
             const topCard = gameState.discardPile[gameState.discardPile.length - 1];
             const firstCard = cards[0];
 
@@ -986,6 +1040,7 @@
                             gameState.penaltyCount = 0;
                             gameState.penaltyType = '';
                         }
+                        gameState.currentPlayer = opponent;
                     }
                     break;
 
@@ -1107,7 +1162,9 @@
         }
 
         function applyLastCardPenalty() {
+            if (gameState.deck.length === 0) reshuffleDeck();
             gameState.playerHand.push(gameState.deck.pop());
+            if (gameState.deck.length === 0) reshuffleDeck();
             gameState.playerHand.push(gameState.deck.pop());
             logAction('⚠️ Penalty! Player must declare "Last Card!" - Picked up 2 cards!', 'system');
             showMessage('⚠️ Penalty! You must declare "Last Card!" - Picked up 2 cards!');
@@ -1199,7 +1256,9 @@
             gameState.gameLog.push(entry);
             
             // Update log display if visible
-            updateLogDisplay();
+            if (document.getElementById('log').classList.contains('active')) {
+                updateLogDisplay();
+            }
         }
 
         function updateLogDisplay() {
@@ -1266,34 +1325,6 @@
             }
         }
 
-        // Screen management
-        function showScreen(screenName) {
-            // Hide all screens
-            document.querySelectorAll('.screen').forEach(screen => {
-                screen.classList.remove('active');
-            });
-            
-            // Show selected screen
-            document.getElementById(screenName).classList.add('active');
-            
-            // Update nav buttons
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            // Update displays based on screen
-            if (screenName === 'log') {
-                updateLogDisplay();
-            } else if (screenName === 'scores') {
-                updateStatsDisplay();
-            }
-        }
-
-        function startNewGame() {
-            showScreen('game');
-            initializeGame();
-        }
-
         function showRules() {
             alert(`Imperial Black Rules:
 
@@ -1319,8 +1350,10 @@ Must declare "Last Card!" when down to one card or pick up 2 penalty cards
 
         // Initialize on page load
         window.onload = function() {
+            console.log('Page loaded, initializing...');
             loadStats();
             updateStatsDisplay();
+            showScreen('menu');
         };
     </script>
 </body>
