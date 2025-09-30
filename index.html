@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Imperial Black - Complete Edition</title>
+    <title>Imperial Black - Backyard Card Game</title>
     <style>
         * {
             margin: 0;
@@ -12,64 +12,12 @@
         }
 
         body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(to bottom, #87CEEB 0%, #87CEEB 40%, #228B22 40%, #228B22 100%);
-            min-height: 100vh;
+            font-family: Arial, sans-serif;
             overflow-x: hidden;
         }
 
-        /* Navigation */
-        .nav-bar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 10px;
-            z-index: 1000;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .nav-title {
-            color: white;
-            font-size: 18px;
-            font-weight: bold;
-        }
-
-        .nav-buttons {
-            display: flex;
-            gap: 10px;
-        }
-
-        .nav-btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s;
-        }
-
-        .nav-btn.active {
-            background: #4CAF50;
-            color: white;
-        }
-
-        .nav-btn:not(.active) {
-            background: #666;
-            color: white;
-        }
-
-        .nav-btn:hover {
-            transform: scale(1.05);
-        }
-
-        /* Screens */
         .screen {
             display: none;
-            padding-top: 60px;
             min-height: 100vh;
         }
 
@@ -77,212 +25,263 @@
             display: block;
         }
 
-        /* Menu Screen */
-        .menu-screen {
+        /* Home Screen Styles */
+        .home-screen {
+            background: linear-gradient(to bottom, #87CEEB 0%, #87CEEB 40%, #228B22 40%, #228B22 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cloud {
+            position: absolute;
+            background-color: white;
+            border-radius: 50px;
+            opacity: 0.9;
+        }
+
+        .cloud1 {
+            top: 50px;
+            left: 100px;
+            width: 80px;
+            height: 40px;
+        }
+
+        .cloud2 {
+            top: 80px;
+            right: 150px;
+            width: 100px;
+            height: 50px;
+            opacity: 0.8;
+        }
+
+        .houses {
+            position: absolute;
+            top: 25%;
+            left: 0;
+            right: 0;
+            height: 15%;
+            background-color: #2F4F4F;
+            clip-path: polygon(0% 100%, 5% 85%, 15% 90%, 25% 75%, 35% 80%, 45% 65%, 55% 70%, 65% 55%, 75% 60%, 85% 45%, 95% 50%, 100% 55%, 100% 100%);
+            z-index: 1;
+        }
+
+        .main-title {
+            position: absolute;
+            top: 15%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            z-index: 10;
+        }
+
+        .main-title h1 {
+            font-size: 4.5rem;
+            font-weight: bold;
+            margin: 0;
+            color: #FFD700;
+            text-shadow: 4px 4px 8px rgba(0,0,0,0.8);
+            font-family: Impact, Arial Black, sans-serif;
+        }
+
+        .chaos-mode {
+            background-color: #333;
+            color: #FFD700;
+            padding: 10px 30px;
+            border-radius: 10px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-top: 10px;
+            border: 3px solid #FFD700;
+        }
+
+        .billboard {
+            position: absolute;
+            width: 180px;
+            height: 120px;
+            border: 6px solid #8B4513;
+            border-radius: 15px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            text-align: center;
-            padding: 20px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+            z-index: 5;
+        }
+
+        .billboard-left {
+            top: 180px;
+            left: 50px;
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+        }
+
+        .billboard-right {
+            top: 180px;
+            right: 50px;
+            background: linear-gradient(45deg, #8A2BE2, #4B0082);
+        }
+
+        .billboard-lights {
+            position: absolute;
+            top: -10px;
+            left: 10px;
+            right: 10px;
+            height: 8px;
+            background-color: #FF6B35;
+            border-radius: 4px;
+        }
+
+        .play-button {
+            position: absolute;
+            bottom: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #28a745;
+            color: white;
+            border: 4px solid #FFD700;
+            padding: 20px 50px;
+            border-radius: 15px;
+            font-size: 1.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+            transition: all 0.3s ease;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            z-index: 10;
+        }
+
+        .play-button:hover {
+            background-color: #218838;
+            transform: translateX(-50%) translateY(-5px);
+        }
+
+        .rules-button {
+            position: absolute;
+            bottom: 12%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #007bff;
+            color: white;
+            border: 3px solid #00BFFF;
+            padding: 15px 40px;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+            z-index: 10;
+        }
+
+        /* Game Screen Styles */
+        .game-screen {
+            background: linear-gradient(to bottom, #87CEEB 0%, #87CEEB 35%, #228B22 35%, #228B22 100%);
+            position: relative;
+            overflow: hidden;
         }
 
         .game-title {
-            font-size: 4rem;
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            z-index: 10;
+        }
+
+        .game-title h1 {
+            font-size: 2.5rem;
             font-weight: bold;
+            margin: 0;
             color: #FFD700;
-            text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
-            margin-bottom: 50px;
-            line-height: 1.2;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
+            font-family: Impact, Arial Black, sans-serif;
         }
 
-        .menu-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            justify-content: center;
-        }
-
-        .menu-btn {
-            padding: 15px 30px;
-            font-size: 18px;
-            font-weight: bold;
-            border: 3px solid #333;
-            border-radius: 15px;
-            cursor: pointer;
-            transition: all 0.3s;
-            min-width: 200px;
-        }
-
-        .menu-btn.play {
-            background: linear-gradient(45deg, #4CAF50, #45a049);
-            color: white;
-        }
-
-        .menu-btn.log {
-            background: linear-gradient(45deg, #2196F3, #1976D2);
-            color: white;
-        }
-
-        .menu-btn.scores {
-            background: linear-gradient(45deg, #FF9800, #F57C00);
-            color: white;
-        }
-
-        .menu-btn.help {
-            background: linear-gradient(45deg, #9C27B0, #7B1FA2);
-            color: white;
-        }
-
-        .menu-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-
-        /* Game Screen */
-        .game-screen {
-            padding: 20px;
-        }
-
-        .game-message {
-            background: rgba(0,0,0,0.8);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 10px;
-            text-align: center;
-            margin: 0 auto 20px;
-            max-width: 600px;
-            font-weight: bold;
-        }
-
-        .ai-section {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .ai-label {
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            display: inline-block;
-            margin-bottom: 10px;
-        }
-
-        .ai-cards {
-            display: flex;
-            justify-content: center;
-            gap: 5px;
-            flex-wrap: wrap;
-        }
-
-        .card-back {
-            width: 60px;
-            height: 84px;
-            background: linear-gradient(45deg, #1e3c72, #2a5298);
-            border: 2px solid #333;
+        .game-chaos-mode {
+            background-color: #333;
+            color: #FFD700;
+            padding: 5px 20px;
             border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #FFD700;
-            font-size: 24px;
+            font-size: 1rem;
+            font-weight: bold;
+            margin-top: 5px;
+            border: 2px solid #FFD700;
         }
 
-        .game-area {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 30px 0;
-        }
-
-        .deck-area {
-            background: rgba(139, 69, 19, 0.8);
-            border: 3px solid #8B4513;
-            border-radius: 50px;
-            padding: 20px 40px;
-            display: flex;
-            gap: 20px;
-            align-items: center;
-        }
-
-        .deck, .discard {
-            text-align: center;
-        }
-
-        .deck-card, .discard-card {
-            width: 80px;
-            height: 112px;
-            border: 2px solid #333;
+        .game-billboard {
+            position: absolute;
+            width: 140px;
+            height: 90px;
+            border: 4px solid #8B4513;
             border-radius: 10px;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
-            font-weight: bold;
-            margin-bottom: 5px;
-            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            z-index: 5;
         }
 
-        .deck-card {
-            background: linear-gradient(45deg, #1e3c72, #2a5298);
-            color: #FFD700;
+        .game-billboard-left {
+            top: 120px;
+            left: 30px;
+            background: linear-gradient(45deg, #FFD700, #FFA500);
         }
 
-        .discard-card {
-            background: white;
-            color: black;
+        .game-billboard-right {
+            top: 120px;
+            right: 30px;
+            background: linear-gradient(45deg, #8A2BE2, #4B0082);
         }
 
-        .player-section {
-            text-align: center;
+        .game-billboard-lights {
+            position: absolute;
+            top: -6px;
+            left: 8px;
+            right: 8px;
+            height: 6px;
+            background-color: #FF6B35;
+            border-radius: 3px;
         }
 
-        .player-label {
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            display: inline-block;
-            margin-bottom: 15px;
-        }
-
-        .player-cards {
+        .game-table {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            height: 250px;
+            background: radial-gradient(ellipse at center, #0d5016 0%, #0a4013 50%, #083010 100%);
+            border: 12px solid #8B4513;
+            border-radius: 50%;
             display: flex;
+            align-items: center;
             justify-content: center;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-bottom: 20px;
-            max-width: 100%;
-            overflow-x: auto;
-            padding: 10px;
+            gap: 60px;
+            box-shadow: inset 0 0 40px rgba(0,0,0,0.4), 0 10px 30px rgba(0,0,0,0.3);
+            z-index: 5;
         }
 
         .card {
             width: 70px;
             height: 98px;
-            background: white;
+            background-color: white;
             border: 2px solid #333;
             border-radius: 8px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s;
+            font-size: 14px;
             font-weight: bold;
-            position: relative;
-            flex-shrink: 0;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            transition: all 0.2s ease;
+            user-select: none;
         }
 
-        .card:hover {
-            transform: translateY(-10px);
-        }
-
-        .card.selected {
-            border-color: #FFD700;
-            box-shadow: 0 0 15px #FFD700;
-            transform: translateY(-15px);
+        .card.back {
+            background-color: #1a365d;
+            color: white;
         }
 
         .card.red {
@@ -293,476 +292,587 @@
             color: black;
         }
 
-        .game-controls {
+        .card.playable {
+            box-shadow: 0 4px 12px rgba(255,215,0,0.8);
+            transform: translateY(-4px);
+        }
+
+        .card.selected {
+            border: 3px solid #FFD700;
+            transform: translateY(-8px);
+            box-shadow: 0 6px 20px rgba(255,215,0,0.8);
+        }
+
+        .card-rank {
+            font-size: 16px;
+        }
+
+        .card-suit {
+            font-size: 20px;
+        }
+
+        .player-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 4px solid #333;
             display: flex;
+            align-items: center;
             justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            position: absolute;
+        }
+
+        .avatar-top {
+            top: 220px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(45deg, #FFD700, #FFD700dd);
+        }
+
+        .avatar-left {
+            top: 300px;
+            left: 200px;
+            background: linear-gradient(45deg, #FF6B35, #FF6B35dd);
+        }
+
+        .avatar-right {
+            top: 300px;
+            right: 200px;
+            background: linear-gradient(45deg, #00BFFF, #00BFFFdd);
+        }
+
+        .avatar-bottom {
+            bottom: 200px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(45deg, #32CD32, #32CD32dd);
+        }
+
+        .player-hand {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             gap: 15px;
-            flex-wrap: wrap;
-            margin-top: 20px;
+            z-index: 10;
         }
 
-        .game-btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
+        .hand-info {
+            background-color: rgba(255,255,255,0.95);
+            padding: 8px 16px;
+            border-radius: 15px;
+            font-size: 12px;
             font-weight: bold;
+            color: #333;
+            border: 2px solid #28a745;
+        }
+
+        .cards-container {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 800px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: 2px solid #333;
+            border-radius: 8px;
             cursor: pointer;
-            transition: all 0.3s;
             font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: all 0.2s ease;
         }
 
-        .play-btn {
-            background: linear-gradient(45deg, #4CAF50, #45a049);
+        .btn-primary {
+            background-color: #28a745;
+            color: white;
+            border-color: #FFD700;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
             color: white;
         }
 
-        .last-card-btn {
-            background: linear-gradient(45deg, #9C27B0, #7B1FA2);
+        .btn-warning {
+            background-color: #ffc107;
+            color: black;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
             color: white;
-            animation: pulse 1.5s infinite;
+            border-color: #FFD700;
         }
 
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
+        .btn:hover {
+            transform: translateY(-2px);
         }
 
-        .clear-btn {
-            background: linear-gradient(45deg, #FF5722, #D84315);
-            color: white;
-        }
-
-        .draw-btn {
-            background: linear-gradient(45deg, #2196F3, #1976D2);
-            color: white;
-        }
-
-        .menu-btn-game {
-            background: linear-gradient(45deg, #FF9800, #F57C00);
-            color: white;
-        }
-
-        .game-btn:hover {
-            transform: scale(1.05);
-        }
-
-        .game-btn:disabled {
+        .btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
 
-        /* Log Screen */
-        .log-screen {
-            display: flex;
-            padding: 20px;
-            gap: 20px;
-        }
-
-        .log-content {
-            flex: 2;
-            background: black;
-            border: 2px solid #00FF00;
-            border-radius: 10px;
-            padding: 20px;
-            color: #00FF00;
-            font-family: 'Courier New', monospace;
-            height: 70vh;
-            overflow-y: auto;
-        }
-
-        .log-title {
-            color: #00FF00;
-            font-size: 20px;
-            font-weight: bold;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .log-entry {
-            margin-bottom: 10px;
-            padding: 5px;
-            border-left: 3px solid #00FF00;
-            padding-left: 10px;
-        }
-
-        .log-timestamp {
-            color: #888;
-            font-size: 12px;
-        }
-
-        .ad-space {
-            flex: 1;
-            background: #f0f0f0;
-            border: 2px dashed #ccc;
-            border-radius: 10px;
-            padding: 20px;
-            text-align: center;
-            height: 70vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .ad-title {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 20px;
-            color: #666;
-        }
-
-        .sample-ad {
-            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+        .message {
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0,0,0,0.9);
             color: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-        }
-
-        /* Scores Screen */
-        .scores-screen {
-            display: flex;
-            padding: 20px;
-            gap: 20px;
-        }
-
-        .scores-content {
-            flex: 2;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 15px;
-            padding: 30px;
-            color: white;
-        }
-
-        .scores-title {
-            font-size: 28px;
-            font-weight: bold;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .stats-section {
-            margin-bottom: 30px;
-        }
-
-        .stats-header {
-            font-size: 20px;
-            font-weight: bold;
-            margin-bottom: 15px;
-            border-bottom: 2px solid rgba(255,255,255,0.3);
-            padding-bottom: 5px;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-
-        .stat-item {
-            background: rgba(255,255,255,0.1);
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 24px;
-            font-weight: bold;
-            color: #FFD700;
-        }
-
-        .stat-label {
+            padding: 10px 20px;
+            border-radius: 20px;
             font-size: 14px;
-            opacity: 0.8;
-        }
-
-        .reset-btn {
-            background: linear-gradient(45deg, #FF5722, #D84315);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            cursor: pointer;
             font-weight: bold;
-            margin-top: 20px;
+            z-index: 20;
+            border: 2px solid #FFD700;
+            max-width: 400px;
+            text-align: center;
         }
 
-        .reset-btn:hover {
-            transform: scale(1.05);
-        }
-
-        /* Win Message */
         .win-message {
-            position: fixed;
-            top: 50%;
+            position: absolute;
+            top: 30%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: linear-gradient(45deg, #FFD700, #FFA500);
-            color: black;
-            padding: 20px 40px;
-            border-radius: 15px;
-            font-size: 24px;
+            padding: 30px 50px;
+            border-radius: 25px;
+            font-size: 3rem;
             font-weight: bold;
+            z-index: 30;
+            border: 5px solid #FFD700;
             text-align: center;
-            z-index: 2000;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            max-width: 400px;
-            border: 3px solid #333;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
         }
 
-        .win-close {
-            position: absolute;
-            top: 5px;
-            right: 10px;
-            background: none;
-            border: none;
-            font-size: 20px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        /* Penalty Counter */
-        .penalty-counter {
-            position: fixed;
-            top: 120px;
-            right: 20px;
-            background: linear-gradient(45deg, #FF5722, #D84315);
+        .win-message.player-win {
+            background-color: #28a745;
             color: white;
-            padding: 15px;
-            border-radius: 10px;
+        }
+
+        .win-message.ai-win {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .penalty-counter {
+            position: absolute;
+            left: -120px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: #dc3545;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 15px;
+            font-size: 14px;
             font-weight: bold;
-            z-index: 1500;
+            border: 3px solid #FFD700;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
             animation: pulse 1s infinite;
         }
 
-        /* Responsive */
+        .coverage-warning {
+            position: absolute;
+            right: -140px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: #ffc107;
+            color: #333;
+            padding: 10px 15px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            border: 2px solid #333;
+            text-align: center;
+        }
+
+        .last-card-bubble {
+            position: absolute;
+            bottom: 250px;
+            right: 100px;
+            background-color: #FFD700;
+            color: #333;
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: bold;
+            border: 3px solid #333;
+            z-index: 15;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .last-card-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 30px;
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 10px solid #FFD700;
+        }
+
+        .ai-info {
+            position: absolute;
+            top: 250px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(255,255,255,0.95);
+            padding: 8px 16px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #333;
+            border: 2px solid #00BFFF;
+        }
+
+        .ai-cards {
+            position: absolute;
+            top: 280px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 3px;
+            z-index: 8;
+        }
+
+        .ai-card {
+            width: 50px;
+            height: 70px;
+        }
+
+        @keyframes pulse {
+            0% { transform: translateY(-50%) scale(1); }
+            50% { transform: translateY(-50%) scale(1.05); }
+            100% { transform: translateY(-50%) scale(1); }
+        }
+
+        /* Rules Screen Styles */
+        .rules-screen {
+            background-color: #ffffff;
+            color: #000000;
+            padding: 20px;
+        }
+
+        .rules-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .rules-title {
+            font-size: 3rem;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+
+        .rules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .rules-section h2 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .rules-section p, .rules-section li {
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .rules-section ul {
+            padding-left: 20px;
+        }
+
+        .power-card {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            border: 1px solid;
+        }
+
+        .power-card.ace {
+            background-color: #fff3cd;
+            border-color: #ffeaa7;
+        }
+
+        .power-card.two {
+            background-color: #d1ecf1;
+            border-color: #bee5eb;
+        }
+
+        .power-card.jack {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+
+        .power-card.eight {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .power-card.king-queen {
+            background-color: #e2e3e5;
+            border-color: #d6d8db;
+        }
+
+        .back-button {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: block;
+            margin: 0 auto;
+        }
+
+        /* Responsive Design */
         @media (max-width: 768px) {
-            .game-title {
-                font-size: 2.5rem;
+            .main-title h1 {
+                font-size: 3rem;
             }
             
-            .player-cards {
-                gap: 5px;
+            .game-title h1 {
+                font-size: 2rem;
+            }
+            
+            .billboard, .game-billboard {
+                width: 120px;
+                height: 80px;
+            }
+            
+            .billboard-left, .game-billboard-left {
+                left: 20px;
+            }
+            
+            .billboard-right, .game-billboard-right {
+                right: 20px;
+            }
+            
+            .game-table {
+                width: 300px;
+                height: 200px;
             }
             
             .card {
                 width: 60px;
                 height: 84px;
-            }
-            
-            .log-screen, .scores-screen {
-                flex-direction: column;
-            }
-            
-            .nav-buttons {
-                flex-wrap: wrap;
-                gap: 5px;
-            }
-            
-            .nav-btn {
-                padding: 6px 12px;
                 font-size: 12px;
+            }
+            
+            .rules-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Navigation Bar -->
-    <div class="nav-bar">
-        <div class="nav-title">Imperial Black</div>
-        <div class="nav-buttons">
-            <button class="nav-btn active" onclick="showScreen('menu')">Menu</button>
-            <button class="nav-btn" onclick="showScreen('game')">Game</button>
-            <button class="nav-btn" onclick="showScreen('log')">Log</button>
-            <button class="nav-btn" onclick="showScreen('scores')">Scores</button>
+    <!-- Home Screen -->
+    <div id="home-screen" class="screen home-screen active">
+        <div class="cloud cloud1"></div>
+        <div class="cloud cloud2"></div>
+        <div class="houses"></div>
+        
+        <div class="main-title">
+            <h1>Backyard</h1>
+            <h1>Black Jack</h1>
+            <div class="chaos-mode">CHAOS MODE</div>
         </div>
+        
+        <div class="billboard billboard-left">
+            <div class="billboard-lights"></div>
+            <div style="font-size: 24px; font-weight: bold; color: #8B0000;">PLAY</div>
+            <div style="font-size: 24px; font-weight: bold; color: #8B0000;">NOW!</div>
+            <div style="font-size: 12px; color: #333; margin-top: 5px;">Win Big!</div>
+            <div style="font-size: 16px; margin-top: 5px;">🎰</div>
+            <div style="font-size: 10px; color: #8B0000;">Casino</div>
+        </div>
+        
+        <div class="billboard billboard-right">
+            <div class="billboard-lights"></div>
+            <div style="font-size: 20px; font-weight: bold; color: #FFD700;">UPGRADE</div>
+            <div style="font-size: 20px; font-weight: bold; color: #FFD700;">NOW!</div>
+            <div style="font-size: 16px; color: #FFD700; margin-top: 5px;">⭐</div>
+            <div style="font-size: 12px; color: #FFD700;">Premium</div>
+            <div style="background-color: #FF6B35; color: white; padding: 4px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; margin-top: 5px;">BONUS</div>
+        </div>
+        
+        <button class="play-button" onclick="startNewGame()">💎 PLAY GAME</button>
+        <button class="rules-button" onclick="showRules()">📖 HOW TO PLAY</button>
     </div>
 
-    <!-- Menu Screen -->
-    <div id="menu-screen" class="screen active menu-screen">
-        <div class="game-title">
-            Backyard<br>
-            Black Jack
-        </div>
-        <div class="menu-buttons">
-            <button class="menu-btn play" onclick="startNewGame()">💎 PLAY GAME</button>
-            <button class="menu-btn log" onclick="showScreen('log')">📊 GAME LOG</button>
-            <button class="menu-btn scores" onclick="showScreen('scores')">🏆 SCORES</button>
-            <button class="menu-btn help" onclick="showScreen('help')">📖 HOW TO PLAY</button>
+    <!-- Rules Screen -->
+    <div id="rules-screen" class="screen rules-screen">
+        <div class="rules-container">
+            <h1 class="rules-title">How to Play Imperial Black</h1>
+            
+            <div class="rules-grid">
+                <div class="rules-section">
+                    <h2 style="color: #dc3545;">🎯 Objective</h2>
+                    <p><strong>Be the first player to discard all your cards!</strong></p>
+                    
+                    <h2 style="color: #28a745; margin-top: 20px;">💎 How to Play</h2>
+                    <ul>
+                        <li>Match the <strong>suit</strong> or <strong>rank</strong> of the top card</li>
+                        <li>Click cards to select them (yellow glow), then click "Play Selected"</li>
+                        <li>Play <strong>runs</strong> - multiple cards of the same rank (any suits)</li>
+                        <li>Play <strong>suit sequences</strong> - K♥ → Q♥ → J♥ or 9♠ → 10♠ → J♠</li>
+                        <li>Click "Last Card!" when you have one card left</li>
+                        <li>Click "Clear Selection" to deselect cards</li>
+                        <li>If you can't play, click "Draw Card"</li>
+                    </ul>
+                </div>
+                
+                <div class="rules-section">
+                    <h2 style="color: #fd7e14;">💥 Power Cards</h2>
+                    
+                    <div class="power-card ace">
+                        <strong>Ace (A):</strong> Wild card - can be played on any card
+                    </div>
+                    <div class="power-card two">
+                        <strong>2:</strong> Next player MUST pick up 2 cards (can be stacked!)
+                    </div>
+                    <div class="power-card jack">
+                        <strong>Black Jack (J♠/J♣):</strong> Next player MUST pick up 5 cards (can be stacked!)
+                    </div>
+                    <div class="power-card eight">
+                        <strong>8:</strong> Must be covered with same suit or pick up 1 card
+                    </div>
+                    <div class="power-card king-queen">
+                        <strong>King/Queen:</strong> Must be covered with same suit or pick up 1 card
+                    </div>
+                    
+                    <h2 style="color: #6f42c1; margin-top: 20px;">🛡️ Power Card Protection</h2>
+                    <div class="power-card king-queen">
+                        <strong>Runs protect power cards!</strong> If you play a Black Jack or 2 as part of a run, it's covered - no penalty!
+                    </div>
+                    
+                    <h2 style="color: #6f42c1; margin-top: 20px;">⚠️ Last Card Rule</h2>
+                    <div class="power-card king-queen">
+                        <strong>Must declare "Last Card!"</strong> when you have one card left, or pick up 2 penalty cards!
+                    </div>
+                    
+                    <h2 style="color: #dc3545; margin-top: 20px;">🔥 Penalty Stacking</h2>
+                    <div class="power-card jack">
+                        <strong>Stack penalties!</strong> Play a 2 on a 2 to make opponent pick up 4 cards! Stack Black Jacks for 10 cards!
+                    </div>
+                </div>
+            </div>
+            
+            <button class="back-button" onclick="showHome()">🏠 Back to Menu</button>
         </div>
     </div>
 
     <!-- Game Screen -->
     <div id="game-screen" class="screen game-screen">
-        <div id="game-message" class="game-message">Welcome to Imperial Black!</div>
+        <div class="cloud cloud1"></div>
+        <div class="cloud cloud2"></div>
+        <div class="houses"></div>
         
-        <div class="ai-section">
-            <div class="ai-label">🤖 AI Player - <span id="ai-card-count">7</span> cards</div>
-            <div id="ai-cards" class="ai-cards"></div>
+        <div class="game-title">
+            <h1>Backyard Black Jack</h1>
+            <div class="game-chaos-mode">CHAOS MODE</div>
         </div>
-
-        <div class="game-area">
-            <div class="deck-area">
-                <div class="deck">
-                    <div class="deck-card" onclick="drawCard()">🂠</div>
-                    <div>Deck (<span id="deck-count">37</span>)</div>
-                </div>
-                <div class="discard">
-                    <div id="discard-card" class="discard-card">🂠</div>
-                    <div>Discard</div>
-                </div>
+        
+        <div class="game-billboard game-billboard-left">
+            <div class="game-billboard-lights"></div>
+            <div style="font-size: 18px; font-weight: bold; color: #8B0000;">PLAY</div>
+            <div style="font-size: 18px; font-weight: bold; color: #8B0000;">NOW!</div>
+            <div style="font-size: 10px; color: #333;">Win Big!</div>
+            <div style="font-size: 12px;">🎰</div>
+            <div style="font-size: 8px; color: #8B0000;">Casino</div>
+        </div>
+        
+        <div class="game-billboard game-billboard-right">
+            <div class="game-billboard-lights"></div>
+            <div style="font-size: 16px; font-weight: bold; color: #FFD700;">UPGRADE</div>
+            <div style="font-size: 16px; font-weight: bold; color: #FFD700;">NOW!</div>
+            <div style="font-size: 12px; color: #FFD700;">⭐ Premium</div>
+            <div style="background-color: #FF6B35; color: white; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: bold; margin-top: 3px;">BONUS</div>
+        </div>
+        
+        <div id="game-message" class="message" style="display: none;"></div>
+        <div id="win-message" class="win-message" style="display: none;"></div>
+        
+        <div class="player-avatar avatar-top">⭐</div>
+        <div class="player-avatar avatar-left">🔷</div>
+        <div class="player-avatar avatar-right">🔶</div>
+        <div class="player-avatar avatar-bottom">💎</div>
+        
+        <div id="ai-info" class="ai-info">⚡ AI Player - 7 cards</div>
+        <div id="ai-cards" class="ai-cards"></div>
+        
+        <div class="game-table">
+            <div id="penalty-counter" class="penalty-counter" style="display: none;">
+                <div style="font-size: 12px;">⚠️ PENALTY ⚠️</div>
+                <div style="font-size: 18px; margin-top: 5px;">Pick up</div>
+                <div id="penalty-count" style="font-size: 24px; font-weight: bold;">0</div>
+                <div style="font-size: 14px;">cards</div>
             </div>
-        </div>
-
-        <div class="player-section">
-            <div class="player-label">💎 Your Hand - <span id="player-card-count">7</span> cards</div>
-            <div id="player-cards" class="player-cards"></div>
-        </div>
-
-        <div class="game-controls">
-            <button id="play-btn" class="game-btn play-btn" onclick="playSelectedCards()" style="display: none;">🎯 Play Selected</button>
-            <button id="last-card-btn" class="game-btn last-card-btn" onclick="declareLastCard()" style="display: none;">🗣️ Last Card!</button>
-            <button class="game-btn clear-btn" onclick="clearSelection()">❌ Clear Selection</button>
-            <button class="game-btn draw-btn" onclick="drawCard()">🃏 Draw Card</button>
-            <button class="game-btn menu-btn-game" onclick="showScreen('menu')">🏠 Back to Menu</button>
-        </div>
-    </div>
-
-    <!-- Log Screen -->
-    <div id="log-screen" class="screen log-screen">
-        <div class="log-content">
-            <div class="log-title">GAME ACTION LOG</div>
-            <div id="game-log"></div>
-        </div>
-        <div class="ad-space">
-            <div class="ad-title">Advertisement Space</div>
-            <div class="sample-ad">
-                <h3>Sample Ad</h3>
-                <p>Play More Games!</p>
-                <p>Visit our game portal</p>
-            </div>
-            <p>Rotating ads will appear here</p>
-        </div>
-    </div>
-
-    <!-- Scores Screen -->
-    <div id="scores-screen" class="screen scores-screen">
-        <div class="scores-content">
-            <div class="scores-title">🏆 GAME STATISTICS</div>
             
-            <div class="stats-section">
-                <div class="stats-header">Current Session</div>
-                <div class="stats-grid">
-                    <div class="stat-item">
-                        <div class="stat-value" id="session-games">0</div>
-                        <div class="stat-label">Games Played</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="session-wins">0</div>
-                        <div class="stat-label">Wins</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="session-losses">0</div>
-                        <div class="stat-label">Losses</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="session-winrate">0%</div>
-                        <div class="stat-label">Win Rate</div>
-                    </div>
-                </div>
+            <div id="coverage-warning" class="coverage-warning" style="display: none;">
+                <div>⚠️ COVERAGE ⚠️</div>
+                <div style="font-size: 14px; margin: 5px 0;">Play <span id="required-suit"></span></div>
+                <div>or pick up 1</div>
             </div>
-
-            <div class="stats-section">
-                <div class="stats-header">All Time</div>
-                <div class="stats-grid">
-                    <div class="stat-item">
-                        <div class="stat-value" id="total-games">0</div>
-                        <div class="stat-label">Total Games</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="total-wins">0</div>
-                        <div class="stat-label">Total Wins</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="total-losses">0</div>
-                        <div class="stat-label">Total Losses</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="overall-winrate">0%</div>
-                        <div class="stat-label">Overall Win Rate</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="stats-section">
-                <div class="stats-header">Game Records</div>
-                <div class="stats-grid">
-                    <div class="stat-item">
-                        <div class="stat-value" id="fastest-win">--</div>
-                        <div class="stat-label">Fastest Win</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="longest-game">--</div>
-                        <div class="stat-label">Longest Game</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="best-streak">0</div>
-                        <div class="stat-label">Best Streak</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="current-streak">0</div>
-                        <div class="stat-label">Current Streak</div>
-                    </div>
-                </div>
-            </div>
-
-            <button class="reset-btn" onclick="resetStatistics()">Reset All Statistics</button>
-        </div>
-        <div class="ad-space">
-            <div class="ad-title">Premium Features</div>
-            <div class="sample-ad">
-                <h3>UPGRADE NOW!</h3>
-                <p>⭐ Premium Bonus</p>
-                <p>🎯 Advanced Stats</p>
-                <p>🎨 Custom Themes</p>
-            </div>
-            <p>Unlock premium features for enhanced gameplay experience</p>
-        </div>
-    </div>
-
-    <!-- Help Screen -->
-    <div id="help-screen" class="screen">
-        <div style="padding: 20px; max-width: 800px; margin: 0 auto; background: rgba(255,255,255,0.9); border-radius: 15px; margin-top: 20px;">
-            <h1>How to Play Imperial Black</h1>
-            <h2>🎯 Objective</h2>
-            <p><strong>Be the first player to discard all your cards!</strong></p>
             
-            <h2>💎 How to Play</h2>
-            <ul>
-                <li>Match the <strong>suit</strong> or <strong>rank</strong> of the top card</li>
-                <li>Click cards to select them (yellow glow), then click "Play Selected"</li>
-                <li>Play <strong>runs</strong> - multiple cards of the same rank (any suits)</li>
-                <li>Click "Last Card!" when you have one card left</li>
-                <li>Click "Clear Selection" to deselect cards</li>
-                <li>If you can't play, click "Draw Card"</li>
-            </ul>
-
-            <h2>💥 Power Cards</h2>
-            <ul>
-                <li><strong>2:</strong> Next player picks up 2 cards (stackable up to 8!)</li>
-                <li><strong>Black Jack (J♠/J♣):</strong> Next player picks up 6 cards (stackable up to 24!)</li>
-                <li><strong>Red Jack (J♥/J♦):</strong> Cancels Black Jack pickup (must be played immediately)</li>
-                <li><strong>King:</strong> Reverses direction of play</li>
-                <li><strong>8:</strong> Skips next player's turn</li>
-                <li><strong>Ace:</strong> Changes suit to suit of Ace played</li>
-            </ul>
-
-            <h2>⚠️ Last Card Rule</h2>
-            <p><strong>Must declare "Last Card!"</strong> when you have one card left, or pick up 2 penalty cards!</p>
-
-            <h2>🔥 Penalty Stacking</h2>
-            <p><strong>Stack penalties!</strong> Play a 2 on a 2 to make opponent pick up 4 cards! Stack Black Jacks for up to 24 cards!</p>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                <div id="deck" class="card back" onclick="drawCard()" style="cursor: pointer;">
+                    <div style="font-size: 24px; color: #FFD700;">🂠</div>
+                </div>
+                <div id="deck-label" style="color: white; font-size: 11px; font-weight: bold; text-align: center; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">
+                    Deck (52)
+                </div>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                <div id="discard-pile" class="card">
+                    <div class="card-rank">A</div>
+                    <div class="card-suit">♠</div>
+                </div>
+                <div style="color: white; font-size: 11px; font-weight: bold; text-align: center; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">
+                    Discard
+                </div>
+            </div>
+        </div>
+        
+        <div id="last-card-bubble" class="last-card-bubble" style="display: none;">
+            Last Card!
+        </div>
+        
+        <div class="player-hand">
+            <div class="hand-info">💎 Your Hand - <span id="hand-count">7</span> cards</div>
+            <div id="player-cards" class="cards-container"></div>
+            <div id="game-controls" class="controls"></div>
+            <button class="btn btn-secondary" onclick="showHome()">🏠 Back to Menu</button>
         </div>
     </div>
 
@@ -773,641 +883,666 @@
             playerHand: [],
             aiHand: [],
             discardPile: [],
-            selectedCards: [],
             currentPlayer: 'player',
-            gameStarted: false,
-            penaltyCount: 0,
-            penaltyType: '',
-            gameStartTime: null,
-            lastCardDeclared: false
+            message: '',
+            gameOver: false,
+            winner: null
         };
 
-        // Statistics
-        let stats = {
-            session: { games: 0, wins: 0, losses: 0 },
-            allTime: { games: 0, wins: 0, losses: 0 },
-            records: { fastestWin: null, longestGame: null, bestStreak: 0, currentStreak: 0 }
-        };
+        let selectedCards = [];
+        let lastCardDeclared = false;
+        let mustPickupCards = 0;
+        let pendingCoverage = null;
 
-        // Game Log
-        let gameLog = [];
+        // Card utilities
+        const suits = ['♠', '♣', '♥', '♦'];
+        const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            loadStatistics();
-            updateStatisticsDisplay();
-            showScreen('menu');
-        });
-
-        // Screen Management
-        function showScreen(screenName) {
-            // Hide all screens
-            document.querySelectorAll('.screen').forEach(screen => {
-                screen.classList.remove('active');
-            });
-            
-            // Update nav buttons
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            // Show selected screen
-            document.getElementById(screenName + '-screen').classList.add('active');
-            
-            // Update active nav button
-            event.target.classList.add('active');
-            
-            // Special handling for game screen
-            if (screenName === 'game' && !gameState.gameStarted) {
-                startNewGame();
-            }
-        }
-
-        // Card Creation
         function createDeck() {
-            const suits = ['♠', '♥', '♦', '♣'];
-            const ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
             const deck = [];
+            suits.forEach(suit => {
+                ranks.forEach(rank => {
+                    deck.push({ suit, rank, id: `${suit}-${rank}` });
+                });
+            });
             
-            for (let suit of suits) {
-                for (let rank of ranks) {
-                    deck.push({ rank, suit });
-                }
-            }
-            
-            return shuffleDeck(deck);
-        }
-
-        function shuffleDeck(deck) {
+            // Shuffle deck
             for (let i = deck.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [deck[i], deck[j]] = [deck[j], deck[i]];
             }
+            
             return deck;
         }
 
-        // Game Initialization
-        function startNewGame() {
-            gameState.deck = createDeck();
-            gameState.playerHand = gameState.deck.splice(0, 7);
-            gameState.aiHand = gameState.deck.splice(0, 7);
-            gameState.discardPile = [gameState.deck.pop()];
-            gameState.selectedCards = [];
-            gameState.currentPlayer = 'player';
-            gameState.gameStarted = true;
-            gameState.penaltyCount = 0;
-            gameState.penaltyType = '';
-            gameState.gameStartTime = Date.now();
-            gameState.lastCardDeclared = false;
-            
-            addToLog('Game started! Match suit or rank, or play power cards!');
-            updateDisplay();
-            showScreen('game');
-        }
-
-        // Display Updates
-        function updateDisplay() {
-            updatePlayerHand();
-            updateAIHand();
-            updateDiscardPile();
-            updateDeckCount();
-            updateGameControls();
-            updateGameMessage();
-        }
-
-        function updatePlayerHand() {
-            const container = document.getElementById('player-cards');
-            container.innerHTML = '';
-            
-            gameState.playerHand.forEach((card, index) => {
-                const cardElement = document.createElement('div');
-                cardElement.className = `card ${card.suit === '♥' || card.suit === '♦' ? 'red' : 'black'}`;
-                cardElement.innerHTML = `<div>${card.rank}</div><div>${card.suit}</div>`;
-                cardElement.onclick = () => toggleCardSelection(index);
-                
-                if (gameState.selectedCards.includes(index)) {
-                    cardElement.classList.add('selected');
-                }
-                
-                container.appendChild(cardElement);
-            });
-            
-            document.getElementById('player-card-count').textContent = gameState.playerHand.length;
-        }
-
-        function updateAIHand() {
-            const container = document.getElementById('ai-cards');
-            container.innerHTML = '';
-            
-            for (let i = 0; i < gameState.aiHand.length; i++) {
-                const cardElement = document.createElement('div');
-                cardElement.className = 'card-back';
-                cardElement.innerHTML = '🂠';
-                container.appendChild(cardElement);
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
             }
-            
-            document.getElementById('ai-card-count').textContent = gameState.aiHand.length;
+            return shuffled;
         }
 
-        function updateDiscardPile() {
+        function reshuffleDiscardPile() {
+            if (gameState.deck.length > 0) return;
+            
+            if (gameState.discardPile.length <= 1) return;
+            
             const topCard = gameState.discardPile[gameState.discardPile.length - 1];
-            const discardElement = document.getElementById('discard-card');
-            discardElement.innerHTML = `<div>${topCard.rank}</div><div>${topCard.suit}</div>`;
-            discardElement.className = `discard-card ${topCard.suit === '♥' || topCard.suit === '♦' ? 'red' : 'black'}`;
+            const cardsToShuffle = gameState.discardPile.slice(0, -1);
+            gameState.deck = shuffleArray(cardsToShuffle);
+            gameState.discardPile = [topCard];
         }
 
-        function updateDeckCount() {
-            document.getElementById('deck-count').textContent = gameState.deck.length;
-        }
+        function canPlayCard(card, topCard, selectedCards = []) {
+            if (pendingCoverage) {
+                if (pendingCoverage.type === 'KQ' && card.suit === pendingCoverage.suit) return true;
+                if (pendingCoverage.type === '8' && card.suit === pendingCoverage.suit) return true;
+                return false;
+            }
 
-        function updateGameControls() {
-            const playBtn = document.getElementById('play-btn');
-            const lastCardBtn = document.getElementById('last-card-btn');
-            
-            // Show/hide play button
-            if (gameState.selectedCards.length > 0 && gameState.currentPlayer === 'player' && gameState.penaltyCount === 0) {
-                playBtn.style.display = 'inline-block';
-                playBtn.textContent = `🎯 Play Selected (${gameState.selectedCards.length})`;
-            } else if (gameState.selectedCards.length > 0 && gameState.penaltyCount > 0) {
-                // Allow playing penalty cards during penalty
-                const selectedCard = gameState.playerHand[gameState.selectedCards[0]];
-                if (canStackPenalty(selectedCard)) {
-                    playBtn.style.display = 'inline-block';
-                    playBtn.textContent = `🎯 Play Selected (${gameState.selectedCards.length})`;
-                } else {
-                    playBtn.style.display = 'none';
-                }
-            } else {
-                playBtn.style.display = 'none';
+            if (mustPickupCards > 0) {
+                if (topCard.rank === '2' && card.rank === '2') return true;
+                if ((topCard.rank === 'J' && (topCard.suit === '♠' || topCard.suit === '♣')) &&
+                    (card.rank === 'J' && (card.suit === '♠' || card.suit === '♣'))) return true;
+                return false;
             }
             
-            // Show/hide last card button
-            if (gameState.playerHand.length === 1 && gameState.currentPlayer === 'player' && !gameState.lastCardDeclared) {
-                lastCardBtn.style.display = 'inline-block';
-            } else {
-                lastCardBtn.style.display = 'none';
-            }
-        }
-
-        function updateGameMessage() {
-            const messageElement = document.getElementById('game-message');
-            
-            if (gameState.penaltyCount > 0) {
-                messageElement.innerHTML = `⚠️ Penalty! Pick up ${gameState.penaltyCount} cards or play a ${gameState.penaltyType}!`;
-                messageElement.style.background = 'linear-gradient(45deg, #FF5722, #D84315)';
-            } else if (gameState.currentPlayer === 'ai') {
-                messageElement.innerHTML = 'AI is thinking...';
-                messageElement.style.background = 'rgba(0,0,0,0.8)';
-            } else {
-                messageElement.innerHTML = 'Your turn! Match suit or rank, or play power cards!';
-                messageElement.style.background = 'rgba(0,0,0,0.8)';
-            }
-        }
-
-        // Card Selection
-        function toggleCardSelection(index) {
-            if (gameState.currentPlayer !== 'player') return;
-            
-            const cardIndex = gameState.selectedCards.indexOf(index);
-            if (cardIndex > -1) {
-                gameState.selectedCards.splice(cardIndex, 1);
-            } else {
-                gameState.selectedCards.push(index);
+            if (card.suit === topCard.suit || card.rank === topCard.rank || card.rank === 'A') {
+                return true;
             }
             
-            updateDisplay();
-        }
-
-        function clearSelection() {
-            gameState.selectedCards = [];
-            updateDisplay();
-        }
-
-        // Card Playing Logic
-        function playSelectedCards() {
-            if (gameState.selectedCards.length === 0 || gameState.currentPlayer !== 'player') return;
-            
-            const selectedCards = gameState.selectedCards.map(index => gameState.playerHand[index]);
-            
-            if (gameState.penaltyCount > 0) {
-                // Handle penalty stacking
-                if (selectedCards.length === 1 && canStackPenalty(selectedCards[0])) {
-                    playPenaltyStack(selectedCards[0]);
-                    return;
-                } else {
-                    addToLog('Cannot play - must pick up penalty or play valid penalty card!');
-                    return;
-                }
-            }
-            
-            if (isValidPlay(selectedCards)) {
-                // Remove cards from hand
-                gameState.selectedCards.sort((a, b) => b - a);
-                gameState.selectedCards.forEach(index => {
-                    const card = gameState.playerHand.splice(index, 1)[0];
-                    gameState.discardPile.push(card);
-                });
+            if (selectedCards.length > 0) {
+                const firstSelected = selectedCards[0];
                 
-                const lastPlayedCard = gameState.discardPile[gameState.discardPile.length - 1];
-                addToLog(`You played ${formatCards(selectedCards)}`);
+                if (card.rank === firstSelected.rank) return true;
                 
-                // Handle power cards
-                handlePowerCard(lastPlayedCard, selectedCards.length > 1);
-                
-                gameState.selectedCards = [];
-                
-                // Check for win
-                if (gameState.playerHand.length === 0) {
-                    playerWins();
-                    return;
+                if ((firstSelected.rank === 'K' || firstSelected.rank === 'Q') && card.suit === firstSelected.suit) {
+                    return true;
                 }
                 
-                // Check last card rule
-                if (gameState.playerHand.length === 1 && !gameState.lastCardDeclared) {
-                    addToLog('⚠️ Penalty! You must declare "Last Card!" - Picked up 2 cards!');
-                    gameState.playerHand.push(gameState.deck.pop(), gameState.deck.pop());
-                    gameState.lastCardDeclared = false;
-                }
-                
-                updateDisplay();
-                
-                // AI turn
-                setTimeout(() => {
-                    if (gameState.currentPlayer === 'player') {
-                        gameState.currentPlayer = 'ai';
-                        aiTurn();
+                if (selectedCards.length > 1) {
+                    const allSameSuit = selectedCards.every(c => c.suit === firstSelected.suit);
+                    if (allSameSuit && card.suit === firstSelected.suit) {
+                        const lastCard = selectedCards[selectedCards.length - 1];
+                        const lastRankIndex = ranks.indexOf(lastCard.rank);
+                        const cardRankIndex = ranks.indexOf(card.rank);
+                        
+                        if (Math.abs(lastRankIndex - cardRankIndex) === 1) return true;
                     }
-                }, 1000);
-            } else {
-                addToLog('Cannot play - cards don\'t match current selection or top card!');
-            }
-        }
-
-        function isValidPlay(cards) {
-            if (cards.length === 0) return false;
-            
-            const topCard = gameState.discardPile[gameState.discardPile.length - 1];
-            
-            // Check if it's a run (same rank)
-            if (cards.length > 1) {
-                const rank = cards[0].rank;
-                return cards.every(card => card.rank === rank);
+                }
+                
+                if (selectedCards.length === 1 && card.suit === firstSelected.suit) {
+                    const firstRankIndex = ranks.indexOf(firstSelected.rank);
+                    const cardRankIndex = ranks.indexOf(card.rank);
+                    
+                    if (Math.abs(firstRankIndex - cardRankIndex) === 1) return true;
+                }
             }
             
-            // Single card - check suit or rank match, or if it's an Ace (wild)
-            const card = cards[0];
-            return card.suit === topCard.suit || card.rank === topCard.rank || card.rank === 'A';
-        }
-
-        function canStackPenalty(card) {
-            if (gameState.penaltyType === '2' && card.rank === '2') return true;
-            if (gameState.penaltyType === 'Black Jack' && (card.rank === 'J' && (card.suit === '♠' || card.suit === '♣'))) return true;
-            if (gameState.penaltyType === 'Black Jack' && (card.rank === 'J' && (card.suit === '♥' || card.suit === '♦'))) return true; // Red Jack cancels
             return false;
         }
 
-        function playPenaltyStack(card) {
-            gameState.playerHand.splice(gameState.selectedCards[0], 1);
-            gameState.discardPile.push(card);
-            gameState.selectedCards = [];
-            
-            if (card.rank === '2') {
-                gameState.penaltyCount += 2;
-                addToLog(`You played ${card.rank}${card.suit} - penalty stacked to ${gameState.penaltyCount} cards!`);
-            } else if (card.rank === 'J' && (card.suit === '♠' || card.suit === '♣')) {
-                gameState.penaltyCount += 6;
-                addToLog(`You played ${card.rank}${card.suit} - penalty stacked to ${gameState.penaltyCount} cards!`);
-            } else if (card.rank === 'J' && (card.suit === '♥' || card.suit === '♦')) {
-                gameState.penaltyCount = 0;
-                gameState.penaltyType = '';
-                addToLog(`You played ${card.rank}${card.suit} - Red Jack cancels the penalty!`);
-            }
-            
-            updateDisplay();
-            
-            setTimeout(() => {
-                gameState.currentPlayer = 'ai';
-                aiTurn();
-            }, 1000);
+        function containsPowerCard(cards) {
+            return cards.some(card => 
+                card.rank === '2' || 
+                (card.rank === 'J' && (card.suit === '♠' || card.suit === '♣'))
+            );
         }
 
-        // Power Card Handling
-        function handlePowerCard(card, isInRun) {
-            if (isInRun) return; // Power cards in runs are covered
-            
-            switch (card.rank) {
-                case '2':
-                    gameState.penaltyCount = 2;
-                    gameState.penaltyType = '2';
-                    addToLog(`${card.rank}${card.suit} played - next player must pick up 2 cards!`);
-                    break;
-                case 'J':
-                    if (card.suit === '♠' || card.suit === '♣') {
-                        gameState.penaltyCount = 6;
-                        gameState.penaltyType = 'Black Jack';
-                        addToLog(`${card.rank}${card.suit} played - Black Jack! Next player must pick up 6 cards!`);
-                    }
-                    break;
-                case '8':
-                    addToLog(`${card.rank}${card.suit} played - next player's turn is skipped!`);
-                    // Skip will be handled in AI turn
-                    break;
-                case 'A':
-                    addToLog(`${card.rank}${card.suit} played - suit changed to ${card.suit}!`);
-                    break;
-            }
+        function needsCoverage(card) {
+            return card.rank === 'K' || card.rank === 'Q' || card.rank === '8';
         }
 
-        // AI Logic
-        function aiTurn() {
-            if (gameState.currentPlayer !== 'ai') return;
+        // Screen management
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function showHome() {
+            showScreen('home-screen');
+        }
+
+        function showRules() {
+            showScreen('rules-screen');
+        }
+
+        function showGame() {
+            showScreen('game-screen');
+        }
+
+        // Game functions
+        function startNewGame() {
+            const deck = createDeck();
+            gameState.playerHand = deck.splice(0, 7);
+            gameState.aiHand = deck.splice(0, 7);
+            gameState.discardPile = [deck.pop()];
+            gameState.deck = deck;
+            gameState.currentPlayer = 'player';
+            gameState.message = 'Game Started! Match suit or rank, or play power cards!';
+            gameState.gameOver = false;
+            gameState.winner = null;
             
+            selectedCards = [];
+            lastCardDeclared = false;
+            mustPickupCards = 0;
+            pendingCoverage = null;
+            
+            showGame();
             updateDisplay();
+        }
+
+        function selectCard(cardIndex) {
+            if (gameState.currentPlayer !== 'player' || gameState.gameOver) return;
             
-            setTimeout(() => {
-                // Handle penalty
-                if (gameState.penaltyCount > 0) {
-                    // AI picks up penalty cards
-                    for (let i = 0; i < gameState.penaltyCount; i++) {
-                        if (gameState.deck.length > 0) {
-                            gameState.aiHand.push(gameState.deck.pop());
-                        }
-                    }
-                    addToLog(`AI picked up ${gameState.penaltyCount} cards!`);
-                    gameState.penaltyCount = 0;
-                    gameState.penaltyType = '';
-                    gameState.currentPlayer = 'player';
-                    updateDisplay();
+            if (pendingCoverage) {
+                const card = gameState.playerHand[cardIndex];
+                if (card.suit !== pendingCoverage.suit) {
+                    showMessage(`You must cover with a ${pendingCoverage.suit} card or pick up 1 card!`);
                     return;
                 }
-                
-                // Check for 8 skip
+            }
+            
+            if (mustPickupCards > 0) {
+                const card = gameState.playerHand[cardIndex];
                 const topCard = gameState.discardPile[gameState.discardPile.length - 1];
-                if (topCard.rank === '8') {
-                    addToLog('AI\'s turn was skipped! Your turn.');
-                    gameState.currentPlayer = 'player';
-                    updateDisplay();
+                
+                if (!canPlayCard(card, topCard)) {
+                    showMessage(`You must pick up ${mustPickupCards} cards or stack a matching power card!`);
                     return;
-                }
-                
-                // AI plays a card
-                const playableCard = findAIPlayableCard();
-                if (playableCard) {
-                    const cardIndex = gameState.aiHand.indexOf(playableCard);
-                    gameState.aiHand.splice(cardIndex, 1);
-                    gameState.discardPile.push(playableCard);
-                    
-                    addToLog(`AI played ${playableCard.rank}${playableCard.suit}`);
-                    
-                    // Handle AI power cards
-                    handleAIPowerCard(playableCard);
-                    
-                    // Check AI win
-                    if (gameState.aiHand.length === 0) {
-                        aiWins();
-                        return;
-                    }
-                } else {
-                    // AI draws a card
-                    if (gameState.deck.length > 0) {
-                        gameState.aiHand.push(gameState.deck.pop());
-                        addToLog('AI drew a card');
-                    }
-                }
-                
-                gameState.currentPlayer = 'player';
-                updateDisplay();
-            }, 1500);
-        }
-
-        function findAIPlayableCard() {
-            const topCard = gameState.discardPile[gameState.discardPile.length - 1];
-            
-            // Find matching cards
-            for (let card of gameState.aiHand) {
-                if (card.suit === topCard.suit || card.rank === topCard.rank || card.rank === 'A') {
-                    return card;
                 }
             }
             
-            return null;
-        }
-
-        function handleAIPowerCard(card) {
-            switch (card.rank) {
-                case '2':
-                    gameState.penaltyCount = 2;
-                    gameState.penaltyType = '2';
-                    addToLog(`AI played ${card.rank}${card.suit} - You must pick up 2 cards!`);
-                    break;
-                case 'J':
-                    if (card.suit === '♠' || card.suit === '♣') {
-                        gameState.penaltyCount = 6;
-                        gameState.penaltyType = 'Black Jack';
-                        addToLog(`AI played ${card.rank}${card.suit} - Black Jack! You must pick up 6 cards!`);
-                    }
-                    break;
-                case '8':
-                    addToLog(`AI played ${card.rank}${card.suit} - Your turn is skipped!`);
-                    setTimeout(() => {
-                        gameState.currentPlayer = 'ai';
-                        aiTurn();
-                    }, 1000);
-                    return;
-                case 'A':
-                    addToLog(`AI played ${card.rank}${card.suit} - Suit changed to ${card.suit}!`);
-                    break;
-            }
-        }
-
-        // Game Actions
-        function drawCard() {
-            if (gameState.currentPlayer !== 'player') return;
+            const card = gameState.playerHand[cardIndex];
+            const isSelected = selectedCards.some(selected => selected.id === card.id);
             
-            if (gameState.penaltyCount > 0) {
-                // Pick up penalty cards
-                for (let i = 0; i < gameState.penaltyCount; i++) {
-                    if (gameState.deck.length > 0) {
-                        gameState.playerHand.push(gameState.deck.pop());
-                    }
-                }
-                addToLog(`You picked up ${gameState.penaltyCount} penalty cards!`);
-                gameState.penaltyCount = 0;
-                gameState.penaltyType = '';
-                
-                gameState.currentPlayer = 'ai';
-                updateDisplay();
-                setTimeout(() => aiTurn(), 1000);
+            if (isSelected) {
+                selectedCards = selectedCards.filter(selected => selected.id !== card.id);
             } else {
-                // Normal draw
-                if (gameState.deck.length > 0) {
-                    gameState.playerHand.push(gameState.deck.pop());
-                    addToLog('You drew a card');
-                    updateDisplay();
+                const topCard = gameState.discardPile[gameState.discardPile.length - 1];
+                
+                if (canPlayCard(card, topCard, selectedCards)) {
+                    selectedCards.push(card);
+                } else {
+                    if (canPlayCard(card, topCard, [])) {
+                        selectedCards = [card];
+                    } else {
+                        showMessage(`Cannot play ${card.rank}${card.suit} - doesn't match current selection or top card`);
+                    }
                 }
             }
+            
+            updateDisplay();
+        }
+
+        function playSelectedCards() {
+            if (selectedCards.length === 0 || gameState.currentPlayer !== 'player' || gameState.gameOver) return;
+
+            const topCard = gameState.discardPile[gameState.discardPile.length - 1];
+            const firstCard = selectedCards[0];
+            
+            if (!canPlayCard(firstCard, topCard)) {
+                showMessage(`Cannot play ${firstCard.rank}${firstCard.suit} - doesn't match ${topCard.rank}${topCard.suit}`);
+                selectedCards = [];
+                updateDisplay();
+                return;
+            }
+
+            // Handle penalty stacking
+            if (mustPickupCards > 0) {
+                const lastPlayedCard = selectedCards[selectedCards.length - 1];
+                let newPenalty = mustPickupCards;
+                
+                if (lastPlayedCard.rank === '2' && topCard.rank === '2') {
+                    newPenalty += 2;
+                } else if (lastPlayedCard.rank === 'J' && (lastPlayedCard.suit === '♠' || lastPlayedCard.suit === '♣') &&
+                           topCard.rank === 'J' && (topCard.suit === '♠' || topCard.suit === '♣')) {
+                    newPenalty += 5;
+                }
+                
+                gameState.playerHand = gameState.playerHand.filter(card => 
+                    !selectedCards.some(selected => selected.id === card.id)
+                );
+
+                gameState.discardPile.push(...selectedCards);
+                gameState.currentPlayer = 'ai';
+                showMessage(`You stacked ${lastPlayedCard.rank}${lastPlayedCard.suit}! AI must pick up ${newPenalty} cards!`);
+
+                selectedCards = [];
+                mustPickupCards = 0;
+                updateDisplay();
+                
+                setTimeout(() => aiTurn(newPenalty), 1500);
+                return;
+            }
+
+            // Handle pending coverage
+            if (pendingCoverage) {
+                const lastPlayedCard = selectedCards[selectedCards.length - 1];
+                
+                if ((pendingCoverage.type === 'KQ' && lastPlayedCard.suit === pendingCoverage.suit) ||
+                    (pendingCoverage.type === '8' && lastPlayedCard.suit === pendingCoverage.suit)) {
+                    
+                    gameState.playerHand = gameState.playerHand.filter(card => 
+                        !selectedCards.some(selected => selected.id === card.id)
+                    );
+
+                    gameState.discardPile.push(...selectedCards);
+                    gameState.currentPlayer = 'ai';
+                    showMessage(`You covered ${pendingCoverage.type === 'KQ' ? 'King/Queen' : '8'} with ${lastPlayedCard.rank}${lastPlayedCard.suit}!`);
+
+                    selectedCards = [];
+                    pendingCoverage = null;
+                    updateDisplay();
+                    
+                    setTimeout(() => aiTurn(), 1500);
+                    return;
+                }
+            }
+
+            // Remove selected cards from hand
+            gameState.playerHand = gameState.playerHand.filter(card => 
+                !selectedCards.some(selected => selected.id === card.id)
+            );
+
+            gameState.discardPile.push(...selectedCards);
+            const lastPlayedCard = selectedCards[selectedCards.length - 1];
+
+            // Check for win
+            if (gameState.playerHand.length === 0) {
+                gameState.gameOver = true;
+                gameState.winner = 'player';
+                showMessage('⭐ CONGRATULATIONS! YOU WIN! ⭐');
+                selectedCards = [];
+                updateDisplay();
+                return;
+            }
+
+            // Check last card rule
+            if (gameState.playerHand.length === 1 && !lastCardDeclared) {
+                reshuffleDiscardPile();
+                const penaltyCards = [];
+                
+                for (let i = 0; i < 2 && gameState.deck.length > 0; i++) {
+                    penaltyCards.push(gameState.deck.pop());
+                }
+                
+                gameState.playerHand.push(...penaltyCards);
+                showMessage('⚠️ Penalty! You must declare "Last Card!" - Picked up 2 cards!');
+                selectedCards = [];
+                updateDisplay();
+                return;
+            }
+
+            // Check if last played card needs coverage
+            if (selectedCards.length === 1 && needsCoverage(lastPlayedCard)) {
+                pendingCoverage = {
+                    type: lastPlayedCard.rank === '8' ? '8' : 'KQ',
+                    suit: lastPlayedCard.suit
+                };
+                
+                showMessage(`You played ${lastPlayedCard.rank}${lastPlayedCard.suit} - you must cover it with a ${lastPlayedCard.suit} or pick up 1 card!`);
+                selectedCards = [];
+                updateDisplay();
+                return;
+            }
+
+            // Handle power cards
+            let aiPenalty = 0;
+            if (selectedCards.length === 1) {
+                if (lastPlayedCard.rank === '2') {
+                    aiPenalty = 2;
+                } else if (lastPlayedCard.rank === 'J' && (lastPlayedCard.suit === '♠' || lastPlayedCard.suit === '♣')) {
+                    aiPenalty = 5;
+                }
+            }
+
+            gameState.currentPlayer = 'ai';
+            showMessage(selectedCards.length > 1 ? 
+                `You played a run of ${selectedCards.length} cards!${containsPowerCard(selectedCards) ? ' Power cards covered!' : ''}` :
+                `You played ${lastPlayedCard.rank}${lastPlayedCard.suit}${aiPenalty > 0 ? ` - AI must pick up ${aiPenalty}!` : ''}`
+            );
+
+            selectedCards = [];
+            lastCardDeclared = false;
+            updateDisplay();
+
+            setTimeout(() => aiTurn(aiPenalty), 1500);
+        }
+
+        function aiTurn(pickupPenalty = 0) {
+            if (gameState.gameOver) return;
+
+            if (pickupPenalty > 0) {
+                reshuffleDiscardPile();
+                const penaltyCards = [];
+                
+                for (let i = 0; i < pickupPenalty && gameState.deck.length > 0; i++) {
+                    penaltyCards.push(gameState.deck.pop());
+                }
+                
+                gameState.aiHand.push(...penaltyCards);
+                gameState.currentPlayer = 'player';
+                showMessage(`AI picked up ${pickupPenalty} cards and played! Your turn.`);
+                updateDisplay();
+                return;
+            }
+
+            const topCard = gameState.discardPile[gameState.discardPile.length - 1];
+            const playableCards = gameState.aiHand.filter(card => 
+                card.suit === topCard.suit || card.rank === topCard.rank || card.rank === 'A'
+            );
+
+            if (playableCards.length > 0) {
+                const cardToPlay = playableCards[0];
+                gameState.aiHand = gameState.aiHand.filter(card => card.id !== cardToPlay.id);
+                
+                let playerPenalty = 0;
+                if (cardToPlay.rank === '2') {
+                    playerPenalty = 2;
+                } else if (cardToPlay.rank === 'J' && (cardToPlay.suit === '♠' || cardToPlay.suit === '♣')) {
+                    playerPenalty = 5;
+                }
+
+                gameState.discardPile.push(cardToPlay);
+                gameState.currentPlayer = 'player';
+                
+                if (gameState.aiHand.length === 0) {
+                    gameState.gameOver = true;
+                    gameState.winner = 'ai';
+                    showMessage('⚡ AI WINS! Better luck next time!');
+                } else {
+                    showMessage(`AI played ${cardToPlay.rank}${cardToPlay.suit}${playerPenalty > 0 ? ` - You must pick up ${playerPenalty} cards!` : ''}`);
+                }
+
+                if (playerPenalty > 0) {
+                    mustPickupCards = playerPenalty;
+                }
+            } else {
+                reshuffleDiscardPile();
+                
+                if (gameState.deck.length > 0) {
+                    const drawnCard = gameState.deck.pop();
+                    gameState.aiHand.push(drawnCard);
+                    gameState.currentPlayer = 'player';
+                    showMessage('AI drew a card and played!');
+                } else {
+                    gameState.currentPlayer = 'player';
+                    showMessage('AI passes turn - no cards available!');
+                }
+            }
+            
+            updateDisplay();
+        }
+
+        function drawCard() {
+            if (gameState.currentPlayer !== 'player' || gameState.gameOver) return;
+            
+            if (mustPickupCards > 0) {
+                forcedPickupCards();
+                return;
+            }
+
+            if (pendingCoverage) {
+                reshuffleDiscardPile();
+                
+                if (gameState.deck.length > 0) {
+                    const drawnCard = gameState.deck.pop();
+                    gameState.playerHand.push(drawnCard);
+                    gameState.currentPlayer = 'ai';
+                    showMessage(`You picked up 1 card as penalty for not covering ${pendingCoverage.type === 'KQ' ? 'King/Queen' : '8'}!`);
+                    
+                    pendingCoverage = null;
+                    updateDisplay();
+                    
+                    setTimeout(() => aiTurn(), 1500);
+                }
+                return;
+            }
+
+            reshuffleDiscardPile();
+            
+            if (gameState.deck.length > 0) {
+                const drawnCard = gameState.deck.pop();
+                gameState.playerHand.push(drawnCard);
+                gameState.currentPlayer = 'ai';
+                showMessage(`You drew ${drawnCard.rank}${drawnCard.suit}`);
+                updateDisplay();
+                
+                setTimeout(() => aiTurn(), 1500);
+            } else {
+                showMessage('No cards available to draw!');
+            }
+        }
+
+        function forcedPickupCards() {
+            if (mustPickupCards === 0) return;
+
+            reshuffleDiscardPile();
+            const penaltyCards = [];
+            const cardsToPickup = Math.min(mustPickupCards, gameState.deck.length);
+            
+            for (let i = 0; i < cardsToPickup; i++) {
+                if (gameState.deck.length > 0) {
+                    penaltyCards.push(gameState.deck.pop());
+                }
+            }
+
+            gameState.playerHand.push(...penaltyCards);
+            gameState.currentPlayer = 'ai';
+            showMessage(`You picked up ${cardsToPickup} penalty cards! AI's turn.`);
+
+            mustPickupCards = 0;
+            updateDisplay();
+
+            setTimeout(() => aiTurn(), 1500);
+        }
+
+        function clearSelection() {
+            selectedCards = [];
+            showMessage('Selection cleared');
+            updateDisplay();
         }
 
         function declareLastCard() {
-            if (gameState.playerHand.length === 1) {
-                gameState.lastCardDeclared = true;
-                addToLog('You declared "Last Card!"');
-                updateDisplay();
-            }
+            lastCardDeclared = true;
+            showMessage('📢 "LAST CARD!" declared!');
+            updateDisplay();
         }
 
-        // Win Conditions
-        function playerWins() {
-            const gameTime = Math.floor((Date.now() - gameState.gameStartTime) / 1000);
-            addToLog(`🎉 You win! Game completed in ${gameTime} seconds!`);
-            
-            // Update statistics
-            stats.session.games++;
-            stats.session.wins++;
-            stats.allTime.games++;
-            stats.allTime.wins++;
-            stats.records.currentStreak++;
-            
-            if (stats.records.currentStreak > stats.records.bestStreak) {
-                stats.records.bestStreak = stats.records.currentStreak;
-            }
-            
-            if (!stats.records.fastestWin || gameTime < stats.records.fastestWin) {
-                stats.records.fastestWin = gameTime;
-            }
-            
-            saveStatistics();
-            updateStatisticsDisplay();
-            
-            showWinMessage('🎉 YOU WIN! 🎉', `Game completed in ${gameTime} seconds!`);
+        function cancelLastCard() {
+            lastCardDeclared = false;
+            showMessage('Last card declaration cancelled');
+            updateDisplay();
         }
 
-        function aiWins() {
-            const gameTime = Math.floor((Date.now() - gameState.gameStartTime) / 1000);
-            addToLog(`⚡ AI wins! Game lasted ${gameTime} seconds.`);
-            
-            // Update statistics
-            stats.session.games++;
-            stats.session.losses++;
-            stats.allTime.games++;
-            stats.allTime.losses++;
-            stats.records.currentStreak = 0;
-            
-            if (!stats.records.longestGame || gameTime > stats.records.longestGame) {
-                stats.records.longestGame = gameTime;
-            }
-            
-            saveStatistics();
-            updateStatisticsDisplay();
-            
-            showWinMessage('⚡ AI WINS! ⚡', `Game lasted ${gameTime} seconds.`);
+        function showMessage(message) {
+            gameState.message = message;
+            updateDisplay();
         }
 
-        function showWinMessage(title, subtitle) {
-            const winDiv = document.createElement('div');
-            winDiv.className = 'win-message';
-            winDiv.innerHTML = `
-                <button class="win-close" onclick="this.parentElement.remove()">×</button>
-                <div>${title}</div>
-                <div style="font-size: 16px; margin-top: 10px;">${subtitle}</div>
-                <div style="margin-top: 15px;">
-                    <button onclick="startNewGame(); this.parentElement.parentElement.remove();" style="padding: 10px 20px; margin-right: 10px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">Play Again</button>
-                    <button onclick="showScreen('menu'); this.parentElement.parentElement.remove();" style="padding: 10px 20px; background: #FF9800; color: white; border: none; border-radius: 5px; cursor: pointer;">Menu</button>
-                </div>
-            `;
-            document.body.appendChild(winDiv);
+        // Display functions
+        function createCardElement(card, isBack = false) {
+            const cardEl = document.createElement('div');
+            cardEl.className = 'card';
             
-            // Auto-remove after 10 seconds
-            setTimeout(() => {
-                if (winDiv.parentElement) {
-                    winDiv.remove();
-                }
-            }, 10000);
-        }
-
-        // Logging
-        function addToLog(message) {
-            const timestamp = new Date().toLocaleTimeString();
-            gameLog.push({ time: timestamp, message });
-            
-            // Keep only last 100 entries
-            if (gameLog.length > 100) {
-                gameLog.shift();
-            }
-            
-            updateLogDisplay();
-        }
-
-        function updateLogDisplay() {
-            const logContainer = document.getElementById('game-log');
-            logContainer.innerHTML = '';
-            
-            gameLog.slice(-20).forEach(entry => {
-                const logEntry = document.createElement('div');
-                logEntry.className = 'log-entry';
-                logEntry.innerHTML = `
-                    <div class="log-timestamp">[${entry.time}]</div>
-                    <div>${entry.message}</div>
+            if (isBack) {
+                cardEl.classList.add('back');
+                cardEl.innerHTML = '<div style="font-size: 24px; color: #FFD700;">🂠</div>';
+            } else {
+                cardEl.classList.add(card.suit === '♥' || card.suit === '♦' ? 'red' : 'black');
+                cardEl.innerHTML = `
+                    <div class="card-rank">${card.rank}</div>
+                    <div class="card-suit">${card.suit}</div>
                 `;
-                logContainer.appendChild(logEntry);
+            }
+            
+            return cardEl;
+        }
+
+        function updateDisplay() {
+            // Update message
+            const messageEl = document.getElementById('game-message');
+            if (gameState.message) {
+                messageEl.textContent = gameState.message;
+                messageEl.style.display = 'block';
+            } else {
+                messageEl.style.display = 'none';
+            }
+
+            // Update win message
+            const winMessageEl = document.getElementById('win-message');
+            if (gameState.gameOver) {
+                winMessageEl.textContent = gameState.winner === 'player' ? '⭐ YOU WIN! ⭐' : '⚡ AI WINS! ⚡';
+                winMessageEl.className = `win-message ${gameState.winner === 'player' ? 'player-win' : 'ai-win'}`;
+                winMessageEl.style.display = 'block';
+            } else {
+                winMessageEl.style.display = 'none';
+            }
+
+            // Update penalty counter
+            const penaltyCounterEl = document.getElementById('penalty-counter');
+            const penaltyCountEl = document.getElementById('penalty-count');
+            if (mustPickupCards > 0) {
+                penaltyCountEl.textContent = mustPickupCards;
+                penaltyCounterEl.style.display = 'block';
+            } else {
+                penaltyCounterEl.style.display = 'none';
+            }
+
+            // Update coverage warning
+            const coverageWarningEl = document.getElementById('coverage-warning');
+            const requiredSuitEl = document.getElementById('required-suit');
+            if (pendingCoverage) {
+                requiredSuitEl.textContent = pendingCoverage.suit;
+                coverageWarningEl.style.display = 'block';
+            } else {
+                coverageWarningEl.style.display = 'none';
+            }
+
+            // Update deck
+            const deckLabelEl = document.getElementById('deck-label');
+            deckLabelEl.textContent = mustPickupCards > 0 ? `Pick ${mustPickupCards}` : 
+                                     pendingCoverage ? 'Pick 1' :
+                                     `Deck (${gameState.deck.length})`;
+
+            // Update discard pile
+            const discardPileEl = document.getElementById('discard-pile');
+            const topCard = gameState.discardPile[gameState.discardPile.length - 1];
+            discardPileEl.className = `card ${topCard.suit === '♥' || topCard.suit === '♦' ? 'red' : 'black'}`;
+            discardPileEl.innerHTML = `
+                <div class="card-rank">${topCard.rank}</div>
+                <div class="card-suit">${topCard.suit}</div>
+            `;
+
+            // Update AI info and cards
+            document.getElementById('ai-info').textContent = `⚡ AI Player - ${gameState.aiHand.length} cards`;
+            
+            const aiCardsEl = document.getElementById('ai-cards');
+            aiCardsEl.innerHTML = '';
+            for (let i = 0; i < Math.min(7, gameState.aiHand.length); i++) {
+                const cardEl = createCardElement(null, true);
+                cardEl.classList.add('ai-card');
+                aiCardsEl.appendChild(cardEl);
+            }
+
+            // Update hand count
+            document.getElementById('hand-count').textContent = gameState.playerHand.length;
+
+            // Update last card bubble
+            const lastCardBubbleEl = document.getElementById('last-card-bubble');
+            if (gameState.playerHand.length === 1 && lastCardDeclared) {
+                lastCardBubbleEl.style.display = 'block';
+            } else {
+                lastCardBubbleEl.style.display = 'none';
+            }
+
+            // Update player cards
+            const playerCardsEl = document.getElementById('player-cards');
+            playerCardsEl.innerHTML = '';
+            
+            gameState.playerHand.forEach((card, index) => {
+                const cardEl = createCardElement(card);
+                const isSelected = selectedCards.some(selected => selected.id === card.id);
+                const topCard = gameState.discardPile[gameState.discardPile.length - 1];
+                const isPlayable = gameState.currentPlayer === 'player' && !gameState.gameOver &&
+                    canPlayCard(card, topCard, selectedCards);
+                
+                if (isPlayable) cardEl.classList.add('playable');
+                if (isSelected) cardEl.classList.add('selected');
+                
+                if ((mustPickupCards > 0 || pendingCoverage) && !isPlayable) {
+                    cardEl.style.opacity = '0.5';
+                }
+                
+                cardEl.onclick = () => selectCard(index);
+                playerCardsEl.appendChild(cardEl);
             });
-            
-            logContainer.scrollTop = logContainer.scrollHeight;
-        }
 
-        // Statistics
-        function updateStatisticsDisplay() {
-            // Session stats
-            document.getElementById('session-games').textContent = stats.session.games;
-            document.getElementById('session-wins').textContent = stats.session.wins;
-            document.getElementById('session-losses').textContent = stats.session.losses;
-            document.getElementById('session-winrate').textContent = 
-                stats.session.games > 0 ? Math.round((stats.session.wins / stats.session.games) * 100) + '%' : '0%';
-            
-            // All time stats
-            document.getElementById('total-games').textContent = stats.allTime.games;
-            document.getElementById('total-wins').textContent = stats.allTime.wins;
-            document.getElementById('total-losses').textContent = stats.allTime.losses;
-            document.getElementById('overall-winrate').textContent = 
-                stats.allTime.games > 0 ? Math.round((stats.allTime.wins / stats.allTime.games) * 100) + '%' : '0%';
-            
-            // Records
-            document.getElementById('fastest-win').textContent = 
-                stats.records.fastestWin ? stats.records.fastestWin + 's' : '--';
-            document.getElementById('longest-game').textContent = 
-                stats.records.longestGame ? stats.records.longestGame + 's' : '--';
-            document.getElementById('best-streak').textContent = stats.records.bestStreak;
-            document.getElementById('current-streak').textContent = stats.records.currentStreak;
-        }
+            // Update controls
+            const controlsEl = document.getElementById('game-controls');
+            controlsEl.innerHTML = '';
 
-        function saveStatistics() {
-            localStorage.setItem('imperialBlackStats', JSON.stringify(stats));
-        }
+            if (selectedCards.length > 0 && gameState.currentPlayer === 'player' && !gameState.gameOver) {
+                const playBtn = document.createElement('button');
+                playBtn.className = 'btn btn-primary';
+                playBtn.textContent = `🎯 Play Selected (${selectedCards.length})`;
+                playBtn.onclick = playSelectedCards;
+                controlsEl.appendChild(playBtn);
 
-        function loadStatistics() {
-            const saved = localStorage.getItem('imperialBlackStats');
-            if (saved) {
-                stats = JSON.parse(saved);
+                const clearBtn = document.createElement('button');
+                clearBtn.className = 'btn btn-secondary';
+                clearBtn.textContent = '❌ Clear Selection';
+                clearBtn.onclick = clearSelection;
+                controlsEl.appendChild(clearBtn);
+            }
+
+            if (gameState.currentPlayer === 'player' && !gameState.gameOver) {
+                const drawBtn = document.createElement('button');
+                drawBtn.className = `btn ${mustPickupCards > 0 ? 'btn-danger' : pendingCoverage ? 'btn-warning' : 'btn-warning'}`;
+                drawBtn.textContent = mustPickupCards > 0 ? `⚠️ Pick Up ${mustPickupCards}` : 
+                                     pendingCoverage ? '⚠️ Pick Up 1' :
+                                     '🃏 Draw Card';
+                drawBtn.onclick = mustPickupCards > 0 ? forcedPickupCards : drawCard;
+                drawBtn.disabled = gameState.deck.length === 0 && gameState.discardPile.length <= 1;
+                controlsEl.appendChild(drawBtn);
+            }
+
+            // Last card button - ALWAYS show when player has 1 card
+            if (gameState.playerHand.length === 1 && gameState.currentPlayer === 'player' && !gameState.gameOver) {
+                if (!lastCardDeclared) {
+                    const lastCardBtn = document.createElement('button');
+                    lastCardBtn.className = 'btn btn-danger';
+                    lastCardBtn.textContent = '📢 Last Card!';
+                    lastCardBtn.style.animation = 'pulse 1s infinite';
+                    lastCardBtn.onclick = declareLastCard;
+                    controlsEl.appendChild(lastCardBtn);
+                } else {
+                    const cancelBtn = document.createElement('button');
+                    cancelBtn.className = 'btn btn-warning';
+                    cancelBtn.textContent = '❌ Cancel Last Card';
+                    cancelBtn.onclick = cancelLastCard;
+                    controlsEl.appendChild(cancelBtn);
+                }
+            }
+
+            if (gameState.gameOver) {
+                const playAgainBtn = document.createElement('button');
+                playAgainBtn.className = 'btn btn-primary';
+                playAgainBtn.textContent = '💎 Play Again';
+                playAgainBtn.style.padding = '15px 30px';
+                playAgainBtn.style.fontSize = '16px';
+                playAgainBtn.onclick = startNewGame;
+                controlsEl.appendChild(playAgainBtn);
             }
         }
 
-        function resetStatistics() {
-            if (confirm('Are you sure you want to reset all statistics? This cannot be undone.')) {
-                stats = {
-                    session: { games: 0, wins: 0, losses: 0 },
-                    allTime: { games: 0, wins: 0, losses: 0 },
-                    records: { fastestWin: null, longestGame: null, bestStreak: 0, currentStreak: 0 }
-                };
-                saveStatistics();
-                updateStatisticsDisplay();
-                addToLog('All statistics have been reset!');
-            }
-        }
-
-        // Utility Functions
-        function formatCards(cards) {
-            return cards.map(card => `${card.rank}${card.suit}`).join(', ');
-        }
+        // Initialize
+        showHome();
     </script>
 </body>
 </html>
