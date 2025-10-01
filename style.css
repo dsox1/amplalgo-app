@@ -113,9 +113,9 @@ body {
   z-index: 2;
 }
 .avatar.top { top: 5%; left: 50%; transform: translateX(-50%); }
-.avatar.left { left: 2%; top: 50%; transform: translateY(-50%); }
-.avatar.right { right: 2%; top: 50%; transform: translateY(-50%); }
-.avatar.bottom { bottom: 5%; left: 50%; transform: translateX(-50%); }
+.avatar.left { left: -20px; top: 50%; transform: translateY(-50%); }
+.avatar.right { right: -20px; top: 50%; transform: translateY(-50%); }
+.avatar.bottom { bottom: 60px; left: 50%; transform: translateX(-50%); }
 
 .shape {
   width: 48px; height: 48px;
@@ -160,7 +160,7 @@ body {
   z-index: 2;
 }
 .player-hand {
-  bottom: 5%;
+  bottom: 120px;
   left: 50%;
   transform: translateX(-50%);
 }
@@ -177,14 +177,14 @@ body {
   scale: 0.7;
 }
 .ai-hand-left {
-  left: 0%;
+  left: -40px;
   top: 50%;
   transform: translateY(-50%);
   flex-direction: column;
   scale: 0.7;
 }
 .ai-hand-right {
-  right: 0%;
+  right: -40px;
   top: 50%;
   transform: translateY(-50%);
   flex-direction: column;
@@ -194,7 +194,7 @@ body {
 /* Status Panel */
 .status {
   position: absolute;
-  top: 12%;
+  top: 80px;
   left: 50%;
   transform: translateX(-50%);
   background: rgba(0,0,0,.75);
@@ -205,9 +205,10 @@ body {
   z-index: 3;
 }
 
+/* Controls */
 .controls {
   position: absolute;
-  bottom: 2%;
+  bottom: 10px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
