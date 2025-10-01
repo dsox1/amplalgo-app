@@ -34,7 +34,61 @@ const game = {
   aiTop: [],
   aiLeft: [],
   aiRight: [],
-  current
+  current: 'player',
+  lastCardDeclared: false,
+  gameOver: false
+};
+
+function createDeck() {
+  const deck = [];
+  const copies = settings.doubleDeck ? 2 : 1;
+  for (let c = 0; c < copies; c++) {
+    for (const suit of suits) {
+      for (const rank of ranks) {
+        deck.push({ rank, suit, joker: false });
+      }
+    }
+    if (settings.jokerEnabled) {
+      deck.push({ rank: 'JOKER', suit: '★', joker: true });
+      deck.push({ rank: 'JOKER', suit: '☆', joker: true });
+    }
+  }
+  for (let i = deck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [deck[i], deck[j]] = [deck[j], deck[i]];
+  }
+  return deck;
+}
+
+function startGame() {
+  Object.assign(game, {
+    deck: createDeck(),
+    discard: [],
+    player: [],
+    aiTop: [],
+    aiLeft: [],
+    aiRight: [],
+    current: 'player',
+    lastCardDeclared: false,
+    gameOver: false
+  });
+
+  for (let i = 0; i < settings.startingHand; i++) {
+    game.player.push(game.deck.pop());
+    game.aiTop.push(game.deck.pop());
+    game.aiLeft.push(game.deck.pop());
+    game.aiRight.push(game.deck.pop());
+  }
+
+  let top;
+  do {
+    top = game.deck.pop();
+  } while (top && ['JOKER', 'A', 'J', '2', '8', 'K'].includes(top.rank));
+  game.discard.push(top || game.deck.pop());
+
+  renderAll();
+  setStatus('Your turn! Match suit or rank, or play a power card.');
+}
 
 function renderAll() {
   renderCenterStacks();
@@ -58,7 +112,6 @@ function renderCounts() {
 }
 
 function renderHands() {
-  // Player hand (face-up)
   UI.playerHand.innerHTML = '';
   game.player.forEach((card, idx) => {
     const el = document.createElement('div');
@@ -68,7 +121,6 @@ function renderHands() {
     UI.playerHand.appendChild(el);
   });
 
-  // Top hand (fanned, face-down)
   UI.aiTopHand.innerHTML = '';
   const angleStep = 10;
   const startAngle = -((game.aiTop.length - 1) * angleStep) / 2;
@@ -80,7 +132,6 @@ function renderHands() {
     UI.aiTopHand.appendChild(el);
   });
 
-  // Left and right hands (stacked, face-down)
   UI.aiLeftHand.innerHTML = '';
   game.aiLeft.forEach(() => {
     const el = document.createElement('div');
@@ -156,28 +207,44 @@ function cardHTML(card) {
   `;
 }
 
-function setStatus(text) {
-  UI.status.textContent = text;
+function isPlayable(card, topCard) {
+  if (!card || !topCard) return false;
+  if (card.joker) return true;
+  return card.rank === topCard.rank || card.suit === topCard.suit;
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  setStatus('Welcome! Tap Play to start.');
-  UI.btnPlay.addEventListener('click', startGame);
-  UI.btnClear.addEventListener('click', clearSelection);
-  UI.btnPlaySelected.addEventListener('click', () => {
-    setStatus('Play logic not yet implemented.');
-    clearSelection();
+function playSelectedCards() {
+  if (game.current !== 'player' || selected.size === 0) return;
+
+  const topCard = game.discard[game.discard.length - 1];
+  const playableCards = [...selected].map(i => game.player[i]).filter(card => isPlayable(card, topCard));
+
+  if (playableCards.length === 0) {
+    setStatus("Selected cards can't be played.");
+    return;
+  }
+
+  playableCards.forEach(card => {
+    game.discard.push(card);
+    game.player.splice(game.player.indexOf(card), 1);
   });
-  UI.btnDraw.addEventListener('click', () => {
-    setStatus('Draw logic not yet implemented.');
-  });
-  UI.btnLastCard.addEventListener('click', () => {
-    game.lastCardDeclared = true;
-    setStatus('You declared “Last Card!”.');
-    UI.btnLastCard.style.display = 'none';
-  });
-  UI.deckCard.addEventListener('click', () => {
-    setStatus('Draw logic not yet implemented.');
-  });
-});
-  
+
+  selected.clear();
+  renderAll();
+
+  if (game.player.length === 0) {
+    setStatus("You win!");
+    game.gameOver = true;
+    return;
+  }
+
+  game.current = 'aiTop';
+  setStatus("AI's turn...");
+  setTimeout(aiTakeTurn, 1000);
+}
+
+function drawCard() {
+  if (game.deck.length === 0 || game.current !== 'player') return;
+  const card = game.deck.pop();
+  game.player.push(card);
+  render
