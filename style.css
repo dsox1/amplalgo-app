@@ -66,6 +66,16 @@ body {
   font-weight: bold;
 }
 
+.card.selected {
+  box-shadow:
+    0 6px 14px rgba(0,0,0,0.2), /* existing shadow */
+    0 0 12px #00ffcc,            /* glow effect */
+    0 0 24px #00ffcc;
+  border: 2px solid #00ffcc;
+  transition: box-shadow 0.3s ease, border 0.3s ease;
+}
+
+
 .card {
   width: 88px;
   height: 128px;
