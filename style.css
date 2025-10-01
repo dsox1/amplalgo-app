@@ -112,9 +112,9 @@ body {
   font-weight: bold;
   z-index: 2;
 }
-.avatar.top { top: 5%; left: 50%; transform: translateX(-50%); }
-.avatar.left { left: -20px; top: 50%; transform: translateY(-50%); }
-.avatar.right { right: -20px; top: 50%; transform: translateY(-50%); }
+.avatar.top { top: 80px; left: 50%; transform: translateX(-50%); }
+.avatar.left { left: 10px; top: 50%; transform: translateY(-50%); }
+.avatar.right { right: 10px; top: 50%; transform: translateY(-50%); }
 .avatar.bottom { bottom: 60px; left: 50%; transform: translateX(-50%); }
 
 .shape {
@@ -165,7 +165,7 @@ body {
   transform: translateX(-50%);
 }
 .ai-hand-top {
-  top: 2%;
+  top: 120px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -177,14 +177,14 @@ body {
   scale: 0.7;
 }
 .ai-hand-left {
-  left: -40px;
+  left: 30px;
   top: 50%;
   transform: translateY(-50%);
   flex-direction: column;
   scale: 0.7;
 }
 .ai-hand-right {
-  right: -40px;
+  right: 30px;
   top: 50%;
   transform: translateY(-50%);
   flex-direction: column;
@@ -194,7 +194,7 @@ body {
 /* Status Panel */
 .status {
   position: absolute;
-  top: 80px;
+  top: 70px;
   left: 50%;
   transform: translateX(-50%);
   background: rgba(0,0,0,.75);
