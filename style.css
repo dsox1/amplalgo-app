@@ -2,6 +2,7 @@ body {
   margin: 0;
   font-family: sans-serif;
   background: transparent;
+  overflow: hidden;
 }
 
 .nav-actions {
@@ -28,28 +29,35 @@ body {
 
 .table-area {
   position: relative;
-  display: grid;
-  place-items: center;
-  padding: 60px 16px;
+  width: 100vw;
+  height: 100vh;
 }
 
 .table {
-  position: relative;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   width: 600px;
   height: 300px;
   background: #11a656;
   border-radius: 50% / 40%;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2) inset;
-  outline: 12px solid #5a3a16;
+  box-shadow:
+    inset 0 0 40px rgba(0, 0, 0, 0.6), /* darker felt shading */
+    0 10px 30px rgba(0, 0, 0, 0.3);
+  outline: 14px solid #5a3a16;
+  z-index: 1;
 }
 
 .center-stacks {
   position: absolute;
-  left: 50%; top: 50%;
+  top: 45%;
+  left: 50%;
   transform: translate(-50%, -50%);
   display: flex;
   gap: 32px;
   align-items: center;
+  z-index: 2;
 }
 
 .stack-label {
@@ -80,11 +88,12 @@ body {
   display: grid;
   place-items: center;
   font-weight: bold;
+  z-index: 2;
 }
 .avatar.top { top: 10%; left: 50%; transform: translateX(-50%); }
 .avatar.left { left: 4%; top: 50%; transform: translateY(-50%); }
 .avatar.right { right: 4%; top: 50%; transform: translateY(-50%); }
-.avatar.bottom { bottom: 4%; left: 50%; transform: translateX(-50%); }
+.avatar.bottom { bottom: 10%; left: 50%; transform: translateX(-50%); }
 
 .shape {
   width: 48px; height: 48px;
@@ -114,25 +123,30 @@ body {
   position: absolute;
   display: flex;
   gap: 8px;
+  z-index: 2;
 }
-.player-hand { bottom: 10%; left: 50%; transform: translateX(-50%); }
-.ai-hand { top: 10%; left: 50%; transform: translateX(-50%); }
+.player-hand { bottom: 5%; left: 50%; transform: translateX(-50%); }
+.ai-hand { top: 5%; left: 50%; transform: translateX(-50%); }
 
 .status {
   position: absolute;
-  left: 50%; bottom: 20%;
+  top: 30%;
+  left: 50%;
   transform: translateX(-50%);
   background: rgba(0,0,0,.75);
   color: #fff;
   padding: 10px 14px;
   border-radius: 10px;
   font-weight: bold;
+  z-index: 3;
 }
 
 .controls {
   position: absolute;
-  left: 50%; bottom: 4%;
+  bottom: 2%;
+  left: 50%;
   transform: translateX(-50%);
   display: flex;
   gap: 10px;
+  z-index: 3;
 }
