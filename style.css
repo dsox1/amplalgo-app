@@ -43,9 +43,23 @@ body {
   background: #11a656;
   border-radius: 50% / 40%;
   box-shadow:
-    inset 0 0 40px rgba(0, 0, 0, 0.6), /* darker felt shading */
+    inset 0 0 40px rgba(0, 0, 0, 0.6),
     0 10px 30px rgba(0, 0, 0, 0.3);
   outline: 14px solid #5a3a16;
+  z-index: 1;
+}
+
+/* Mini table behind top fan */
+.mini-table {
+  position: absolute;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 300px;
+  height: 120px;
+  background: goldenrod;
+  border-radius: 50% / 40%;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.4);
   z-index: 1;
 }
 
@@ -83,6 +97,28 @@ body {
   cursor: pointer;
 }
 
+.card-face {
+  width: 100%;
+  height: 100%;
+  padding: 6px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.card-corners {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+}
+.card-icon {
+  text-align: center;
+  font-size: 28px;
+}
+.red { color: #d32f2f; }
+.black { color: #222; }
+
 .avatars .avatar {
   position: absolute;
   display: grid;
@@ -90,13 +126,24 @@ body {
   font-weight: bold;
   z-index: 2;
 }
-.avatar.top { top: 10%; left: 50%; transform: translateX(-50%); }
-.avatar.left { left: 4%; top: 50%; transform: translateY(-50%); }
-.avatar.right { right: 4%; top: 50%; transform: translateY(-50%); }
-.avatar.bottom { bottom: 10%; left: 50%; transform: translateX(-50%); }
+.avatar.top { top: 5%; left: 50%; transform: translateX(-50%); }
+.avatar.left { left: 2%; top: 50%; transform: translateY(-50%); }
+.avatar.right { right: 2%; top: 50%; transform: translateY(-50%); }
+.avatar.bottom { bottom: 5%; left: 50%; transform: translateX(-50%); }
 
 .shape {
   width: 48px; height: 48px;
+  position: relative;
+}
+.shape::before {
+  content: "";
+  position: absolute;
+  top: -3px;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background: inherit;
+  border-radius: 50%;
 }
 .shape.circle { border-radius: 50%; background: #ff6f61; }
 .shape.pentagon {
@@ -119,6 +166,7 @@ body {
   color: #fff;
 }
 
+/* Hands */
 .hand {
   position: absolute;
   display: flex;
@@ -126,7 +174,24 @@ body {
   z-index: 2;
 }
 .player-hand { bottom: 5%; left: 50%; transform: translateX(-50%); }
-.ai-hand { top: 5%; left: 50%; transform: translateX(-50%); }
+.ai-hand-top {
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  flex-direction: row;
+}
+.ai-hand-left {
+  left: 2%;
+  top: 50%;
+  transform: translateY(-50%);
+  flex-direction: column;
+}
+.ai-hand-right {
+  right: 2%;
+  top: 50%;
+  transform: translateY(-50%);
+  flex-direction: column;
+}
 
 .status {
   position: absolute;
