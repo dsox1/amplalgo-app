@@ -248,3 +248,52 @@ function drawCard() {
   const card = game.deck.pop();
   game.player.push(card);
   render
+}
+
+function setStatus(text) {
+  UI.status.textContent = text;
+}
+
+// Basic AI turn simulation (placeholder)
+function aiTakeTurn() {
+  const topCard = game.discard[game.discard.length - 1];
+  const aiHand = game.aiTop;
+  const playable = aiHand.find(card => isPlayable(card, topCard));
+
+  if (playable) {
+    game.discard.push(playable);
+    aiHand.splice(aiHand.indexOf(playable), 1);
+    setStatus("AI played a card.");
+  } else if (game.deck.length > 0) {
+    const drawn = game.deck.pop();
+    aiHand.push(drawn);
+    setStatus("AI drew a card.");
+  } else {
+    setStatus("AI skipped turn.");
+  }
+
+  renderAll();
+
+  if (aiHand.length === 0) {
+    setStatus("AI wins!");
+    game.gameOver = true;
+    return;
+  }
+
+  game.current = 'player';
+  setStatus("Your turn!");
+}
+
+// Wire up buttons once DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+  UI.btnPlay.addEventListener('click', startGame);
+  UI.btnClear.addEventListener('click', clearSelection);
+  UI.btnPlaySelected.addEventListener('click', playSelectedCards);
+  UI.btnDraw.addEventListener('click', drawCard);
+  UI.btnLastCard.addEventListener('click', () => {
+    game.lastCardDeclared = true;
+    setStatus('You declared “Last Card!”.');
+    UI.btnLastCard.style.display = 'none';
+  });
+  UI.deckCard.addEventListener('click', drawCard);
+});
