@@ -204,7 +204,7 @@ body {
 .status {
   position: absolute;
   top: 80px;
-  left: 50%;
+  left: 70%;
   transform: translateX(-50%);
   background: #111;
   color: #00ffcc;
