@@ -169,12 +169,13 @@ body {
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  gap: 4px;
 }
 .ai-hand-top .card {
+  margin-left: -60px;
   transform: rotate(var(--angle));
   transform-origin: bottom center;
   scale: 0.7;
+  z-index: 1;
 }
 .ai-hand-left {
   left: 30px;
@@ -183,6 +184,10 @@ body {
   flex-direction: column;
   scale: 0.7;
 }
+.ai-hand-left .card {
+  margin-bottom: -80px;
+  z-index: 1;
+}
 .ai-hand-right {
   right: 30px;
   top: 50%;
@@ -190,23 +195,34 @@ body {
   flex-direction: column;
   scale: 0.7;
 }
-
-/* Info Status Panel */
-.status {
-  position: absolute;
-  top: 90px;
-  left: 70%;
-  transform: translateX(-50%);
-  background: rgba(0,0,0,.75);
-  color: #fff;
-  padding: 10px 14px;
-  border-radius: 10px;
-  font-weight: bold;
-  z-index: 3;
+.ai-hand-right .card {
+  margin-bottom: -80px;
+  z-index: 1;
 }
 
+/* Status Panel — Glowing Info Board */
+.status {
+  position: absolute;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #111;
+  color: #00ffcc;
+  font-family: 'Courier New', monospace;
+  font-size: 18px;
+  padding: 12px 20px;
+  border: 2px solid #00ffcc;
+  border-radius: 8px;
+  box-shadow: 0 0 12px #00ffcc;
+  animation: pulse 1.5s infinite;
+  z-index: 5;
+}
 
-
+@keyframes pulse {
+  0% { box-shadow: 0 0 8px #00ffcc; }
+  50% { box-shadow: 0 0 20px #00ffcc; }
+  100% { box-shadow: 0 0 8px #00ffcc; }
+}
 
 /* Controls */
 .controls {
