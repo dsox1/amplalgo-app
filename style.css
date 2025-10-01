@@ -205,6 +205,18 @@ body {
   z-index: 3;
 }
 
+.info-bar {
+  position: absolute;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+}
+
+
+
+
+
 /* Controls */
 .controls {
   position: absolute;
