@@ -207,7 +207,7 @@ body {
 
 .info-bar {
   position: absolute;
-  top: 60px;
+  top: 10px;
   left: 70%;
   transform: translateX(-50%);
   z-index: 3;
