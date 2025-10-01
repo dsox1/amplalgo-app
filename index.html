@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- Floating button bar -->
+  <!-- Top Navigation -->
   <div class="nav-actions">
     <button id="btn-play" class="btn primary">Play</button>
     <button id="btn-rules" class="btn">Rules</button>
@@ -15,7 +15,7 @@
     <button id="btn-stats" class="btn">Scores</button>
   </div>
 
-  <!-- Game table -->
+  <!-- Game Table -->
   <main class="table-area">
     <section class="table">
       <div class="center-stacks">
@@ -28,26 +28,47 @@
           <div class="stack-label">Discard</div>
         </div>
       </div>
-
-      <div class="avatars">
-        <div class="avatar top" id="avatar-ai"><div class="shape pentagon"></div><div class="avatar-label">AI • <span id="ai-count">0</span></div></div>
-        <div class="avatar left"><div class="shape star"></div></div>
-        <div class="avatar right"><div class="shape hexagon"></div></div>
-        <div class="avatar bottom" id="avatar-player"><div class="shape circle"></div><div class="avatar-label">You • <span id="player-count">0</span></div></div>
-      </div>
-
-      <section class="hand player-hand" id="player-hand"></section>
-      <section class="hand ai-hand" id="ai-hand"></section>
-
-      <div id="status" class="status">Welcome! Tap Play to start.</div>
-
-      <div class="controls">
-        <button id="btn-play-selected" class="btn primary" disabled>Play selected</button>
-        <button id="btn-clear" class="btn">Clear selection</button>
-        <button id="btn-draw" class="btn">Draw card</button>
-        <button id="btn-last-card" class="btn warn" style="display:none;">Last Card!</button>
-      </div>
     </section>
+
+    <!-- Mini Table Behind Top Fan -->
+    <div class="mini-table"></div>
+
+    <!-- Hands -->
+    <section class="hand player-hand" id="player-hand"></section>
+    <section class="hand ai-hand-top" id="ai-hand-top"></section>
+    <section class="hand ai-hand-left" id="ai-hand-left"></section>
+    <section class="hand ai-hand-right" id="ai-hand-right"></section>
+
+    <!-- Avatars -->
+    <div class="avatars">
+      <div class="avatar top" id="avatar-ai-top">
+        <div class="shape pentagon"></div>
+        <div class="avatar-label">AI • <span id="ai-top-count">0</span></div>
+      </div>
+      <div class="avatar left" id="avatar-ai-left">
+        <div class="shape star"></div>
+        <div class="avatar-label">AI • <span id="ai-left-count">0</span></div>
+      </div>
+      <div class="avatar right" id="avatar-ai-right">
+        <div class="shape hexagon"></div>
+        <div class="avatar-label">AI • <span id="ai-right-count">0</span></div>
+      </div>
+      <div class="avatar bottom" id="avatar-player">
+        <div class="shape circle"></div>
+        <div class="avatar-label">You • <span id="player-count">0</span></div>
+      </div>
+    </div>
+
+    <!-- Status Panel -->
+    <div id="status" class="status">Welcome! Tap Play to start.</div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <button id="btn-play-selected" class="btn primary" disabled>Play selected</button>
+      <button id="btn-clear" class="btn">Clear selection</button>
+      <button id="btn-draw" class="btn">Draw card</button>
+      <button id="btn-last-card" class="btn warn" style="display:none;">Last Card!</button>
+    </div>
   </main>
 
   <script src="game.js"></script>
