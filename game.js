@@ -1,7 +1,8 @@
-console.log("🎮 Backyard BlackJack - Complete Power Card Rules Version");
+console.log("🎮 Backyard BlackJack - Improved Version with Runs & Event Log");
 
 const suits = ['♠', '♥', '♦', '♣'];
 const ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+const rankValues = { 'A': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10, 'J': 11, 'Q': 12, 'K': 13 };
 
 const UI = {
   deckCard: document.getElementById('deck-card'),
@@ -16,6 +17,7 @@ const UI = {
   aiRightCount: document.getElementById('ai-right-count'),
   playerCount: document.getElementById('player-count'),
   status: document.getElementById('status'),
+  eventLog: document.getElementById('event-log'),
   btnPlaySelected: document.getElementById('btn-play-selected'),
   btnClear: document.getElementById('btn-clear'),
   btnDraw: document.getElementById('btn-draw'),
@@ -37,14 +39,49 @@ const game = {
   aiLeft: [],
   aiRight: [],
   current: 'player',
-  direction: 1, // 1 = clockwise, -1 = counterclockwise
+  direction: 1,
   lastCardDeclared: false,
   gameOver: false,
-  pendingPickup: 0, // Cards to pick up from 2s/Black Jacks
-  pendingPickupType: null, // '2' or 'blackjack'
-  skipNext: false, // For 8 cards
-  waitingForRedJack: false // Waiting for Red Jack to cancel Black Jack
+  pendingPickup: 0,
+  pendingPickupType: null,
+  skipNext: false,
+  waitingForRedJack: false,
+  eventCounter: 0,
+  messageQueue: []
 };
+
+let selected = new Set();
+
+function logEvent(message, type = 'info') {
+  game.eventCounter++;
+  const timestamp = new Date().toLocaleTimeString();
+  const logEntry = {
+    id: game.eventCounter,
+    message: message,
+    type: type,
+    timestamp: timestamp
+  };
+  
+  // Add to top of log
+  const logContainer = UI.eventLog;
+  if (logContainer) {
+    const logElement = document.createElement('div');
+    logElement.className = `log-entry ${type}`;
+    logElement.innerHTML = `
+      <span class="log-id">#${game.eventCounter}</span>
+      <span class="log-time">${timestamp}</span>
+      <span class="log-message">${message}</span>
+    `;
+    logContainer.insertBefore(logElement, logContainer.firstChild);
+    
+    // Keep only last 50 entries
+    while (logContainer.children.length > 50) {
+      logContainer.removeChild(logContainer.lastChild);
+    }
+  }
+  
+  console.log(`📝 Event #${game.eventCounter}: ${message}`);
+}
 
 function createDeck() {
   console.log("🃏 Creating deck...");
@@ -88,8 +125,15 @@ function startGame() {
     pendingPickup: 0,
     pendingPickupType: null,
     skipNext: false,
-    waitingForRedJack: false
+    waitingForRedJack: false,
+    eventCounter: 0,
+    messageQueue: []
   });
+
+  // Clear event log
+  if (UI.eventLog) {
+    UI.eventLog.innerHTML = '';
+  }
 
   // Deal cards
   console.log("🎯 Dealing cards...");
@@ -107,9 +151,12 @@ function startGame() {
   } while (top && (top.joker || isPowerCard(top)));
   game.discard.push(top || game.deck.pop());
 
+  logEvent(`🎮 New game started! Starting card: ${top.rank}${top.suit}`, 'game');
+  logEvent(`🎯 Cards dealt: ${settings.startingHand} cards each`, 'game');
+
   console.log("🎨 Rendering game...");
   renderAll();
-  setStatus('Your turn! Match suit or rank, or play a power card.');
+  setStatus('Your turn! Match suit or rank, play runs, or use power cards.');
   console.log("✅ Game started successfully!");
 }
 
@@ -125,6 +172,24 @@ function isBlackJack(card) {
 
 function isRedJack(card) {
   return card.rank === 'J' && (card.suit === '♥' || card.suit === '♦');
+}
+
+function isValidRun(cards) {
+  if (cards.length < 2) return false;
+  
+  // Sort cards by rank value
+  const sortedCards = [...cards].sort((a, b) => rankValues[a.rank] - rankValues[b.rank]);
+  
+  // Check if ranks are consecutive
+  for (let i = 1; i < sortedCards.length; i++) {
+    const prevValue = rankValues[sortedCards[i-1].rank];
+    const currValue = rankValues[sortedCards[i].rank];
+    if (currValue !== prevValue + 1) {
+      return false;
+    }
+  }
+  
+  return true;
 }
 
 function renderAll() {
@@ -187,8 +252,6 @@ function renderHands() {
   });
 }
 
-let selected = new Set();
-
 function toggleSelect(idx) {
   if (game.current !== 'player' || game.gameOver) return;
   
@@ -212,6 +275,7 @@ function clearSelection() {
   [...UI.playerHand.children].forEach(el => el.classList.remove('selected'));
   updateControls();
   setStatus('Selection cleared.');
+  logEvent('🧹 Selection cleared', 'action');
 }
 
 function updateControls() {
@@ -280,6 +344,16 @@ function setStatus(text) {
   console.log(`📢 Status: ${text}`);
 }
 
+function setStatusWithDelay(text, delay = 0) {
+  if (delay > 0) {
+    setTimeout(() => {
+      setStatus(text);
+    }, delay);
+  } else {
+    setStatus(text);
+  }
+}
+
 function getNextPlayer(current) {
   const players = ['player', 'aiTop', 'aiLeft', 'aiRight'];
   const currentIndex = players.indexOf(current);
@@ -287,46 +361,75 @@ function getNextPlayer(current) {
   return players[nextIndex];
 }
 
+function highlightAIPlay(aiPlayer, card) {
+  // Add visual feedback for AI play
+  let handElement;
+  if (aiPlayer === 'aiTop') handElement = UI.aiTopHand;
+  else if (aiPlayer === 'aiLeft') handElement = UI.aiLeftHand;
+  else if (aiPlayer === 'aiRight') handElement = UI.aiRightHand;
+  
+  if (handElement && handElement.children.length > 0) {
+    const cardElement = handElement.children[0];
+    cardElement.style.transform = 'scale(1.2) translateY(-10px)';
+    cardElement.style.boxShadow = '0 0 20px #4CAF50';
+    cardElement.style.zIndex = '1000';
+    
+    setTimeout(() => {
+      cardElement.style.transform = '';
+      cardElement.style.boxShadow = '';
+      cardElement.style.zIndex = '';
+    }, 1500);
+  }
+}
+
 function applyPowerCardEffect(card, playedBy) {
   console.log(`⚡ Applying power card effect: ${card.rank}${card.suit} played by ${playedBy}`);
   
   if (card.rank === '2') {
-    // 2: Next player picks up 2 cards (stackable)
     game.pendingPickup += 2;
     game.pendingPickupType = '2';
-    setStatus(`${playedBy === 'player' ? 'You' : 'AI'} played a 2! Next player must pick up ${game.pendingPickup} cards or stack another 2.`);
+    const message = `⚡ ${playedBy === 'player' ? 'You' : 'AI'} played a 2! Next player must pick up ${game.pendingPickup} cards or stack another 2.`;
+    setStatus(message);
+    logEvent(message, 'power');
     
   } else if (isBlackJack(card)) {
-    // Black Jack: Next player picks up 6 cards (stackable, Red Jack cancels)
     game.pendingPickup += 6;
     game.pendingPickupType = 'blackjack';
     game.waitingForRedJack = true;
-    setStatus(`${playedBy === 'player' ? 'You' : 'AI'} played a Black Jack! Next player must pick up ${game.pendingPickup} cards, stack another Black Jack, or play a Red Jack to cancel.`);
+    const message = `⚡ ${playedBy === 'player' ? 'You' : 'AI'} played a Black Jack! Next player must pick up ${game.pendingPickup} cards, stack another Black Jack, or play a Red Jack to cancel.`;
+    setStatus(message);
+    logEvent(message, 'power');
     
   } else if (isRedJack(card)) {
-    // Red Jack: Cancels Black Jack
     if (game.pendingPickupType === 'blackjack') {
       game.pendingPickup = 0;
       game.pendingPickupType = null;
       game.waitingForRedJack = false;
-      setStatus(`${playedBy === 'player' ? 'You' : 'AI'} played a Red Jack! Black Jack penalty cancelled.`);
+      const message = `⚡ ${playedBy === 'player' ? 'You' : 'AI'} played a Red Jack! Black Jack penalty cancelled.`;
+      setStatus(message);
+      logEvent(message, 'power');
     } else {
-      setStatus(`${playedBy === 'player' ? 'You' : 'AI'} played a Red Jack.`);
+      const message = `${playedBy === 'player' ? 'You' : 'AI'} played a Red Jack.`;
+      setStatus(message);
+      logEvent(message, 'play');
     }
     
   } else if (card.rank === 'K') {
-    // King: Reverses direction
     game.direction *= -1;
-    setStatus(`${playedBy === 'player' ? 'You' : 'AI'} played a King! Direction reversed.`);
+    const message = `⚡ ${playedBy === 'player' ? 'You' : 'AI'} played a King! Direction reversed.`;
+    setStatus(message);
+    logEvent(message, 'power');
     
   } else if (card.rank === '8') {
-    // 8: Skips next player's turn
     game.skipNext = true;
-    setStatus(`${playedBy === 'player' ? 'You' : 'AI'} played an 8! Next player's turn is skipped.`);
+    const message = `⚡ ${playedBy === 'player' ? 'You' : 'AI'} played an 8! Next player's turn is skipped.`;
+    setStatus(message);
+    logEvent(message, 'power');
     
   } else if (card.rank === 'A') {
-    // Ace: Changes suit (handled in play function)
-    setStatus(`${playedBy === 'player' ? 'You' : 'AI'} played an Ace! Suit changed.`);
+    const message = `⚡ ${playedBy === 'player' ? 'You' : 'AI'} played an Ace! Suit is now ${card.suit}.`;
+    setStatus(message);
+    logEvent(message, 'power');
   }
 }
 
@@ -335,132 +438,181 @@ function aiTakeTurn() {
   const topCard = game.discard[game.discard.length - 1];
   const aiHand = game.aiTop;
   
-  // Check if AI needs to handle pending pickup
-  if (game.pendingPickup > 0) {
-    console.log(`🤖 AI handling pending pickup: ${game.pendingPickup} cards (type: ${game.pendingPickupType})`);
-    
-    // Look for stacking cards or Red Jack
-    let stackCard = null;
-    if (game.pendingPickupType === '2') {
-      stackCard = aiHand.find(card => card.rank === '2');
-    } else if (game.pendingPickupType === 'blackjack') {
-      stackCard = aiHand.find(card => isBlackJack(card) || isRedJack(card));
-    }
-    
-    if (stackCard) {
-      // AI can stack or cancel
-      aiHand.splice(aiHand.indexOf(stackCard), 1);
-      game.discard.push(stackCard);
-      applyPowerCardEffect(stackCard, 'AI');
+  // Show AI thinking
+  setStatus("🤖 AI is thinking...");
+  
+  setTimeout(() => {
+    // Check if AI needs to handle pending pickup
+    if (game.pendingPickup > 0) {
+      console.log(`🤖 AI handling pending pickup: ${game.pendingPickup} cards (type: ${game.pendingPickupType})`);
       
-      if (isRedJack(stackCard) && game.pendingPickupType === 'blackjack') {
-        // Red Jack cancelled the penalty, continue normal play
-        game.current = getNextPlayer('aiTop');
+      let stackCard = null;
+      if (game.pendingPickupType === '2') {
+        stackCard = aiHand.find(card => card.rank === '2');
+      } else if (game.pendingPickupType === 'blackjack') {
+        stackCard = aiHand.find(card => isBlackJack(card) || isRedJack(card));
+      }
+      
+      if (stackCard) {
+        aiHand.splice(aiHand.indexOf(stackCard), 1);
+        game.discard.push(stackCard);
+        highlightAIPlay('aiTop', stackCard);
+        logEvent(`🤖 AI played ${stackCard.rank}${stackCard.suit}`, 'ai-play');
+        
+        setTimeout(() => {
+          applyPowerCardEffect(stackCard, 'AI');
+          
+          if (isRedJack(stackCard) && game.pendingPickupType === 'blackjack') {
+            game.current = getNextPlayer('aiTop');
+          } else {
+            game.current = getNextPlayer('aiTop');
+          }
+          
+          renderAll();
+          
+          if (aiHand.length === 0) {
+            setStatus("🏆 AI wins!");
+            logEvent("🏆 AI wins the game!", 'game');
+            game.gameOver = true;
+            return;
+          }
+          
+          setTimeout(() => {
+            if (game.current === 'aiTop' || game.current === 'aiLeft' || game.current === 'aiRight') {
+              aiTakeTurn();
+            } else {
+              setStatus("Your turn!");
+            }
+          }, 2000);
+        }, 2000);
       } else {
-        // Stacked the penalty, pass to next player
+        for (let i = 0; i < game.pendingPickup && game.deck.length > 0; i++) {
+          aiHand.push(game.deck.pop());
+        }
+        const message = `🤖 AI picked up ${game.pendingPickup} cards!`;
+        setStatus(message);
+        logEvent(message, 'ai-action');
+        game.pendingPickup = 0;
+        game.pendingPickupType = null;
+        game.waitingForRedJack = false;
         game.current = getNextPlayer('aiTop');
+        
+        renderAll();
+        
+        setTimeout(() => {
+          if (game.current === 'aiTop' || game.current === 'aiLeft' || game.current === 'aiRight') {
+            aiTakeTurn();
+          } else {
+            setStatus("Your turn!");
+          }
+        }, 3000);
       }
-    } else {
-      // AI must pick up cards
-      for (let i = 0; i < game.pendingPickup && game.deck.length > 0; i++) {
-        aiHand.push(game.deck.pop());
-      }
-      setStatus(`AI picked up ${game.pendingPickup} cards!`);
-      game.pendingPickup = 0;
-      game.pendingPickupType = null;
-      game.waitingForRedJack = false;
-      game.current = getNextPlayer('aiTop');
-    }
-    
-    renderAll();
-    
-    if (aiHand.length === 0) {
-      setStatus("AI wins!");
-      game.gameOver = true;
       return;
     }
     
-    // Continue to next turn
-    setTimeout(() => {
-      if (game.current === 'aiTop' || game.current === 'aiLeft' || game.current === 'aiRight') {
-        aiTakeTurn();
-      } else {
-        setStatus("Your turn!");
-      }
-    }, 1000);
-    return;
-  }
-  
-  // Check if AI's turn should be skipped
-  if (game.skipNext) {
-    game.skipNext = false;
-    setStatus("AI's turn was skipped!");
-    game.current = getNextPlayer('aiTop');
-    
-    setTimeout(() => {
-      if (game.current === 'aiTop' || game.current === 'aiLeft' || game.current === 'aiRight') {
-        aiTakeTurn();
-      } else {
-        setStatus("Your turn!");
-      }
-    }, 1000);
-    return;
-  }
-  
-  // Normal AI play
-  const playable = aiHand.find(card => isPlayable(card, topCard));
-
-  if (playable) {
-    aiHand.splice(aiHand.indexOf(playable), 1);
-    
-    if (playable.joker) {
-      const chosenSuit = suits[Math.floor(Math.random() * suits.length)];
-      game.discard.push({ rank: 'JOKER', suit: chosenSuit, joker: true });
-      setStatus(`AI played a Joker. Suit is now ${chosenSuit}`);
-    } else if (playable.rank === 'A') {
-      // AI chooses suit for Ace
-      const chosenSuit = suits[Math.floor(Math.random() * suits.length)];
-      game.discard.push({ rank: 'A', suit: chosenSuit, joker: false });
-      setStatus(`AI played an Ace. Suit changed to ${chosenSuit}`);
-    } else {
-      game.discard.push(playable);
-      setStatus(`AI played ${playable.rank}${playable.suit}`);
+    // Check if AI's turn should be skipped
+    if (game.skipNext) {
+      game.skipNext = false;
+      const message = "🤖 AI's turn was skipped!";
+      setStatus(message);
+      logEvent(message, 'skip');
+      game.current = getNextPlayer('aiTop');
       
-      // Apply power card effects
-      if (isPowerCard(playable)) {
-        applyPowerCardEffect(playable, 'AI');
-      }
+      setTimeout(() => {
+        if (game.current === 'aiTop' || game.current === 'aiLeft' || game.current === 'aiRight') {
+          aiTakeTurn();
+        } else {
+          setStatus("Your turn!");
+        }
+      }, 3000);
+      return;
     }
-  } else if (game.deck.length > 0) {
-    const drawn = game.deck.pop();
-    aiHand.push(drawn);
-    setStatus("AI drew a card.");
-  } else {
-    setStatus("AI skipped turn.");
-  }
+    
+    // Normal AI play
+    const playable = aiHand.find(card => isPlayable(card, topCard));
 
-  renderAll();
+    if (playable) {
+      aiHand.splice(aiHand.indexOf(playable), 1);
+      highlightAIPlay('aiTop', playable);
+      
+      setTimeout(() => {
+        if (playable.joker) {
+          const chosenSuit = suits[Math.floor(Math.random() * suits.length)];
+          game.discard.push({ rank: 'JOKER', suit: chosenSuit, joker: true });
+          const message = `🤖 AI played a Joker. Suit is now ${chosenSuit}`;
+          setStatus(message);
+          logEvent(message, 'ai-play');
+        } else {
+          game.discard.push(playable);
+          const message = `🤖 AI played ${playable.rank}${playable.suit}`;
+          setStatus(message);
+          logEvent(message, 'ai-play');
+          
+          if (isPowerCard(playable)) {
+            setTimeout(() => {
+              applyPowerCardEffect(playable, 'AI');
+            }, 1000);
+          }
+        }
+        
+        renderAll();
 
-  if (aiHand.length === 0) {
-    setStatus("AI wins!");
-    game.gameOver = true;
-    return;
-  }
+        if (aiHand.length === 0) {
+          setTimeout(() => {
+            setStatus("🏆 AI wins!");
+            logEvent("🏆 AI wins the game!", 'game');
+            game.gameOver = true;
+          }, 2000);
+          return;
+        }
 
-  // Move to next player
-  game.current = getNextPlayer('aiTop');
-  
-  setTimeout(() => {
-    if (game.current === 'aiTop' || game.current === 'aiLeft' || game.current === 'aiRight') {
-      aiTakeTurn();
+        game.current = getNextPlayer('aiTop');
+        
+        setTimeout(() => {
+          if (game.current === 'aiTop' || game.current === 'aiLeft' || game.current === 'aiRight') {
+            aiTakeTurn();
+          } else {
+            setStatus("Your turn!");
+          }
+        }, 5000); // 5 second delay between AI messages
+      }, 2000);
+      
+    } else if (game.deck.length > 0) {
+      const drawn = game.deck.pop();
+      aiHand.push(drawn);
+      const message = "🤖 AI drew a card.";
+      setStatus(message);
+      logEvent(message, 'ai-action');
+      
+      renderAll();
+      game.current = getNextPlayer('aiTop');
+      
+      setTimeout(() => {
+        if (game.current === 'aiTop' || game.current === 'aiLeft' || game.current === 'aiRight') {
+          aiTakeTurn();
+        } else {
+          setStatus("Your turn!");
+        }
+      }, 3000);
     } else {
-      setStatus("Your turn!");
+      const message = "🤖 AI skipped turn.";
+      setStatus(message);
+      logEvent(message, 'ai-action');
+      game.current = getNextPlayer('aiTop');
+      
+      setTimeout(() => {
+        if (game.current === 'aiTop' || game.current === 'aiLeft' || game.current === 'aiRight') {
+          aiTakeTurn();
+        } else {
+          setStatus("Your turn!");
+        }
+      }, 3000);
     }
-  }, 1000);
+  }, 1500); // Initial AI thinking delay
 }
 
 function promptSuitSelection() {
-  console.log("🃏 Prompting for suit selection...");
+  console.log("🃏 Prompting for joker suit selection...");
   const suitOptions = [
     { suit: '♠', name: 'Spades' },
     { suit: '♥', name: 'Hearts' },
@@ -472,10 +624,10 @@ function promptSuitSelection() {
   
   try {
     const suitText = suitOptions.map((s, i) => `${i + 1}. ${s.suit} ${s.name}`).join('\n');
-    const choice = prompt(`Choose a suit:\n${suitText}\n\nEnter 1-4:`);
+    const choice = prompt(`Choose a suit for your Joker:\n${suitText}\n\nEnter 1-4:`);
     
     if (!choice) {
-      setStatus("Suit selection cancelled.");
+      setStatus("Joker suit selection cancelled.");
       return null;
     }
     
@@ -483,13 +635,12 @@ function promptSuitSelection() {
     if (choiceNum >= 1 && choiceNum <= 4) {
       selectedSuit = suitOptions[choiceNum - 1].suit;
     } else {
-      setStatus("Invalid choice. Suit selection cancelled.");
+      setStatus("Invalid choice. Joker suit selection cancelled.");
       return null;
     }
   } catch (error) {
-    // Fallback: automatically choose a random suit
     selectedSuit = suits[Math.floor(Math.random() * suits.length)];
-    setStatus(`Suit chosen automatically: ${selectedSuit}`);
+    setStatus(`Joker suit chosen automatically: ${selectedSuit}`);
   }
   
   return selectedSuit;
@@ -522,38 +673,36 @@ function playSelectedCards() {
       return;
     }
     
-    // Play the stacking/cancelling card
     const cardIndex = game.player.indexOf(stackingCard);
     game.player.splice(cardIndex, 1);
     game.discard.push(stackingCard);
     selected.clear();
     
+    logEvent(`🎯 You played ${stackingCard.rank}${stackingCard.suit}`, 'player-play');
     applyPowerCardEffect(stackingCard, 'player');
     
     renderAll();
     
     if (game.player.length === 0) {
-      setStatus("You win!");
+      setStatus("🏆 You win!");
+      logEvent("🏆 You win the game!", 'game');
       game.gameOver = true;
       return;
     }
     
-    // Check last card rule
     if (game.player.length === 1 && !game.lastCardDeclared) {
       setStatus('You have one card left! Don\'t forget to declare "Last Card!"');
-      // Apply penalty
       for (let i = 0; i < 2 && game.deck.length > 0; i++) {
         game.player.push(game.deck.pop());
       }
-      setStatus('Penalty! You forgot to declare "Last Card!" - picked up 2 cards.');
+      setStatus('⚠️ Penalty! You forgot to declare "Last Card!" - picked up 2 cards.');
+      logEvent('⚠️ Last Card penalty applied - picked up 2 cards', 'penalty');
       renderAll();
     }
     
     if (isRedJack(stackingCard) && game.pendingPickupType === 'blackjack') {
-      // Red Jack cancelled penalty, continue normal play
       game.current = getNextPlayer('player');
     } else {
-      // Stacked penalty, pass to next player
       game.current = getNextPlayer('player');
     }
     
@@ -565,7 +714,59 @@ function playSelectedCards() {
     return;
   }
   
-  // Normal play - check if cards are playable
+  // Check for runs
+  if (selectedCards.length > 1) {
+    if (isValidRun(selectedCards)) {
+      // Play the run
+      selectedIndices.sort((a, b) => b - a); // Remove from end first
+      selectedIndices.forEach(idx => {
+        game.player.splice(idx, 1);
+      });
+      
+      // Add all cards to discard (last card becomes top)
+      const sortedRun = [...selectedCards].sort((a, b) => rankValues[a.rank] - rankValues[b.rank]);
+      sortedRun.forEach(card => game.discard.push(card));
+      
+      selected.clear();
+      
+      const runDescription = sortedRun.map(c => `${c.rank}${c.suit}`).join(', ');
+      const message = `🎯 You played a run: ${runDescription}`;
+      setStatus(message);
+      logEvent(message, 'player-play');
+      
+      renderAll();
+      
+      if (game.player.length === 0) {
+        setStatus("🏆 You win!");
+        logEvent("🏆 You win the game!", 'game');
+        game.gameOver = true;
+        return;
+      }
+      
+      if (game.player.length === 1 && !game.lastCardDeclared) {
+        setStatus('You have one card left! Don\'t forget to declare "Last Card!"');
+        for (let i = 0; i < 2 && game.deck.length > 0; i++) {
+          game.player.push(game.deck.pop());
+        }
+        setStatus('⚠️ Penalty! You forgot to declare "Last Card!" - picked up 2 cards.');
+        logEvent('⚠️ Last Card penalty applied - picked up 2 cards', 'penalty');
+        renderAll();
+      }
+      
+      game.current = getNextPlayer('player');
+      setTimeout(() => {
+        if (game.current === 'aiTop' || game.current === 'aiLeft' || game.current === 'aiRight') {
+          aiTakeTurn();
+        }
+      }, 1000);
+      return;
+    } else {
+      setStatus("Selected cards don't form a valid run. Cards must be consecutive ranks.");
+      return;
+    }
+  }
+  
+  // Single card play
   const playableCards = selectedCards.filter(card => isPlayable(card, topCard));
 
   if (playableCards.length === 0) {
@@ -575,7 +776,6 @@ function playSelectedCards() {
     return;
   }
 
-  // Play the first playable card (for simplicity, only play one at a time)
   const cardToPlay = playableCards[0];
   const cardIndex = game.player.indexOf(cardToPlay);
   game.player.splice(cardIndex, 1);
@@ -585,58 +785,48 @@ function playSelectedCards() {
     console.log("🃏 Playing joker card...");
     const chosenSuit = promptSuitSelection();
     if (!chosenSuit) {
-      // Put card back if cancelled
       game.player.splice(cardIndex, 0, cardToPlay);
       renderAll();
       return;
     }
     game.discard.push({ rank: 'JOKER', suit: chosenSuit, joker: true });
-    setStatus(`You played a Joker. Suit is now ${chosenSuit}`);
-    
-  } else if (cardToPlay.rank === 'A') {
-    console.log("🃏 Playing Ace - choosing suit...");
-    const chosenSuit = promptSuitSelection();
-    if (!chosenSuit) {
-      // Put card back if cancelled
-      game.player.splice(cardIndex, 0, cardToPlay);
-      renderAll();
-      return;
-    }
-    game.discard.push({ rank: 'A', suit: chosenSuit, joker: false });
-    setStatus(`You played an Ace. Suit changed to ${chosenSuit}`);
+    const message = `🎯 You played a Joker. Suit is now ${chosenSuit}`;
+    setStatus(message);
+    logEvent(message, 'player-play');
     
   } else {
     game.discard.push(cardToPlay);
-    setStatus(`You played ${cardToPlay.rank}${cardToPlay.suit}`);
+    const message = `🎯 You played ${cardToPlay.rank}${cardToPlay.suit}`;
+    setStatus(message);
+    logEvent(message, 'player-play');
     
-    // Apply power card effects
     if (isPowerCard(cardToPlay)) {
-      applyPowerCardEffect(cardToPlay, 'player');
+      setTimeout(() => {
+        applyPowerCardEffect(cardToPlay, 'player');
+      }, 500);
     }
   }
   
   renderAll();
 
-  // Check for win
   if (game.player.length === 0) {
-    setStatus("You win!");
+    setStatus("🏆 You win!");
+    logEvent("🏆 You win the game!", 'game');
     game.gameOver = true;
     console.log("🏆 Player wins!");
     return;
   }
 
-  // Check last card rule
   if (game.player.length === 1 && !game.lastCardDeclared) {
     setStatus('You have one card left! Don\'t forget to declare "Last Card!"');
-    // Apply penalty
     for (let i = 0; i < 2 && game.deck.length > 0; i++) {
       game.player.push(game.deck.pop());
     }
-    setStatus('Penalty! You forgot to declare "Last Card!" - picked up 2 cards.');
+    setStatus('⚠️ Penalty! You forgot to declare "Last Card!" - picked up 2 cards.');
+    logEvent('⚠️ Last Card penalty applied - picked up 2 cards', 'penalty');
     renderAll();
   }
 
-  // Move to next player
   game.current = getNextPlayer('player');
   
   setTimeout(() => {
@@ -648,18 +838,18 @@ function playSelectedCards() {
 
 function drawCard() {
   if (game.pendingPickup > 0) {
-    // Player must pick up penalty cards
     for (let i = 0; i < game.pendingPickup && game.deck.length > 0; i++) {
       game.player.push(game.deck.pop());
     }
-    setStatus(`You picked up ${game.pendingPickup} penalty cards!`);
+    const message = `🎴 You picked up ${game.pendingPickup} penalty cards!`;
+    setStatus(message);
+    logEvent(message, 'player-action');
     game.pendingPickup = 0;
     game.pendingPickupType = null;
     game.waitingForRedJack = false;
     
     renderAll();
     
-    // Move to next player
     game.current = getNextPlayer('player');
     setTimeout(() => {
       if (game.current === 'aiTop' || game.current === 'aiLeft' || game.current === 'aiRight') {
@@ -667,12 +857,21 @@ function drawCard() {
       }
     }, 1000);
   } else {
-    // Normal draw
     if (game.deck.length === 0 || game.current !== 'player' || game.gameOver) return;
     const card = game.deck.pop();
     game.player.push(card);
     renderAll();
-    setStatus("You drew a card.");
+    const message = "🎴 You drew a card.";
+    setStatus(message);
+    logEvent(message, 'player-action');
+    
+    // Pass turn to opponent after drawing
+    game.current = getNextPlayer('player');
+    setTimeout(() => {
+      if (game.current === 'aiTop' || game.current === 'aiLeft' || game.current === 'aiRight') {
+        aiTakeTurn();
+      }
+    }, 1000);
   }
 }
 
@@ -680,7 +879,6 @@ function drawCard() {
 document.addEventListener('DOMContentLoaded', () => {
   console.log("🚀 DOM loaded, setting up event listeners...");
   
-  // Verify all UI elements exist
   const missingElements = [];
   Object.entries(UI).forEach(([key, element]) => {
     if (!element) {
@@ -695,44 +893,39 @@ document.addEventListener('DOMContentLoaded', () => {
   
   console.log("✅ All UI elements found");
   
-  // Start game button
   UI.btnPlay.addEventListener('click', () => {
     console.log("🎮 Play button clicked!");
     startGame();
   });
   
-  // Play selected cards button
   UI.btnPlaySelected.addEventListener('click', () => {
     console.log("🎯 Play Selected button clicked!");
     playSelectedCards();
   });
 
-  // Clear selection button
   UI.btnClear.addEventListener('click', () => {
     console.log("🧹 Clear button clicked!");
     clearSelection();
   });
   
-  // Draw card button
   UI.btnDraw.addEventListener('click', () => {
     console.log("🎴 Draw button clicked!");
     drawCard();
   });
 
-  // Last card declaration button
   UI.btnLastCard.addEventListener('click', () => {
     console.log("🗣️ Last Card button clicked!");
     game.lastCardDeclared = true;
     setStatus('You declared "Last Card!"');
+    logEvent('🗣️ You declared "Last Card!"', 'declaration');
     UI.btnLastCard.style.display = 'none';
   });
 
-  // Deck card click (alternative draw)
   UI.deckCard.addEventListener('click', () => {
     console.log("🎴 Deck clicked!");
     drawCard();
   });
   
   console.log("✅ All event listeners set up successfully!");
-  console.log("🎮 Game ready to play with complete power card rules!");
-}); // <-- FIXED: Closing bracket and brace for DOMContentLoaded
+  console.log("🎮 Game ready with runs, event log, and improved AI feedback!");
+}); // <-- PROPER CLOSING BRACKET AND BRACE
