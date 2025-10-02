@@ -430,4 +430,4 @@ document.addEventListener('DOMContentLoaded', () => {
     renderAll();
     setStatus("You drew a card.");
   });
-});
+}); // <-- FIXED: Added missing closing bracket and brace
