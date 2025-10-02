@@ -168,6 +168,7 @@ function clearSelection() {
   selected.clear();
   [...UI.playerHand.children].forEach(el => el.classList.remove('selected'));
   updateControls();
+  setStatus('Selection cleared.');
 }
 
 function updateControls() {
@@ -176,13 +177,14 @@ function updateControls() {
   UI.btnLastCard.style.display = showLastCard ? 'inline-block' : 'none';
 }
 
+// FIXED: Card display function with correct suit rendering
 function cardHTML(card) {
   if (!card || card.joker) {
     return `
       <div class="card-face">
-        <div class="card-corners"><span>JOKER</span><span>${card.suit}</span></div>
-        <div class="card-icon"><span class="black">${card.suit}</span></div>
-        <div class="card-corners"><span>${card.suit}</span><span>JOKER</span></div>
+        <div class="card-corners"><span>JOKER</span><span>${card ? card.suit : '★'}</span></div>
+        <div class="card-icon"><span class="black">${card ? card.suit : '★'}</span></div>
+        <div class="card-corners"><span>${card ? card.suit : '★'}</span><span>JOKER</span></div>
       </div>
     `;
   }
@@ -192,6 +194,8 @@ function cardHTML(card) {
   if (card.rank === 'K') centerIcon = '♛';
   if (card.rank === 'Q') centerIcon = '♕';
   if (card.rank === 'J') centerIcon = '🛡';
+  
+  // FIXED: Ensure suit symbols are displayed correctly
   return `
     <div class="card-face">
       <div class="card-corners ${suitClass}">
@@ -214,32 +218,6 @@ function isPlayable(card, topCard) {
   return card.rank === topCard.rank || card.suit === topCard.suit;
 }
 
-function playSelectedCards() {
-  if (game.current !== 'player' || selected.size === 0) return;
-
-  const topCard = game.discard[game.discard.length - 1];
-  const playableCards = [...selected].map(i => game.player[i]).filter(card => isPlayable(card, topCard));
-
-  if (playableCards.length === 0) {
-    setStatus("Selected cards can't be played.");
-    return;
-  }
-
-  const jokerCard = playableCards.find(card => card.joker);
-  if (jokerCard) {
-    const suit = prompt("Choose a suit: ♠, ♥, ♦, ♣");
-    if (!suits.includes(suit)) {
-      setStatus("Invalid suit. Joker play cancelled.");
-      return;
-    }
-    game.discard.push({ rank: 'JOKER', suit, joker: true });
-    game.player.splice(game.player.indexOf(jokerCard), 1);
-  } else {
-    playableCards.forEach(card => {
-      game.discard.push(card);
-      game.player
-}}
-
 function setStatus(text) {
   UI.status.textContent = text;
 }
@@ -258,7 +236,7 @@ function aiTakeTurn() {
       setStatus(`AI played a Joker. Suit is now ${chosenSuit}`);
     } else {
       game.discard.push(playable);
-      setStatus(`AI played ${playable.rank} of ${playable.suit}`);
+      setStatus(`AI played ${playable.rank}${playable.suit}`);
     }
   } else if (game.deck.length > 0) {
     const drawn = game.deck.pop();
@@ -280,83 +258,176 @@ function aiTakeTurn() {
   setStatus("Your turn!");
 }
 
-// Joker suit selection for player
+// IMPROVED: Better joker suit selection with fallback
 function promptSuitSelection() {
-  const suit = prompt("Choose a suit: ♠, ♥, ♦, ♣");
-  if (!suits.includes(suit)) {
-    setStatus("Invalid suit. Joker play cancelled.");
+  // Create a better suit selection UI
+  const suitOptions = [
+    { suit: '♠', name: 'Spades' },
+    { suit: '♥', name: 'Hearts' },
+    { suit: '♦', name: 'Diamonds' },
+    { suit: '♣', name: 'Clubs' }
+  ];
+  
+  let selectedSuit = null;
+  
+  // Try to use prompt, but provide fallback
+  try {
+    const suitText = suitOptions.map((s, i) => `${i + 1}. ${s.suit} ${s.name}`).join('\n');
+    const choice = prompt(`Choose a suit for your Joker:\n${suitText}\n\nEnter 1-4 or the suit symbol:`);
+    
+    if (!choice) {
+      setStatus("Joker play cancelled.");
+      return false;
+    }
+    
+    // Parse the choice
+    if (choice === '1' || choice.includes('♠') || choice.toLowerCase().includes('spade')) {
+      selectedSuit = '♠';
+    } else if (choice === '2' || choice.includes('♥') || choice.toLowerCase().includes('heart')) {
+      selectedSuit = '♥';
+    } else if (choice === '3' || choice.includes('♦') || choice.toLowerCase().includes('diamond')) {
+      selectedSuit = '♦';
+    } else if (choice === '4' || choice.includes('♣') || choice.toLowerCase().includes('club')) {
+      selectedSuit = '♣';
+    } else {
+      setStatus("Invalid choice. Joker play cancelled.");
+      return false;
+    }
+  } catch (error) {
+    // Fallback: automatically choose a random suit if prompt fails
+    selectedSuit = suits[Math.floor(Math.random() * suits.length)];
+    setStatus(`Joker played automatically. Suit chosen: ${selectedSuit}`);
+  }
+  
+  game.discard.push({ rank: 'JOKER', suit: selectedSuit, joker: true });
+  setStatus(`You played a Joker. Suit is now ${selectedSuit}`);
+  return true;
+}
+
+// FIXED: Complete playSelectedCards function
+function playSelectedCards() {
+  if (game.current !== 'player' || selected.size === 0 || game.gameOver) return;
+
+  const topCard = game.discard[game.discard.length - 1];
+  const selectedIndices = [...selected];
+  const selectedCards = selectedIndices.map(i => game.player[i]);
+  
+  // Check if any selected cards are playable
+  const playableCards = selectedCards.filter(card => isPlayable(card, topCard));
+
+  if (playableCards.length === 0) {
+    const topCardDisplay = topCard.joker ? `Joker (${topCard.suit})` : `${topCard.rank}${topCard.suit}`;
+    setStatus(`Selected cards can't be played on ${topCardDisplay}`);
     return;
   }
-  game.discard.push({ rank: 'JOKER', suit, joker: true });
+
+  // Handle joker cards
+  const jokerCard = playableCards.find(card => card.joker);
+  if (jokerCard) {
+    // Remove joker from hand first
+    const jokerIndex = game.player.indexOf(jokerCard);
+    game.player.splice(jokerIndex, 1);
+    
+    // Clear selection
+    selected.clear();
+    
+    // Prompt for suit selection
+    if (promptSuitSelection()) {
+      renderAll();
+      
+      // Check for win
+      if (game.player.length === 0) {
+        setStatus("You win!");
+        game.gameOver = true;
+        return;
+      }
+      
+      // Check last card rule
+      if (game.player.length === 1 && !game.lastCardDeclared) {
+        setStatus('You have one card left! Don\'t forget to declare "Last Card!"');
+      }
+      
+      // Switch to AI turn
+      game.current = 'aiTop';
+      setTimeout(aiTakeTurn, 1000);
+    } else {
+      // If suit selection was cancelled, put the joker back
+      game.player.splice(jokerIndex, 0, jokerCard);
+      renderAll();
+    }
+    return;
+  }
+
+  // Handle regular cards
+  // Sort indices in descending order to remove from end first
+  selectedIndices.sort((a, b) => b - a);
+  
+  // Play all selected playable cards
+  playableCards.forEach(card => {
+    game.discard.push(card);
+    const cardIndex = game.player.indexOf(card);
+    if (cardIndex !== -1) {
+      game.player.splice(cardIndex, 1);
+    }
+  });
+
+  // Clear selection
+  selected.clear();
+  
+  // Update display
   renderAll();
+
+  // Check for win
+  if (game.player.length === 0) {
+    setStatus("You win!");
+    game.gameOver = true;
+    return;
+  }
+
+  // Check last card rule
+  if (game.player.length === 1 && !game.lastCardDeclared) {
+    setStatus('You have one card left! Don\'t forget to declare "Last Card!"');
+  }
+
+  // Switch to AI turn
   game.current = 'aiTop';
-  setStatus(`You played a Joker. Suit is now ${suit}`);
+  setStatus("AI's turn...");
   setTimeout(aiTakeTurn, 1000);
 }
 
-// Fix: Wire up buttons after DOM is ready
+// Wire up buttons after DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
+  // Start game button
   UI.btnPlay.addEventListener('click', startGame);
-  UI.btnPlaySelected.addEventListener('click', () => {
-    if (game.current !== 'player' || selected.size === 0) return;
+  
+  // Play selected cards button
+  UI.btnPlaySelected.addEventListener('click', playSelectedCards);
 
-    const topCard = game.discard[game.discard.length - 1];
-    const playableCards = [...selected].map(i => game.player[i]).filter(card => isPlayable(card, topCard));
-
-    if (playableCards.length === 0) {
-      setStatus("Selected cards can't be played.");
-      return;
-    }
-
-    const jokerCard = playableCards.find(card => card.joker);
-    if (jokerCard) {
-      game.player.splice(game.player.indexOf(jokerCard), 1);
-      selected.clear();
-      promptSuitSelection();
-      return;
-    }
-
-    playableCards.forEach(card => {
-      game.discard.push(card);
-      game.player.splice(game.player.indexOf(card), 1);
-    });
-
-    selected.clear();
-    renderAll();
-
-    if (game.player.length === 0) {
-      setStatus("You win!");
-      game.gameOver = true;
-      return;
-    }
-
-    game.current = 'aiTop';
-    setStatus("AI's turn...");
-    setTimeout(aiTakeTurn, 1000);
-  });
-
+  // FIXED: Clear selection button
   UI.btnClear.addEventListener('click', clearSelection);
+  
+  // Draw card button
   UI.btnDraw.addEventListener('click', () => {
-    if (game.deck.length === 0 || game.current !== 'player') return;
+    if (game.deck.length === 0 || game.current !== 'player' || game.gameOver) return;
     const card = game.deck.pop();
     game.player.push(card);
     renderAll();
     setStatus("You drew a card.");
   });
 
+  // Last card declaration button
   UI.btnLastCard.addEventListener('click', () => {
     game.lastCardDeclared = true;
-    setStatus('You declared “Last Card!”.');
+    setStatus('You declared "Last Card!"');
     UI.btnLastCard.style.display = 'none';
   });
 
+  // Deck card click (alternative draw)
   UI.deckCard.addEventListener('click', () => {
-    if (game.deck.length === 0 || game.current !== 'player') return;
+    if (game.deck.length === 0 || game.current !== 'player' || game.gameOver) return;
     const card = game.deck.pop();
     game.player.push(card);
     renderAll();
     setStatus("You drew a card.");
   });
 });
-
-                          
