@@ -405,6 +405,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // FIXED: Clear selection button
   UI.btnClear.addEventListener('click', clearSelection);
+  });
   
   // Draw card button
   UI.btnDraw.addEventListener('click', () => {
@@ -414,7 +415,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderAll();
     setStatus("You drew a card.");
   });
-  });
+  
 
   // Last card declaration button
   UI.btnLastCard.addEventListener('click', () => {
