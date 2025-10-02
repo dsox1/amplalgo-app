@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Backyard Black Jack - Final Debug Version</title>
+  <title>Backyard Black Jack - Complete Power Card Rules</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -69,17 +69,29 @@
       <button id="btn-play-selected" class="btn primary" disabled>Play selected</button>
       <button id="btn-clear" class="btn">Clear selection</button>
       <button id="btn-draw" class="btn">Draw card</button>
-      <button id="btn-last-card" class="btn warn" style="display:none;">Last Card!</button>
+      <button id="btn-last-card" class="btn warn" style="display:none;">🗣️ Last Card!</button>
     </div>
   </main>
 
+  <!-- Power Card Rules Reference -->
+  <div style="position: fixed; top: 10px; left: 10px; background: rgba(0,0,0,0.9); color: white; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 11px; max-width: 300px;">
+    <div style="font-weight: bold; margin-bottom: 10px; color: #4CAF50;">⚡ POWER CARD RULES</div>
+    <div><strong>2:</strong> Next player +2 cards (stackable)</div>
+    <div><strong>Black J (♠♣):</strong> Next player +6 cards</div>
+    <div><strong>Red J (♥♦):</strong> Cancels Black Jack</div>
+    <div><strong>King:</strong> Reverses direction</div>
+    <div><strong>8:</strong> Skips next player</div>
+    <div><strong>Ace:</strong> Changes suit</div>
+    <div><strong>Last Card:</strong> Must declare or +2 penalty</div>
+  </div>
+
   <!-- Debug Info -->
   <div style="position: fixed; bottom: 10px; right: 10px; background: rgba(0,0,0,0.8); color: white; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px;">
-    <div>Debug Version - Check Console (F12)</div>
+    <div>Complete Power Card Version</div>
     <div id="debug-info">Ready to play</div>
   </div>
 
-  <script src="game.js"></script>
+  <script src="backyard_blackjack_complete.js"></script>
   
   <script>
     // Additional debug info
@@ -89,7 +101,8 @@
         debugEl.innerHTML = `
           Player: ${game.player ? game.player.length : 0} cards<br>
           Selected: ${typeof selected !== 'undefined' ? selected.size : 0}<br>
-          Turn: ${game.current || 'none'}
+          Turn: ${game.current || 'none'}<br>
+          Pickup: ${game.pendingPickup || 0} (${game.pendingPickupType || 'none'})
         `;
       }
     }, 1000);
