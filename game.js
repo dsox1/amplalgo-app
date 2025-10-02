@@ -399,13 +399,12 @@ function playSelectedCards() {
 document.addEventListener('DOMContentLoaded', () => {
   // Start game button
   UI.btnPlay.addEventListener('click', startGame);
-  
+  });
   // Play selected cards button
   UI.btnPlaySelected.addEventListener('click', playSelectedCards);
 
   // FIXED: Clear selection button
   UI.btnClear.addEventListener('click', clearSelection);
-  });
   
   // Draw card button
   UI.btnDraw.addEventListener('click', () => {
