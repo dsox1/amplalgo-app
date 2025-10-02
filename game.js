@@ -414,6 +414,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderAll();
     setStatus("You drew a card.");
   });
+  });
 
   // Last card declaration button
   UI.btnLastCard.addEventListener('click', () => {
