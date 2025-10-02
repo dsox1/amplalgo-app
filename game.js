@@ -735,4 +735,4 @@ document.addEventListener('DOMContentLoaded', () => {
   
   console.log("✅ All event listeners set up successfully!");
   console.log("🎮 Game ready to play with complete power card rules!");
-});
+}); // <-- FIXED: Closing bracket and brace for DOMContentLoaded
