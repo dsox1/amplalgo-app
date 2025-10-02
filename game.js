@@ -238,6 +238,7 @@ function playSelectedCards() {
     playableCards.forEach(card => {
       game.discard.push(card);
       game.player
+  }
 
 function setStatus(text) {
   UI.status.textContent = text;
