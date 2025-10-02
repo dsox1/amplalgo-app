@@ -83,7 +83,7 @@ function startGame() {
   let top;
   do {
     top = game.deck.pop();
-  } while (top && ['JOKER', 'A', 'J', '2', '8', 'K'].includes(top.rank));
+  } while (top && top.joker);
   game.discard.push(top || game.deck.pop());
 
   renderAll();
@@ -180,9 +180,9 @@ function cardHTML(card) {
   if (!card || card.joker) {
     return `
       <div class="card-face">
-        <div class="card-corners"><span>JOKER</span><span>★</span></div>
-        <div class="card-icon"><span class="black">?</span></div>
-        <div class="card-corners"><span>☆</span><span>JOKER</span></div>
+        <div class="card-corners"><span>JOKER</span><span>${card.suit}</span></div>
+        <div class="card-icon"><span class="black">${card.suit}</span></div>
+        <div class="card-corners"><span>${card.suit}</span><span>JOKER</span></div>
       </div>
     `;
   }
@@ -210,6 +210,7 @@ function cardHTML(card) {
 function isPlayable(card, topCard) {
   if (!card || !topCard) return false;
   if (card.joker) return true;
+  if (topCard.joker) return card.suit === topCard.suit;
   return card.rank === topCard.rank || card.suit === topCard.suit;
 }
 
@@ -224,76 +225,16 @@ function playSelectedCards() {
     return;
   }
 
-  playableCards.forEach(card => {
-    game.discard.push(card);
-    game.player.splice(game.player.indexOf(card), 1);
-  });
-
-  selected.clear();
-  renderAll();
-
-  if (game.player.length === 0) {
-    setStatus("You win!");
-    game.gameOver = true;
-    return;
-  }
-
-  game.current = 'aiTop';
-  setStatus("AI's turn...");
-  setTimeout(aiTakeTurn, 1000);
-}
-
-function drawCard() {
-  if (game.deck.length === 0 || game.current !== 'player') return;
-  const card = game.deck.pop();
-  game.player.push(card);
-  render
-}
-
-function setStatus(text) {
-  UI.status.textContent = text;
-}
-
-// Basic AI turn simulation (placeholder)
-function aiTakeTurn() {
-  const topCard = game.discard[game.discard.length - 1];
-  const aiHand = game.aiTop;
-  const playable = aiHand.find(card => isPlayable(card, topCard));
-
-  if (playable) {
-    game.discard.push(playable);
-    aiHand.splice(aiHand.indexOf(playable), 1);
-    setStatus("AI played a card.");
-  } else if (game.deck.length > 0) {
-    const drawn = game.deck.pop();
-    aiHand.push(drawn);
-    setStatus("AI drew a card.");
+  const jokerCard = playableCards.find(card => card.joker);
+  if (jokerCard) {
+    const suit = prompt("Choose a suit: ♠, ♥, ♦, ♣");
+    if (!suits.includes(suit)) {
+      setStatus("Invalid suit. Joker play cancelled.");
+      return;
+    }
+    game.discard.push({ rank: 'JOKER', suit, joker: true });
+    game.player.splice(game.player.indexOf(jokerCard), 1);
   } else {
-    setStatus("AI skipped turn.");
-  }
-
-  renderAll();
-
-  if (aiHand.length === 0) {
-    setStatus("AI wins!");
-    game.gameOver = true;
-    return;
-  }
-
-  game.current = 'player';
-  setStatus("Your turn!");
-}
-
-// Wire up buttons once DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-  UI.btnPlay.addEventListener('click', startGame);
-  UI.btnClear.addEventListener('click', clearSelection);
-  UI.btnPlaySelected.addEventListener('click', playSelectedCards);
-  UI.btnDraw.addEventListener('click', drawCard);
-  UI.btnLastCard.addEventListener('click', () => {
-    game.lastCardDeclared = true;
-    setStatus('You declared “Last Card!”.');
-    UI.btnLastCard.style.display = 'none';
-  });
-  UI.deckCard.addEventListener('click', drawCard);
-});
+    playableCards.forEach(card => {
+      game.discard.push(card);
+      game.player
