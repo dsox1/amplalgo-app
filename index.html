@@ -3,16 +3,41 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Backyard Black Jack - Improved with Runs & Event Log</title>
+  <title>Backyard Black Jack - Final Version</title>
   <link rel="stylesheet" href="style.css" />
   <style>
-    /* Event Log Panel */
+    /* Panel Toggle Buttons */
+    .panel-toggles {
+      position: fixed;
+      top: 50px;
+      left: 10px;
+      z-index: 1001;
+    }
+    
+    .panel-toggle-btn {
+      display: block;
+      margin-bottom: 5px;
+      padding: 8px 12px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    
+    .panel-toggle-btn:hover {
+      background: #45a049;
+    }
+    
+    /* Event Log Panel - Same height as rules */
     .event-log-panel {
       position: fixed;
       top: 10px;
       right: 10px;
       width: 350px;
-      height: 400px;
+      height: 200px; /* Same as rules panel */
       background: rgba(0, 0, 0, 0.95);
       border: 2px solid #4CAF50;
       border-radius: 8px;
@@ -38,10 +63,11 @@
     }
     
     .log-entry {
-      margin-bottom: 8px;
-      padding: 4px 6px;
-      border-radius: 4px;
-      border-left: 3px solid #666;
+      margin-bottom: 6px;
+      padding: 3px 5px;
+      border-radius: 3px;
+      border-left: 2px solid #666;
+      font-size: 10px;
     }
     
     .log-entry.game {
@@ -71,14 +97,14 @@
     
     .log-id {
       color: #888;
-      font-size: 9px;
-      margin-right: 8px;
+      font-size: 8px;
+      margin-right: 6px;
     }
     
     .log-time {
       color: #AAA;
-      font-size: 9px;
-      margin-right: 8px;
+      font-size: 8px;
+      margin-right: 6px;
     }
     
     .log-message {
@@ -96,8 +122,10 @@
       border-radius: 8px;
       font-family: monospace;
       font-size: 11px;
-      max-width: 300px;
+      width: 280px;
+      height: 200px; /* Fixed height */
       border: 2px solid #9C27B0;
+      overflow-y: auto;
     }
     
     .power-rules-header {
@@ -108,12 +136,85 @@
     }
     
     .power-rule {
-      margin-bottom: 4px;
-      padding: 2px 0;
+      margin-bottom: 3px;
+      padding: 1px 0;
+      font-size: 10px;
     }
     
     .power-rule strong {
       color: #4CAF50;
+    }
+    
+    /* Status Panel - Lower left quarter */
+    .info-bar {
+      position: fixed !important;
+      bottom: 20px !important;
+      left: 20px !important;
+      width: 300px !important;
+      background: rgba(0, 0, 0, 0.8) !important;
+      border: 2px solid #2196F3 !important;
+      border-radius: 8px !important;
+      padding: 15px !important;
+      z-index: 1000 !important;
+    }
+    
+    .status {
+      color: white !important;
+      font-family: monospace !important;
+      font-size: 14px !important;
+      text-align: center !important;
+    }
+    
+    /* Last Card Button - Red knob on table */
+    .last-card-knob {
+      position: absolute;
+      top: 50%;
+      right: 15%;
+      width: 60px;
+      height: 60px;
+      background: radial-gradient(circle, #ff4444, #cc0000);
+      border: 4px solid #ffffff;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: white;
+      font-size: 10px;
+      text-align: center;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      transition: all 0.3s ease;
+      z-index: 100;
+    }
+    
+    .last-card-knob:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+    }
+    
+    .last-card-knob:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    /* Card scaling and spacing improvements */
+    .card {
+      transition: transform 0.2s ease;
+    }
+    
+    .hand {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: nowrap;
+      overflow: visible;
+    }
+    
+    .player-hand {
+      max-width: 90vw;
+      margin: 0 auto;
     }
     
     /* AI Play Animation */
@@ -126,9 +227,20 @@
       50% { transform: scale(1.2) translateY(-10px); box-shadow: 0 0 20px #4CAF50; }
       100% { transform: scale(1); box-shadow: none; }
     }
+    
+    /* Hide original controls that are now replaced */
+    .controls #btn-last-card {
+      display: none !important;
+    }
   </style>
 </head>
 <body>
+  <!-- Panel Toggle Buttons -->
+  <div class="panel-toggles">
+    <button id="btn-toggle-rules" class="panel-toggle-btn">📋 Rules</button>
+    <button id="btn-toggle-log" class="panel-toggle-btn">📊 Log</button>
+  </div>
+
   <!-- Top Navigation -->
   <div class="nav-actions">
     <button id="btn-play" class="btn primary">Play</button>
@@ -150,6 +262,11 @@
           <div class="stack-label">Discard</div>
         </div>
       </div>
+      
+      <!-- Last Card Red Knob -->
+      <button id="btn-last-card" class="last-card-knob" title="Declare Last Card">
+        LAST<br>CARD
+      </button>
     </section>
 
     <!-- Mini Table Behind Top Fan -->
@@ -181,7 +298,7 @@
       </div>
     </div>
 
-    <!-- Status Panel -->
+    <!-- Status Panel - Lower Left -->
     <div class="info-bar">
       <div id="status" class="status">Welcome! Tap Play to start.</div>
     </div>
@@ -191,12 +308,11 @@
       <button id="btn-play-selected" class="btn primary" disabled>Play selected</button>
       <button id="btn-clear" class="btn">Clear selection</button>
       <button id="btn-draw" class="btn">Draw card</button>
-      <button id="btn-last-card" class="btn warn" style="display:none;">🗣️ Last Card!</button>
     </div>
   </main>
 
   <!-- Power Card Rules Panel -->
-  <div class="power-rules-panel">
+  <div id="rules-panel" class="power-rules-panel">
     <div class="power-rules-header">⚡ POWER CARD RULES</div>
     <div class="power-rule"><strong>2:</strong> Next player +2 cards (stackable)</div>
     <div class="power-rule"><strong>Black J (♠♣):</strong> Next player +6 cards</div>
@@ -204,18 +320,43 @@
     <div class="power-rule"><strong>King:</strong> Reverses direction</div>
     <div class="power-rule"><strong>8:</strong> Skips next player</div>
     <div class="power-rule"><strong>Ace:</strong> Suit becomes new requirement</div>
+    <div class="power-rule"><strong>Joker:</strong> Choose rank AND suit</div>
     <div class="power-rule"><strong>Runs:</strong> Consecutive ranks (any suits)</div>
     <div class="power-rule"><strong>Last Card:</strong> Must declare or +2 penalty</div>
   </div>
 
   <!-- Event Log Panel -->
-  <div class="event-log-panel">
+  <div id="log-panel" class="event-log-panel">
     <div class="event-log-header">📋 GAME EVENT LOG</div>
     <div class="event-log-content" id="event-log">
       <!-- Events will be added here dynamically -->
     </div>
   </div>
 
-  <script src="game.js"></script>
+  <script src="backyard_blackjack_final.js"></script>
+  
+  <script>
+    // Panel toggle functionality
+    function togglePanel(panelId) {
+      const panel = document.getElementById(panelId);
+      if (panel) {
+        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+      }
+    }
+    
+    // Set up toggle buttons
+    document.addEventListener('DOMContentLoaded', () => {
+      const rulesBtn = document.getElementById('btn-toggle-rules');
+      const logBtn = document.getElementById('btn-toggle-log');
+      
+      if (rulesBtn) {
+        rulesBtn.addEventListener('click', () => togglePanel('rules-panel'));
+      }
+      
+      if (logBtn) {
+        logBtn.addEventListener('click', () => togglePanel('log-panel'));
+      }
+    });
+  </script>
 </body>
 </html>
