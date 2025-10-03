@@ -1,4 +1,4 @@
-console.log("🎮 Backyard BlackJack - Improved Version with Runs & Event Log");
+console.log("🎮 Backyard BlackJack - Final Version with All Fixes");
 
 const suits = ['♠', '♥', '♦', '♣'];
 const ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
@@ -22,7 +22,11 @@ const UI = {
   btnClear: document.getElementById('btn-clear'),
   btnDraw: document.getElementById('btn-draw'),
   btnLastCard: document.getElementById('btn-last-card'),
-  btnPlay: document.getElementById('btn-play')
+  btnPlay: document.getElementById('btn-play'),
+  btnToggleRules: document.getElementById('btn-toggle-rules'),
+  btnToggleLog: document.getElementById('btn-toggle-log'),
+  rulesPanel: document.getElementById('rules-panel'),
+  logPanel: document.getElementById('log-panel')
 };
 
 const settings = {
@@ -47,7 +51,7 @@ const game = {
   skipNext: false,
   waitingForRedJack: false,
   eventCounter: 0,
-  messageQueue: []
+  aiTurnInProgress: false
 };
 
 let selected = new Set();
@@ -55,14 +59,18 @@ let selected = new Set();
 function logEvent(message, type = 'info') {
   game.eventCounter++;
   const timestamp = new Date().toLocaleTimeString();
-  const logEntry = {
-    id: game.eventCounter,
-    message: message,
-    type: type,
-    timestamp: timestamp
-  };
   
-  // Add to top of log
+  // Remove face icons and replace with symbols
+  const cleanMessage = message
+    .replace(/🎮/g, '▶')
+    .replace(/🤖/g, '⚙')
+    .replace(/🎯/g, '●')
+    .replace(/🎴/g, '♦')
+    .replace(/🃏/g, '★')
+    .replace(/🏆/g, '♔')
+    .replace(/🗣️/g, '♪')
+    .replace(/🧹/g, '✗');
+  
   const logContainer = UI.eventLog;
   if (logContainer) {
     const logElement = document.createElement('div');
@@ -70,7 +78,7 @@ function logEvent(message, type = 'info') {
     logElement.innerHTML = `
       <span class="log-id">#${game.eventCounter}</span>
       <span class="log-time">${timestamp}</span>
-      <span class="log-message">${message}</span>
+      <span class="log-message">${cleanMessage}</span>
     `;
     logContainer.insertBefore(logElement, logContainer.firstChild);
     
@@ -80,7 +88,7 @@ function logEvent(message, type = 'info') {
     }
   }
   
-  console.log(`📝 Event #${game.eventCounter}: ${message}`);
+  console.log(`📝 Event #${game.eventCounter}: ${cleanMessage}`);
 }
 
 function createDeck() {
@@ -127,7 +135,7 @@ function startGame() {
     skipNext: false,
     waitingForRedJack: false,
     eventCounter: 0,
-    messageQueue: []
+    aiTurnInProgress: false
   });
 
   // Clear event log
@@ -151,8 +159,8 @@ function startGame() {
   } while (top && (top.joker || isPowerCard(top)));
   game.discard.push(top || game.deck.pop());
 
-  logEvent(`🎮 New game started! Starting card: ${top.rank}${top.suit}`, 'game');
-  logEvent(`🎯 Cards dealt: ${settings.startingHand} cards each`, 'game');
+  logEvent(`▶ New game started! Starting card: ${top.rank}${top.suit}`, 'game');
+  logEvent(`● Cards dealt: ${settings.startingHand} cards each`, 'game');
 
   console.log("🎨 Rendering game...");
   renderAll();
@@ -192,6 +200,20 @@ function isValidRun(cards) {
   return true;
 }
 
+function calculateCardScale(handSize) {
+  if (handSize <= 7) return 1.0;
+  if (handSize <= 10) return 0.85;
+  if (handSize <= 13) return 0.7;
+  return 0.6;
+}
+
+function calculateCardSpacing(handSize) {
+  if (handSize <= 7) return 0;
+  if (handSize <= 10) return -10;
+  if (handSize <= 13) return -20;
+  return -30;
+}
+
 function renderAll() {
   renderCenterStacks();
   renderHands();
@@ -214,46 +236,61 @@ function renderCounts() {
 }
 
 function renderHands() {
+  // Player hand with neat layout
   UI.playerHand.innerHTML = '';
+  const playerScale = calculateCardScale(game.player.length);
+  const playerSpacing = calculateCardSpacing(game.player.length);
+  
   game.player.forEach((card, idx) => {
     const el = document.createElement('div');
     el.className = 'card selectable';
     el.innerHTML = cardHTML(card);
+    el.style.transform = `scale(${playerScale})`;
+    el.style.marginLeft = idx > 0 ? `${playerSpacing}px` : '0';
     el.addEventListener('click', () => toggleSelect(idx));
     UI.playerHand.appendChild(el);
   });
 
-  // Render AI hands (card backs)
+  // AI hands with neat layout
   UI.aiTopHand.innerHTML = '';
-  const angleStep = 10;
+  const aiScale = calculateCardScale(game.aiTop.length);
+  const angleStep = Math.min(10, 60 / Math.max(1, game.aiTop.length - 1));
   const startAngle = -((game.aiTop.length - 1) * angleStep) / 2;
+  
   game.aiTop.forEach((card, i) => {
     const el = document.createElement('div');
     el.className = 'card back';
     el.style.setProperty('--angle', `${startAngle + i * angleStep}deg`);
+    el.style.transform = `scale(${aiScale})`;
     el.textContent = '🂠';
     UI.aiTopHand.appendChild(el);
   });
 
   UI.aiLeftHand.innerHTML = '';
-  game.aiLeft.forEach(() => {
+  const leftScale = calculateCardScale(game.aiLeft.length);
+  game.aiLeft.forEach((card, i) => {
     const el = document.createElement('div');
     el.className = 'card back';
+    el.style.transform = `scale(${leftScale})`;
+    el.style.marginTop = i > 0 ? `${calculateCardSpacing(game.aiLeft.length)}px` : '0';
     el.textContent = '🂠';
     UI.aiLeftHand.appendChild(el);
   });
 
   UI.aiRightHand.innerHTML = '';
-  game.aiRight.forEach(() => {
+  const rightScale = calculateCardScale(game.aiRight.length);
+  game.aiRight.forEach((card, i) => {
     const el = document.createElement('div');
     el.className = 'card back';
+    el.style.transform = `scale(${rightScale})`;
+    el.style.marginTop = i > 0 ? `${calculateCardSpacing(game.aiRight.length)}px` : '0';
     el.textContent = '🂠';
     UI.aiRightHand.appendChild(el);
   });
 }
 
 function toggleSelect(idx) {
-  if (game.current !== 'player' || game.gameOver) return;
+  if (game.current !== 'player' || game.gameOver || game.aiTurnInProgress) return;
   
   console.log(`🎯 Toggling selection for card ${idx}`);
   const el = UI.playerHand.children[idx];
@@ -275,7 +312,7 @@ function clearSelection() {
   [...UI.playerHand.children].forEach(el => el.classList.remove('selected'));
   updateControls();
   setStatus('Selection cleared.');
-  logEvent('🧹 Selection cleared', 'action');
+  logEvent('✗ Selection cleared', 'action');
 }
 
 function updateControls() {
@@ -288,13 +325,15 @@ function updateControls() {
       (game.pendingPickupType === '2' && card.rank === '2') ||
       (game.pendingPickupType === 'blackjack' && (isBlackJack(card) || isRedJack(card)))
     );
-    UI.btnPlaySelected.disabled = !hasSelection || !canStack;
+    UI.btnPlaySelected.disabled = !hasSelection || !canStack || game.aiTurnInProgress;
   } else {
-    UI.btnPlaySelected.disabled = !hasSelection;
+    UI.btnPlaySelected.disabled = !hasSelection || game.aiTurnInProgress;
   }
   
+  // Last Card button is always visible as red knob
   const showLastCard = game.player.length === 1 && !game.lastCardDeclared;
-  UI.btnLastCard.style.display = showLastCard ? 'inline-block' : 'none';
+  UI.btnLastCard.style.opacity = showLastCard ? '1' : '0.3';
+  UI.btnLastCard.disabled = !showLastCard;
   
   console.log(`🎮 Controls updated - Play button: ${UI.btnPlaySelected.disabled ? 'disabled' : 'enabled'}`);
 }
@@ -336,22 +375,19 @@ function isPlayable(card, topCard) {
   if (card.joker) return true;
   if (card.rank === 'A') return true; // Aces can be played anytime
   if (topCard.joker) return card.suit === topCard.suit;
-  return card.rank === topCard.rank || card.suit === topCard.suit;
+  
+  // Fix for Queen/King matching - ensure proper suit and rank matching
+  const rankMatch = card.rank === topCard.rank;
+  const suitMatch = card.suit === topCard.suit;
+  
+  console.log(`Checking playability: ${card.rank}${card.suit} on ${topCard.rank}${topCard.suit} - Rank match: ${rankMatch}, Suit match: ${suitMatch}`);
+  
+  return rankMatch || suitMatch;
 }
 
 function setStatus(text) {
   UI.status.textContent = text;
   console.log(`📢 Status: ${text}`);
-}
-
-function setStatusWithDelay(text, delay = 0) {
-  if (delay > 0) {
-    setTimeout(() => {
-      setStatus(text);
-    }, delay);
-  } else {
-    setStatus(text);
-  }
 }
 
 function getNextPlayer(current) {
@@ -370,12 +406,12 @@ function highlightAIPlay(aiPlayer, card) {
   
   if (handElement && handElement.children.length > 0) {
     const cardElement = handElement.children[0];
-    cardElement.style.transform = 'scale(1.2) translateY(-10px)';
+    cardElement.style.transform += ' scale(1.2) translateY(-10px)';
     cardElement.style.boxShadow = '0 0 20px #4CAF50';
     cardElement.style.zIndex = '1000';
     
     setTimeout(() => {
-      cardElement.style.transform = '';
+      cardElement.style.transform = cardElement.style.transform.replace(' scale(1.2) translateY(-10px)', '');
       cardElement.style.boxShadow = '';
       cardElement.style.zIndex = '';
     }, 1500);
@@ -434,12 +470,20 @@ function applyPowerCardEffect(card, playedBy) {
 }
 
 function aiTakeTurn() {
+  if (game.current !== 'aiTop' && game.current !== 'aiLeft' && game.current !== 'aiRight') {
+    console.log("Not AI's turn, returning to player");
+    game.aiTurnInProgress = false;
+    setStatus("Your turn!");
+    return;
+  }
+  
   console.log("🤖 AI taking turn...");
+  game.aiTurnInProgress = true;
   const topCard = game.discard[game.discard.length - 1];
   const aiHand = game.aiTop;
   
   // Show AI thinking
-  setStatus("🤖 AI is thinking...");
+  setStatus("⚙ AI is thinking...");
   
   setTimeout(() => {
     // Check if AI needs to handle pending pickup
@@ -457,7 +501,7 @@ function aiTakeTurn() {
         aiHand.splice(aiHand.indexOf(stackCard), 1);
         game.discard.push(stackCard);
         highlightAIPlay('aiTop', stackCard);
-        logEvent(`🤖 AI played ${stackCard.rank}${stackCard.suit}`, 'ai-play');
+        logEvent(`⚙ AI played ${stackCard.rank}${stackCard.suit}`, 'ai-play');
         
         setTimeout(() => {
           applyPowerCardEffect(stackCard, 'AI');
@@ -471,13 +515,15 @@ function aiTakeTurn() {
           renderAll();
           
           if (aiHand.length === 0) {
-            setStatus("🏆 AI wins!");
-            logEvent("🏆 AI wins the game!", 'game');
+            setStatus("♔ AI wins!");
+            logEvent("♔ AI wins the game!", 'game');
             game.gameOver = true;
+            game.aiTurnInProgress = false;
             return;
           }
           
           setTimeout(() => {
+            game.aiTurnInProgress = false;
             if (game.current === 'aiTop' || game.current === 'aiLeft' || game.current === 'aiRight') {
               aiTakeTurn();
             } else {
@@ -489,7 +535,7 @@ function aiTakeTurn() {
         for (let i = 0; i < game.pendingPickup && game.deck.length > 0; i++) {
           aiHand.push(game.deck.pop());
         }
-        const message = `🤖 AI picked up ${game.pendingPickup} cards!`;
+        const message = `⚙ AI picked up ${game.pendingPickup} cards!`;
         setStatus(message);
         logEvent(message, 'ai-action');
         game.pendingPickup = 0;
@@ -500,6 +546,7 @@ function aiTakeTurn() {
         renderAll();
         
         setTimeout(() => {
+          game.aiTurnInProgress = false;
           if (game.current === 'aiTop' || game.current === 'aiLeft' || game.current === 'aiRight') {
             aiTakeTurn();
           } else {
@@ -513,12 +560,13 @@ function aiTakeTurn() {
     // Check if AI's turn should be skipped
     if (game.skipNext) {
       game.skipNext = false;
-      const message = "🤖 AI's turn was skipped!";
+      const message = "⚙ AI's turn was skipped!";
       setStatus(message);
       logEvent(message, 'skip');
       game.current = getNextPlayer('aiTop');
       
       setTimeout(() => {
+        game.aiTurnInProgress = false;
         if (game.current === 'aiTop' || game.current === 'aiLeft' || game.current === 'aiRight') {
           aiTakeTurn();
         } else {
@@ -538,13 +586,14 @@ function aiTakeTurn() {
       setTimeout(() => {
         if (playable.joker) {
           const chosenSuit = suits[Math.floor(Math.random() * suits.length)];
-          game.discard.push({ rank: 'JOKER', suit: chosenSuit, joker: true });
-          const message = `🤖 AI played a Joker. Suit is now ${chosenSuit}`;
+          const chosenRank = ranks[Math.floor(Math.random() * ranks.length)];
+          game.discard.push({ rank: chosenRank, suit: chosenSuit, joker: true });
+          const message = `⚙ AI played a Joker as ${chosenRank}${chosenSuit}`;
           setStatus(message);
           logEvent(message, 'ai-play');
         } else {
           game.discard.push(playable);
-          const message = `🤖 AI played ${playable.rank}${playable.suit}`;
+          const message = `⚙ AI played ${playable.rank}${playable.suit}`;
           setStatus(message);
           logEvent(message, 'ai-play');
           
@@ -559,9 +608,10 @@ function aiTakeTurn() {
 
         if (aiHand.length === 0) {
           setTimeout(() => {
-            setStatus("🏆 AI wins!");
-            logEvent("🏆 AI wins the game!", 'game');
+            setStatus("♔ AI wins!");
+            logEvent("♔ AI wins the game!", 'game');
             game.gameOver = true;
+            game.aiTurnInProgress = false;
           }, 2000);
           return;
         }
@@ -569,6 +619,7 @@ function aiTakeTurn() {
         game.current = getNextPlayer('aiTop');
         
         setTimeout(() => {
+          game.aiTurnInProgress = false;
           if (game.current === 'aiTop' || game.current === 'aiLeft' || game.current === 'aiRight') {
             aiTakeTurn();
           } else {
@@ -580,7 +631,7 @@ function aiTakeTurn() {
     } else if (game.deck.length > 0) {
       const drawn = game.deck.pop();
       aiHand.push(drawn);
-      const message = "🤖 AI drew a card.";
+      const message = "⚙ AI drew a card.";
       setStatus(message);
       logEvent(message, 'ai-action');
       
@@ -588,6 +639,7 @@ function aiTakeTurn() {
       game.current = getNextPlayer('aiTop');
       
       setTimeout(() => {
+        game.aiTurnInProgress = false;
         if (game.current === 'aiTop' || game.current === 'aiLeft' || game.current === 'aiRight') {
           aiTakeTurn();
         } else {
@@ -595,12 +647,13 @@ function aiTakeTurn() {
         }
       }, 3000);
     } else {
-      const message = "🤖 AI skipped turn.";
+      const message = "⚙ AI skipped turn.";
       setStatus(message);
       logEvent(message, 'ai-action');
       game.current = getNextPlayer('aiTop');
       
       setTimeout(() => {
+        game.aiTurnInProgress = false;
         if (game.current === 'aiTop' || game.current === 'aiLeft' || game.current === 'aiRight') {
           aiTakeTurn();
         } else {
@@ -611,45 +664,66 @@ function aiTakeTurn() {
   }, 1500); // Initial AI thinking delay
 }
 
-function promptSuitSelection() {
-  console.log("🃏 Prompting for joker suit selection...");
-  const suitOptions = [
-    { suit: '♠', name: 'Spades' },
-    { suit: '♥', name: 'Hearts' },
-    { suit: '♦', name: 'Diamonds' },
-    { suit: '♣', name: 'Clubs' }
-  ];
-  
-  let selectedSuit = null;
+function promptJokerSelection() {
+  console.log("🃏 Prompting for joker selection...");
   
   try {
-    const suitText = suitOptions.map((s, i) => `${i + 1}. ${s.suit} ${s.name}`).join('\n');
-    const choice = prompt(`Choose a suit for your Joker:\n${suitText}\n\nEnter 1-4:`);
+    // First choose rank
+    const rankText = ranks.map((r, i) => `${i + 1}. ${r}`).join('\n');
+    const rankChoice = prompt(`Choose a rank for your Joker:\n${rankText}\n\nEnter 1-13:`);
     
-    if (!choice) {
+    if (!rankChoice) {
+      setStatus("Joker selection cancelled.");
+      return null;
+    }
+    
+    const rankNum = parseInt(rankChoice);
+    if (rankNum < 1 || rankNum > 13) {
+      setStatus("Invalid rank choice. Joker selection cancelled.");
+      return null;
+    }
+    
+    const selectedRank = ranks[rankNum - 1];
+    
+    // Then choose suit
+    const suitOptions = [
+      { suit: '♠', name: 'Spades' },
+      { suit: '♥', name: 'Hearts' },
+      { suit: '♦', name: 'Diamonds' },
+      { suit: '♣', name: 'Clubs' }
+    ];
+    
+    const suitText = suitOptions.map((s, i) => `${i + 1}. ${s.suit} ${s.name}`).join('\n');
+    const suitChoice = prompt(`Choose a suit for your ${selectedRank} Joker:\n${suitText}\n\nEnter 1-4:`);
+    
+    if (!suitChoice) {
       setStatus("Joker suit selection cancelled.");
       return null;
     }
     
-    const choiceNum = parseInt(choice);
-    if (choiceNum >= 1 && choiceNum <= 4) {
-      selectedSuit = suitOptions[choiceNum - 1].suit;
-    } else {
-      setStatus("Invalid choice. Joker suit selection cancelled.");
+    const suitNum = parseInt(suitChoice);
+    if (suitNum < 1 || suitNum > 4) {
+      setStatus("Invalid suit choice. Joker selection cancelled.");
       return null;
     }
+    
+    const selectedSuit = suitOptions[suitNum - 1].suit;
+    
+    return { rank: selectedRank, suit: selectedSuit };
+    
   } catch (error) {
-    selectedSuit = suits[Math.floor(Math.random() * suits.length)];
-    setStatus(`Joker suit chosen automatically: ${selectedSuit}`);
+    // Fallback: automatically choose random rank and suit
+    const selectedRank = ranks[Math.floor(Math.random() * ranks.length)];
+    const selectedSuit = suits[Math.floor(Math.random() * suits.length)];
+    setStatus(`Joker chosen automatically: ${selectedRank}${selectedSuit}`);
+    return { rank: selectedRank, suit: selectedSuit };
   }
-  
-  return selectedSuit;
 }
 
 function playSelectedCards() {
   console.log("🎯 Playing selected cards...");
   
-  if (game.current !== 'player' || selected.size === 0 || game.gameOver) {
+  if (game.current !== 'player' || selected.size === 0 || game.gameOver || game.aiTurnInProgress) {
     console.log("❌ Cannot play - invalid state");
     return;
   }
@@ -678,33 +752,28 @@ function playSelectedCards() {
     game.discard.push(stackingCard);
     selected.clear();
     
-    logEvent(`🎯 You played ${stackingCard.rank}${stackingCard.suit}`, 'player-play');
+    logEvent(`● You played ${stackingCard.rank}${stackingCard.suit}`, 'player-play');
     applyPowerCardEffect(stackingCard, 'player');
     
     renderAll();
     
     if (game.player.length === 0) {
-      setStatus("🏆 You win!");
-      logEvent("🏆 You win the game!", 'game');
+      setStatus("♔ You win!");
+      logEvent("♔ You win the game!", 'game');
       game.gameOver = true;
       return;
     }
     
     if (game.player.length === 1 && !game.lastCardDeclared) {
-      setStatus('You have one card left! Don\'t forget to declare "Last Card!"');
       for (let i = 0; i < 2 && game.deck.length > 0; i++) {
         game.player.push(game.deck.pop());
       }
-      setStatus('⚠️ Penalty! You forgot to declare "Last Card!" - picked up 2 cards.');
-      logEvent('⚠️ Last Card penalty applied - picked up 2 cards', 'penalty');
+      setStatus('⚠ Penalty! You forgot to declare "Last Card!" - picked up 2 cards.');
+      logEvent('⚠ Last Card penalty applied - picked up 2 cards', 'penalty');
       renderAll();
     }
     
-    if (isRedJack(stackingCard) && game.pendingPickupType === 'blackjack') {
-      game.current = getNextPlayer('player');
-    } else {
-      game.current = getNextPlayer('player');
-    }
+    game.current = getNextPlayer('player');
     
     setTimeout(() => {
       if (game.current === 'aiTop' || game.current === 'aiLeft' || game.current === 'aiRight') {
@@ -730,26 +799,25 @@ function playSelectedCards() {
       selected.clear();
       
       const runDescription = sortedRun.map(c => `${c.rank}${c.suit}`).join(', ');
-      const message = `🎯 You played a run: ${runDescription}`;
+      const message = `● You played a run: ${runDescription}`;
       setStatus(message);
       logEvent(message, 'player-play');
       
       renderAll();
       
       if (game.player.length === 0) {
-        setStatus("🏆 You win!");
-        logEvent("🏆 You win the game!", 'game');
+        setStatus("♔ You win!");
+        logEvent("♔ You win the game!", 'game');
         game.gameOver = true;
         return;
       }
       
       if (game.player.length === 1 && !game.lastCardDeclared) {
-        setStatus('You have one card left! Don\'t forget to declare "Last Card!"');
         for (let i = 0; i < 2 && game.deck.length > 0; i++) {
           game.player.push(game.deck.pop());
         }
-        setStatus('⚠️ Penalty! You forgot to declare "Last Card!" - picked up 2 cards.');
-        logEvent('⚠️ Last Card penalty applied - picked up 2 cards', 'penalty');
+        setStatus('⚠ Penalty! You forgot to declare "Last Card!" - picked up 2 cards.');
+        logEvent('⚠ Last Card penalty applied - picked up 2 cards', 'penalty');
         renderAll();
       }
       
@@ -770,7 +838,7 @@ function playSelectedCards() {
   const playableCards = selectedCards.filter(card => isPlayable(card, topCard));
 
   if (playableCards.length === 0) {
-    const topCardDisplay = topCard.joker ? `Joker (${topCard.suit})` : `${topCard.rank}${topCard.suit}`;
+    const topCardDisplay = topCard.joker ? `Joker (${topCard.rank}${topCard.suit})` : `${topCard.rank}${topCard.suit}`;
     setStatus(`Selected cards can't be played on ${topCardDisplay}`);
     console.log("❌ No playable cards in selection");
     return;
@@ -783,20 +851,20 @@ function playSelectedCards() {
   
   if (cardToPlay.joker) {
     console.log("🃏 Playing joker card...");
-    const chosenSuit = promptSuitSelection();
-    if (!chosenSuit) {
+    const jokerChoice = promptJokerSelection();
+    if (!jokerChoice) {
       game.player.splice(cardIndex, 0, cardToPlay);
       renderAll();
       return;
     }
-    game.discard.push({ rank: 'JOKER', suit: chosenSuit, joker: true });
-    const message = `🎯 You played a Joker. Suit is now ${chosenSuit}`;
+    game.discard.push({ rank: jokerChoice.rank, suit: jokerChoice.suit, joker: true });
+    const message = `● You played a Joker as ${jokerChoice.rank}${jokerChoice.suit}`;
     setStatus(message);
     logEvent(message, 'player-play');
     
   } else {
     game.discard.push(cardToPlay);
-    const message = `🎯 You played ${cardToPlay.rank}${cardToPlay.suit}`;
+    const message = `● You played ${cardToPlay.rank}${cardToPlay.suit}`;
     setStatus(message);
     logEvent(message, 'player-play');
     
@@ -810,20 +878,19 @@ function playSelectedCards() {
   renderAll();
 
   if (game.player.length === 0) {
-    setStatus("🏆 You win!");
-    logEvent("🏆 You win the game!", 'game');
+    setStatus("♔ You win!");
+    logEvent("♔ You win the game!", 'game');
     game.gameOver = true;
     console.log("🏆 Player wins!");
     return;
   }
 
   if (game.player.length === 1 && !game.lastCardDeclared) {
-    setStatus('You have one card left! Don\'t forget to declare "Last Card!"');
     for (let i = 0; i < 2 && game.deck.length > 0; i++) {
       game.player.push(game.deck.pop());
     }
-    setStatus('⚠️ Penalty! You forgot to declare "Last Card!" - picked up 2 cards.');
-    logEvent('⚠️ Last Card penalty applied - picked up 2 cards', 'penalty');
+    setStatus('⚠ Penalty! You forgot to declare "Last Card!" - picked up 2 cards.');
+    logEvent('⚠ Last Card penalty applied - picked up 2 cards', 'penalty');
     renderAll();
   }
 
@@ -837,11 +904,13 @@ function playSelectedCards() {
 }
 
 function drawCard() {
+  if (game.aiTurnInProgress) return;
+  
   if (game.pendingPickup > 0) {
     for (let i = 0; i < game.pendingPickup && game.deck.length > 0; i++) {
       game.player.push(game.deck.pop());
     }
-    const message = `🎴 You picked up ${game.pendingPickup} penalty cards!`;
+    const message = `♦ You picked up ${game.pendingPickup} penalty cards!`;
     setStatus(message);
     logEvent(message, 'player-action');
     game.pendingPickup = 0;
@@ -861,7 +930,7 @@ function drawCard() {
     const card = game.deck.pop();
     game.player.push(card);
     renderAll();
-    const message = "🎴 You drew a card.";
+    const message = "♦ You drew a card.";
     setStatus(message);
     logEvent(message, 'player-action');
     
@@ -875,13 +944,20 @@ function drawCard() {
   }
 }
 
+function togglePanel(panelId) {
+  const panel = document.getElementById(panelId);
+  if (panel) {
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  }
+}
+
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
   console.log("🚀 DOM loaded, setting up event listeners...");
   
   const missingElements = [];
   Object.entries(UI).forEach(([key, element]) => {
-    if (!element) {
+    if (!element && key !== 'btnToggleRules' && key !== 'btnToggleLog' && key !== 'rulesPanel' && key !== 'logPanel') {
       missingElements.push(key);
     }
   });
@@ -917,8 +993,8 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log("🗣️ Last Card button clicked!");
     game.lastCardDeclared = true;
     setStatus('You declared "Last Card!"');
-    logEvent('🗣️ You declared "Last Card!"', 'declaration');
-    UI.btnLastCard.style.display = 'none';
+    logEvent('♪ You declared "Last Card!"', 'declaration');
+    updateControls();
   });
 
   UI.deckCard.addEventListener('click', () => {
@@ -926,6 +1002,15 @@ document.addEventListener('DOMContentLoaded', () => {
     drawCard();
   });
   
+  // Panel toggle buttons
+  if (UI.btnToggleRules) {
+    UI.btnToggleRules.addEventListener('click', () => togglePanel('rules-panel'));
+  }
+  
+  if (UI.btnToggleLog) {
+    UI.btnToggleLog.addEventListener('click', () => togglePanel('log-panel'));
+  }
+  
   console.log("✅ All event listeners set up successfully!");
-  console.log("🎮 Game ready with runs, event log, and improved AI feedback!");
+  console.log("🎮 Final game ready with all fixes!");
 }); // <-- PROPER CLOSING BRACKET AND BRACE
