@@ -1,4 +1,4 @@
-console.log("🎮 Backyard BlackJack - Corrected Version with Fixed Turn Management");
+console.log("🎮 Backyard BlackJack - Final Fixed Version with Proper Turn Management");
 
 const suits = ['♠', '♥', '♦', '♣'];
 const ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
@@ -26,6 +26,7 @@ const UI = {
   btnRules: document.getElementById('btn-rules'),
   rulesPanel: document.getElementById('rules-panel'),
   logPanel: document.getElementById('log-panel'),
+  logContent: document.getElementById('log-content'),
   logHeader: document.getElementById('log-header')
 };
 
@@ -52,7 +53,8 @@ const game = {
   waitingForRedJack: false,
   eventCounter: 0,
   aiTurnInProgress: false,
-  lastPlayedBy: null // Track who played the last card
+  lastPlayedBy: null,
+  turnTimeout: null
 };
 
 let selected = new Set();
@@ -119,7 +121,13 @@ function createDeck() {
 function startGame() {
   console.log("🎮 Starting new game...");
   
-  // Reset game state
+  // Clear any existing timeouts
+  if (game.turnTimeout) {
+    clearTimeout(game.turnTimeout);
+    game.turnTimeout = null;
+  }
+  
+  // Reset game state completely
   Object.assign(game, {
     deck: createDeck(),
     discard: [],
@@ -137,8 +145,12 @@ function startGame() {
     waitingForRedJack: false,
     eventCounter: 0,
     aiTurnInProgress: false,
-    lastPlayedBy: null
+    lastPlayedBy: null,
+    turnTimeout: null
   });
+
+  // Clear selection
+  selected.clear();
 
   // Clear event log
   if (UI.eventLog) {
@@ -160,7 +172,7 @@ function startGame() {
     top = game.deck.pop();
   } while (top && (top.joker || isPowerCard(top)));
   game.discard.push(top || game.deck.pop());
-  game.lastPlayedBy = 'system'; // System dealt the initial card
+  game.lastPlayedBy = 'system';
 
   logEvent(`▶ New game started! Starting card: ${top.rank}${top.suit}`, 'game');
   logEvent(`● Cards dealt: ${settings.startingHand} cards each`, 'game');
@@ -247,6 +259,9 @@ function renderHands() {
   game.player.forEach((card, idx) => {
     const el = document.createElement('div');
     el.className = 'card selectable';
+    if (selected.has(idx)) {
+      el.classList.add('selected');
+    }
     el.innerHTML = cardHTML(card);
     el.style.transform = `scale(${playerScale})`;
     el.style.marginLeft = idx > 0 ? `${playerSpacing}px` : '0';
@@ -293,26 +308,30 @@ function renderHands() {
 }
 
 function toggleSelect(idx) {
-  if (game.current !== 'player' || game.gameOver || game.aiTurnInProgress) return;
+  if (game.current !== 'player' || game.gameOver || game.aiTurnInProgress) {
+    console.log(`❌ Cannot select - Current: ${game.current}, GameOver: ${game.gameOver}, AI in progress: ${game.aiTurnInProgress}`);
+    return;
+  }
   
   console.log(`🎯 Toggling selection for card ${idx}`);
-  const el = UI.playerHand.children[idx];
+  
   if (selected.has(idx)) {
     selected.delete(idx);
-    el.classList.remove('selected');
     console.log(`❌ Deselected card ${idx}`);
   } else {
     selected.add(idx);
-    el.classList.add('selected');
     console.log(`✅ Selected card ${idx}: ${game.player[idx].rank}${game.player[idx].suit}`);
   }
+  
+  // Re-render to update visual selection
+  renderHands();
   updateControls();
 }
 
 function clearSelection() {
   console.log("🧹 Clearing selection...");
   selected.clear();
-  [...UI.playerHand.children].forEach(el => el.classList.remove('selected'));
+  renderHands();
   updateControls();
   setStatus('Selection cleared.');
   logEvent('✗ Selection cleared', 'action');
@@ -328,15 +347,15 @@ function updateControls() {
       (game.pendingPickupType === '2' && card.rank === '2') ||
       (game.pendingPickupType === 'blackjack' && (isBlackJack(card) || isRedJack(card)))
     );
-    UI.btnPlaySelected.disabled = !hasSelection || !canStack || game.aiTurnInProgress;
+    UI.btnPlaySelected.disabled = !hasSelection || !canStack || game.aiTurnInProgress || game.current !== 'player';
   } else {
-    UI.btnPlaySelected.disabled = !hasSelection || game.aiTurnInProgress;
+    UI.btnPlaySelected.disabled = !hasSelection || game.aiTurnInProgress || game.current !== 'player';
   }
   
-  // Last Card button is always available (for early game ending)
+  // Last Card button is always available
   UI.btnLastCard.disabled = game.gameOver;
   
-  console.log(`🎮 Controls updated - Play button: ${UI.btnPlaySelected.disabled ? 'disabled' : 'enabled'}`);
+  console.log(`🎮 Controls updated - Play button: ${UI.btnPlaySelected.disabled ? 'disabled' : 'enabled'}, Selection size: ${selected.size}`);
 }
 
 function cardHTML(card) {
@@ -377,7 +396,6 @@ function isPlayable(card, topCard) {
   if (card.rank === 'A') return true; // Aces can be played anytime
   if (topCard.joker) return card.suit === topCard.suit;
   
-  // Fix for Queen/King matching - ensure proper suit and rank matching
   const rankMatch = card.rank === topCard.rank;
   const suitMatch = card.suit === topCard.suit;
   
@@ -402,8 +420,14 @@ function getNextPlayer(current) {
   return players[nextIndex];
 }
 
+function getAIHand(aiPlayer) {
+  if (aiPlayer === 'aiTop') return game.aiTop;
+  if (aiPlayer === 'aiLeft') return game.aiLeft;
+  if (aiPlayer === 'aiRight') return game.aiRight;
+  return game.aiTop; // fallback
+}
+
 function highlightAIPlay(aiPlayer, card) {
-  // Add visual feedback for AI play
   let handElement;
   if (aiPlayer === 'aiTop') handElement = UI.aiTopHand;
   else if (aiPlayer === 'aiLeft') handElement = UI.aiLeftHand;
@@ -475,21 +499,33 @@ function applyPowerCardEffect(card, playedBy) {
 }
 
 function aiTakeTurn() {
-  // CRITICAL FIX: Only AI should call this function and only when it's actually AI's turn
+  // CRITICAL: Prevent AI from taking turn if it's not AI's turn or if already in progress
   if (game.current === 'player' || game.gameOver || game.aiTurnInProgress) {
-    console.log(`❌ AI turn called incorrectly. Current: ${game.current}, GameOver: ${game.gameOver}, InProgress: ${game.aiTurnInProgress}`);
+    console.log(`❌ AI turn blocked - Current: ${game.current}, GameOver: ${game.gameOver}, InProgress: ${game.aiTurnInProgress}`);
     return;
   }
   
   console.log(`🤖 AI (${game.current}) taking turn... Last played by: ${game.lastPlayedBy}`);
   game.aiTurnInProgress = true;
+  
   const topCard = game.discard[game.discard.length - 1];
-  const aiHand = game.aiTop; // For simplicity, using aiTop for all AI logic
+  const aiHand = getAIHand(game.current);
   
   // Show AI thinking
   setStatus("⚙ AI is thinking...");
   
-  setTimeout(() => {
+  // Clear any existing timeout
+  if (game.turnTimeout) {
+    clearTimeout(game.turnTimeout);
+  }
+  
+  game.turnTimeout = setTimeout(() => {
+    // Double-check we're still in the right state
+    if (game.current === 'player' || game.gameOver) {
+      game.aiTurnInProgress = false;
+      return;
+    }
+    
     // Check if AI needs to handle pending pickup
     if (game.pendingPickup > 0) {
       console.log(`🤖 AI handling pending pickup: ${game.pendingPickup} cards (type: ${game.pendingPickupType})`);
@@ -505,14 +541,11 @@ function aiTakeTurn() {
         aiHand.splice(aiHand.indexOf(stackCard), 1);
         game.discard.push(stackCard);
         game.lastPlayedBy = 'ai';
-        highlightAIPlay('aiTop', stackCard);
+        highlightAIPlay(game.current, stackCard);
         logEvent(`⚙ AI played ${stackCard.rank}${stackCard.suit}`, 'ai-play');
         
         setTimeout(() => {
           applyPowerCardEffect(stackCard, 'AI');
-          
-          game.current = getNextPlayer(game.current);
-          renderAll();
           
           if (aiHand.length === 0) {
             setStatus("♔ AI wins!");
@@ -522,9 +555,11 @@ function aiTakeTurn() {
             return;
           }
           
+          game.current = getNextPlayer(game.current);
+          renderAll();
           game.aiTurnInProgress = false;
           
-          // CRITICAL: Only continue AI turns if next player is also AI
+          // Only continue if next player is AI
           if (game.current !== 'player') {
             setTimeout(() => aiTakeTurn(), 2000);
           } else {
@@ -532,6 +567,7 @@ function aiTakeTurn() {
           }
         }, 2000);
       } else {
+        // AI picks up penalty cards
         for (let i = 0; i < game.pendingPickup && game.deck.length > 0; i++) {
           aiHand.push(game.deck.pop());
         }
@@ -541,8 +577,8 @@ function aiTakeTurn() {
         game.pendingPickup = 0;
         game.pendingPickupType = null;
         game.waitingForRedJack = false;
-        game.current = getNextPlayer(game.current);
         
+        game.current = getNextPlayer(game.current);
         renderAll();
         game.aiTurnInProgress = false;
         
@@ -561,8 +597,8 @@ function aiTakeTurn() {
       const message = "⚙ AI's turn was skipped!";
       setStatus(message);
       logEvent(message, 'skip');
-      game.current = getNextPlayer(game.current);
       
+      game.current = getNextPlayer(game.current);
       game.aiTurnInProgress = false;
       
       if (game.current !== 'player') {
@@ -579,7 +615,7 @@ function aiTakeTurn() {
     if (playable) {
       aiHand.splice(aiHand.indexOf(playable), 1);
       game.lastPlayedBy = 'ai';
-      highlightAIPlay('aiTop', playable);
+      highlightAIPlay(game.current, playable);
       
       setTimeout(() => {
         if (playable.joker) {
@@ -602,8 +638,6 @@ function aiTakeTurn() {
           }
         }
         
-        renderAll();
-
         if (aiHand.length === 0) {
           setTimeout(() => {
             setStatus("♔ AI wins!");
@@ -615,6 +649,7 @@ function aiTakeTurn() {
         }
 
         game.current = getNextPlayer(game.current);
+        renderAll();
         game.aiTurnInProgress = false;
         
         // CRITICAL: Only continue if next player is AI
@@ -626,14 +661,15 @@ function aiTakeTurn() {
       }, 2000);
       
     } else if (game.deck.length > 0) {
+      // AI draws a card
       const drawn = game.deck.pop();
       aiHand.push(drawn);
       const message = "⚙ AI drew a card.";
       setStatus(message);
       logEvent(message, 'ai-action');
       
-      renderAll();
       game.current = getNextPlayer(game.current);
+      renderAll();
       game.aiTurnInProgress = false;
       
       if (game.current !== 'player') {
@@ -642,9 +678,11 @@ function aiTakeTurn() {
         setStatus("Your turn!");
       }
     } else {
+      // AI skips turn
       const message = "⚙ AI skipped turn.";
       setStatus(message);
       logEvent(message, 'ai-action');
+      
       game.current = getNextPlayer(game.current);
       game.aiTurnInProgress = false;
       
@@ -654,7 +692,7 @@ function aiTakeTurn() {
         setStatus("Your turn!");
       }
     }
-  }, 1500); // Initial AI thinking delay
+  }, 1500); // AI thinking delay
 }
 
 function promptJokerSelection() {
@@ -719,7 +757,7 @@ function playSelectedCards() {
   console.log("🎯 Playing selected cards...");
   
   if (game.current !== 'player' || selected.size === 0 || game.gameOver || game.aiTurnInProgress) {
-    console.log("❌ Cannot play - invalid state");
+    console.log(`❌ Cannot play - Current: ${game.current}, Selected: ${selected.size}, GameOver: ${game.gameOver}, AI in progress: ${game.aiTurnInProgress}`);
     return;
   }
 
@@ -875,7 +913,10 @@ function playSelectedCards() {
 }
 
 function drawCard() {
-  if (game.aiTurnInProgress || game.current !== 'player') return;
+  if (game.aiTurnInProgress || game.current !== 'player') {
+    console.log(`❌ Cannot draw - AI in progress: ${game.aiTurnInProgress}, Current: ${game.current}`);
+    return;
+  }
   
   if (game.pendingPickup > 0) {
     for (let i = 0; i < game.pendingPickup && game.deck.length > 0; i++) {
@@ -919,13 +960,15 @@ function toggleRulesPanel() {
   if (UI.rulesPanel) {
     const isVisible = UI.rulesPanel.style.display !== 'none';
     UI.rulesPanel.style.display = isVisible ? 'none' : 'block';
+    console.log(`📋 Rules panel ${isVisible ? 'hidden' : 'shown'}`);
   }
 }
 
 function toggleLogPanel() {
-  if (UI.logPanel) {
-    const isVisible = UI.logPanel.style.display !== 'none';
-    UI.logPanel.style.display = isVisible ? 'none' : 'block';
+  if (UI.logContent) {
+    const isVisible = UI.logContent.style.display !== 'none';
+    UI.logContent.style.display = isVisible ? 'none' : 'block';
+    console.log(`📊 Log panel content ${isVisible ? 'hidden' : 'shown'}`);
   }
 }
 
@@ -935,17 +978,20 @@ document.addEventListener('DOMContentLoaded', () => {
   
   const missingElements = [];
   Object.entries(UI).forEach(([key, element]) => {
-    if (!element && key !== 'logHeader') {
+    if (!element && key !== 'logHeader' && key !== 'logContent') {
       missingElements.push(key);
     }
   });
   
   if (missingElements.length > 0) {
     console.error("❌ Missing UI elements:", missingElements);
-    return;
+  } else {
+    console.log("✅ All UI elements found");
   }
   
-  console.log("✅ All UI elements found");
+  // Hide panels on load
+  if (UI.rulesPanel) UI.rulesPanel.style.display = 'none';
+  if (UI.logContent) UI.logContent.style.display = 'none';
   
   UI.btnPlay.addEventListener('click', () => {
     console.log("🎮 Play button clicked!");
@@ -988,7 +1034,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   
-  // Log header toggles log panel
+  // Log header toggles log panel content only
   if (UI.logHeader) {
     UI.logHeader.addEventListener('click', () => {
       console.log("📊 Log header clicked!");
@@ -997,5 +1043,5 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   
   console.log("✅ All event listeners set up successfully!");
-  console.log("🎮 Corrected game ready with fixed turn management!");
-}); // <-- PROPER CLOSING BRACKET AND BRACE
+  console.log("🎮 Final fixed game ready with proper turn management!");
+});
