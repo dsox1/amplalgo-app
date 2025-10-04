@@ -3,35 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Backyard Black Jack - Final Version</title>
+  <title>Backyard Black Jack - Corrected Version</title>
   <link rel="stylesheet" href="style.css" />
   <style>
-    /* Panel Toggle Buttons */
-    .panel-toggles {
-      position: fixed;
-      top: 50px;
-      left: 10px;
-      z-index: 1001;
-    }
-    
-    .panel-toggle-btn {
-      display: block;
-      margin-bottom: 5px;
-      padding: 8px 12px;
-      background: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: bold;
-    }
-    
-    .panel-toggle-btn:hover {
-      background: #45a049;
-    }
-    
-    /* Event Log Panel - Same height as rules */
+    /* Event Log Panel - Same height as rules, clickable header */
     .event-log-panel {
       position: fixed;
       top: 10px;
@@ -54,6 +29,12 @@
       font-weight: bold;
       text-align: center;
       border-radius: 6px 6px 0 0;
+      cursor: pointer;
+      user-select: none;
+    }
+    
+    .event-log-header:hover {
+      background: #45a049;
     }
     
     .event-log-content {
@@ -145,7 +126,19 @@
       color: #4CAF50;
     }
     
-    /* Status Panel - Lower left quarter */
+    .joker-rules {
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid #444;
+    }
+    
+    .joker-example {
+      color: #FFD700;
+      font-style: italic;
+      font-size: 9px;
+    }
+    
+    /* Status Panel - Lower left quarter - FIXED */
     .info-bar {
       position: fixed !important;
       bottom: 20px !important;
@@ -163,9 +156,10 @@
       font-family: monospace !important;
       font-size: 14px !important;
       text-align: center !important;
+      margin: 0 !important;
     }
     
-    /* Last Card Button - Red knob on table */
+    /* Last Card Button - Red knob on table - Always available */
     .last-card-knob {
       position: absolute;
       top: 50%;
@@ -194,7 +188,7 @@
     }
     
     .last-card-knob:disabled {
-      opacity: 0.3;
+      opacity: 0.5;
       cursor: not-allowed;
       transform: none;
     }
@@ -235,12 +229,6 @@
   </style>
 </head>
 <body>
-  <!-- Panel Toggle Buttons -->
-  <div class="panel-toggles">
-    <button id="btn-toggle-rules" class="panel-toggle-btn">📋 Rules</button>
-    <button id="btn-toggle-log" class="panel-toggle-btn">📊 Log</button>
-  </div>
-
   <!-- Top Navigation -->
   <div class="nav-actions">
     <button id="btn-play" class="btn primary">Play</button>
@@ -263,8 +251,8 @@
         </div>
       </div>
       
-      <!-- Last Card Red Knob -->
-      <button id="btn-last-card" class="last-card-knob" title="Declare Last Card">
+      <!-- Last Card Red Knob - Always Available -->
+      <button id="btn-last-card" class="last-card-knob" title="Declare Last Card (Always Available)">
         LAST<br>CARD
       </button>
     </section>
@@ -298,7 +286,7 @@
       </div>
     </div>
 
-    <!-- Status Panel - Lower Left -->
+    <!-- Status Panel - Lower Left - FIXED -->
     <div class="info-bar">
       <div id="status" class="status">Welcome! Tap Play to start.</div>
     </div>
@@ -320,43 +308,25 @@
     <div class="power-rule"><strong>King:</strong> Reverses direction</div>
     <div class="power-rule"><strong>8:</strong> Skips next player</div>
     <div class="power-rule"><strong>Ace:</strong> Suit becomes new requirement</div>
-    <div class="power-rule"><strong>Joker:</strong> Choose rank AND suit</div>
     <div class="power-rule"><strong>Runs:</strong> Consecutive ranks (any suits)</div>
     <div class="power-rule"><strong>Last Card:</strong> Must declare or +2 penalty</div>
+    
+    <div class="joker-rules">
+      <div class="power-rule"><strong>Joker:</strong> Transform to any card</div>
+      <div class="joker-example">Format: [RANK][SUIT] - AS, 10H, KC</div>
+      <div class="joker-example">Ranks: A,2,3,4,5,6,7,8,9,10,J,Q,K</div>
+      <div class="joker-example">Suits: S(♠), H(♥), D(♦), C(♣)</div>
+    </div>
   </div>
 
-  <!-- Event Log Panel -->
+  <!-- Event Log Panel - Clickable Header -->
   <div id="log-panel" class="event-log-panel">
-    <div class="event-log-header">📋 GAME EVENT LOG</div>
+    <div id="log-header" class="event-log-header" title="Click to hide/show">📋 GAME EVENT LOG</div>
     <div class="event-log-content" id="event-log">
       <!-- Events will be added here dynamically -->
     </div>
   </div>
 
-  <script src="game.js"></script>
-  
-  <script>
-    // Panel toggle functionality
-    function togglePanel(panelId) {
-      const panel = document.getElementById(panelId);
-      if (panel) {
-        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-      }
-    }
-    
-    // Set up toggle buttons
-    document.addEventListener('DOMContentLoaded', () => {
-      const rulesBtn = document.getElementById('btn-toggle-rules');
-      const logBtn = document.getElementById('btn-toggle-log');
-      
-      if (rulesBtn) {
-        rulesBtn.addEventListener('click', () => togglePanel('rules-panel'));
-      }
-      
-      if (logBtn) {
-        logBtn.addEventListener('click', () => togglePanel('log-panel'));
-      }
-    });
-  </script>
+  <script src="backyard_blackjack_corrected.js"></script>
 </body>
 </html>
