@@ -244,3 +244,15 @@ body {
   gap: 10px;
   z-index: 3;
 }
+
+.turn-arrow {
+  width: 24px;
+  height: 24px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  display: none;
+  margin-top: 6px;
+}
+.turn-arrow.active {
+  display: block;
+}
