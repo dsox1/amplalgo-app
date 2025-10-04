@@ -3,16 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Backyard Black Jack - Corrected Version</title>
+  <title>Backyard Black Jack - Final Fixed Version</title>
   <link rel="stylesheet" href="style.css" />
   <style>
-    /* Event Log Panel - Same height as rules, clickable header */
+    /* Event Log Panel - Header always visible, content toggles */
     .event-log-panel {
       position: fixed;
       top: 10px;
       right: 10px;
       width: 350px;
-      height: 200px; /* Same as rules panel */
       background: rgba(0, 0, 0, 0.95);
       border: 2px solid #4CAF50;
       border-radius: 8px;
@@ -38,9 +37,10 @@
     }
     
     .event-log-content {
-      height: calc(100% - 40px);
+      height: 200px;
       overflow-y: auto;
       padding: 10px;
+      display: none; /* Hidden by default */
     }
     
     .log-entry {
@@ -92,7 +92,7 @@
       color: white;
     }
     
-    /* Power Card Rules Panel */
+    /* Power Card Rules Panel - Hidden by default */
     .power-rules-panel {
       position: fixed;
       top: 10px;
@@ -104,9 +104,10 @@
       font-family: monospace;
       font-size: 11px;
       width: 280px;
-      height: 200px; /* Fixed height */
+      height: 200px;
       border: 2px solid #9C27B0;
       overflow-y: auto;
+      display: none; /* Hidden by default */
     }
     
     .power-rules-header {
@@ -196,6 +197,12 @@
     /* Card scaling and spacing improvements */
     .card {
       transition: transform 0.2s ease;
+    }
+    
+    .card.selected {
+      border: 3px solid #00FFFF;
+      box-shadow: 0 0 15px #00FFFF;
+      transform: translateY(-5px);
     }
     
     .hand {
@@ -299,7 +306,7 @@
     </div>
   </main>
 
-  <!-- Power Card Rules Panel -->
+  <!-- Power Card Rules Panel - Hidden by default, controlled by Rules button -->
   <div id="rules-panel" class="power-rules-panel">
     <div class="power-rules-header">⚡ POWER CARD RULES</div>
     <div class="power-rule"><strong>2:</strong> Next player +2 cards (stackable)</div>
@@ -319,14 +326,16 @@
     </div>
   </div>
 
-  <!-- Event Log Panel - Clickable Header -->
+  <!-- Event Log Panel - Header always visible, content toggles -->
   <div id="log-panel" class="event-log-panel">
     <div id="log-header" class="event-log-header" title="Click to hide/show">📋 GAME EVENT LOG</div>
-    <div class="event-log-content" id="event-log">
-      <!-- Events will be added here dynamically -->
+    <div id="log-content" class="event-log-content">
+      <div id="event-log">
+        <!-- Events will be added here dynamically -->
+      </div>
     </div>
   </div>
 
-  <script src="game.js"></script>
+  <script src="backyard_blackjack_final_fixed.js"></script>
 </body>
 </html>
