@@ -199,21 +199,43 @@ function isRedJack(card) {
 
 function isValidRun(cards) {
   if (cards.length < 2) return false;
-  
-  // Sort cards by rank value
-  const sortedCards = [...cards].sort((a, b) => rankValues[a.rank] - rankValues[b.rank]);
-  
-  // Check if ranks are consecutive
-  for (let i = 1; i < sortedCards.length; i++) {
-    const prevValue = rankValues[sortedCards[i-1].rank];
-    const currValue = rankValues[sortedCards[i].rank];
-    if (currValue !== prevValue + 1) {
-      return false;
+
+  const allSameSuit = cards.every(card => card.suit === cards[0].suit);
+  const allSameRank = cards.every(card => card.rank === cards[0].rank);
+
+  if (allSameSuit) {
+    // Check for sequential ranks
+    const sorted = [...cards].sort((a, b) => rankValues[a.rank] - rankValues[b.rank]);
+    for (let i = 1; i < sorted.length; i++) {
+      const prev = rankValues[sorted[i - 1].rank];
+      const curr = rankValues[sorted[i].rank];
+      if (curr !== prev + 1) return false;
     }
+    return true;
   }
-  
+
+  if (allSameRank) {
+    return true; // Grouped rank run
+  }
+
+  // Check for grouped rank blocks (e.g. 2♠ 2♦ 2♥ 2♣ 3♠ 3♦)
+  const grouped = {};
+  for (const card of cards) {
+    if (!grouped[card.rank]) grouped[card.rank] = [];
+    grouped[card.rank].push(card);
+  }
+
+  const ranksInOrder = Object.keys(grouped)
+    .map(r => rankValues[r])
+    .sort((a, b) => a - b);
+
+  for (let i = 1; i < ranksInOrder.length; i++) {
+    if (ranksInOrder[i] !== ranksInOrder[i - 1] + 1) return false;
+  }
+
   return true;
 }
+
 
 function calculateCardScale(handSize) {
   if (handSize <= 7) return 1.0;
