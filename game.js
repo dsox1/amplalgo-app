@@ -43,10 +43,23 @@ const game = {
 let selected = new Set();
 
 // ------------------ STATUS & LOG ------------------
-function setStatus(text){
-  if(UI.status) UI.status.textContent=text;
-  console.log("📢 Status:", text);
+function setStatus(text) {
+  if (!UI.status) return;
+
+  // Create a new entry
+  const entry = document.createElement('div');
+  entry.className = 'status-entry';
+  entry.textContent = text;
+
+  // Insert at the top
+  UI.status.insertBefore(entry, UI.status.firstChild);
+
+  // Keep only the last 5 messages
+  while (UI.status.children.length > 5) {
+    UI.status.removeChild(UI.status.lastChild);
+  }
 }
+
 
 function logEvent(message,type='info'){
   game.eventCounter++;
@@ -358,14 +371,25 @@ function getNextPlayer(current){
   return order[(idx+game.direction+order.length)%order.length];
 }
 
-function drawCard(){
-  if(game.deck.length===0 || game.current!=='player' || game.gameOver) return;
-  const card=game.deck.pop();
+function drawCard() {
+  if (game.deck.length === 0 || game.current !== 'player' || game.gameOver) return;
+  const card = game.deck.pop();
   game.player.push(card);
   renderAll();
-  setStatus(`You drew ${card.rank}${card.suit}`);
-  logEvent(`● You drew ${card.rank}${card.suit}`,'player-play');
+
+  const message = `♦ You drew ${card.rank}${card.suit}`;
+  setStatus(message);
+  logEvent(message, 'player-action');
+
+  // Advance turn
+  game.current = getNextPlayer('player');
+  if (game.current !== 'player') {
+    setTimeout(aiTakeTurn, 1000);
+  } else {
+    setStatus("Your turn again!");
+  }
 }
+
 
 // ------------------ AI TURN ------------------
 function aiTakeTurn(){
