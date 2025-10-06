@@ -185,4 +185,170 @@ function cardHTML(card){
     return `<div class="card-face">
       <div class="card-corners"><span>JOKER</span><span>${card?.suit||'★'}</span></div>
       <div class="card-icon"><span class="black">${card?.suit||'★'}</span></div>
-      <div class="card-corners"><span>${card?.suit||
+      <div class="card-corners"><span>${card?.suit|| ${card?.suit || '★'}</span><span>JOKER</span></div>
+    </div>`;
+  }
+  const isRed = card.suit === '♥' || card.suit === '♦';
+  const suitClass = isRed ? 'red' : 'black';
+  let centerIcon = card.suit;
+  if (card.rank === 'K') centerIcon = '♛';
+  if (card.rank === 'Q') centerIcon = '♕';
+  if (card.rank === 'J') centerIcon = '🛡';
+  return `<div class="card-face">
+    <div class="card-corners ${suitClass}">
+      <span>${card.rank}</span><span>${card.suit}</span>
+    </div>
+    <div class="card-icon ${suitClass}">
+      <span>${centerIcon}</span>
+    </div>
+    <div class="card-corners ${suitClass}">
+      <span>${card.suit}</span><span>${card.rank}</span>
+    </div>
+  </div>`;
+}
+
+// ------------------ SELECTION ------------------
+function toggleSelect(idx){
+  if(game.current!=='player'||game.gameOver)return;
+  if(selected.has(idx)) selected.delete(idx); else selected.add(idx);
+  renderHands(); updateControls();
+}
+function clearSelection(){ selected.clear(); renderHands(); updateControls(); }
+function updateControls(){
+  UI.btnPlaySelected.disabled = selected.size===0 || game.current!=='player';
+  UI.btnLastCard.disabled = game.gameOver;
+}
+
+// ------------------ JOKER ------------------
+function promptJokerSelection(){
+  const input = prompt("Transform your Joker:\nFormat: [RANK][SUIT] e.g. AS, 10H, KC");
+  if(!input) return null;
+  const clean=input.trim().toUpperCase();
+  let rank,suitChar;
+  if(clean.length===2){ rank=clean[0]; suitChar=clean[1]; }
+  else if(clean.length===3 && clean.startsWith('10')){ rank='10'; suitChar=clean[2]; }
+  else { setStatus("Invalid format."); return null; }
+  if(!ranks.includes(rank)){ setStatus("Invalid rank."); return null; }
+  const suitMap={S:'♠',H:'♥',D:'♦',C:'♣'};
+  const suit=suitMap[suitChar]; if(!suit){ setStatus("Invalid suit."); return null; }
+  return {rank,suit};
+}
+
+// ------------------ PLAY LOGIC ------------------
+function playSelectedCards(){
+  if(game.current!=='player'||selected.size===0||game.gameOver)return;
+  const top=game.discard[game.discard.length-1];
+  const indices=[...selected]; const cards=indices.map(i=>game.player[i]);
+
+  // Cover rules
+  if(game.mustCoverQueen){
+    if(!cards.some(c=>isPlayable(c,top))){ setStatus("You must cover your Queen."); return; }
+    game.mustCoverQueen=false;
+  }
+  if(game.mustCoverKing){
+    if(!cards.some(c=>isPlayable(c,top))){ setStatus("You must cover your King."); return; }
+    game.mustCoverKing=false;
+  }
+
+  // Runs
+  if(cards.length>1 && isValidRun(cards)){
+    indices.sort((a,b)=>b-a).forEach(i=>game.player.splice(i,1));
+    cards.forEach(c=>game.discard.push(c));
+    game.lastPlayedCard=cards[cards.length-1]; game.lastPlayedBy='player';
+    selected.clear(); setStatus("You played a run.");
+    applyCoverRules(game.lastPlayedCard); renderAll();
+    if(game.player.length===0){ setStatus("You win!"); game.gameOver=true; return; }
+    game.current=getNextPlayer('player');
+    setTimeout(()=>{ if(game.current!=='player') aiTakeTurn(); },1000);
+    return;
+  }
+
+  // Single card
+  const playable=cards.find(c=>isPlayable(c,top));
+  if(!playable){ setStatus("Selected cards can't be played."); return; }
+  const idx=game.player.indexOf(playable); game.player.splice(idx,1); selected.clear();
+  if(playable.joker){
+    const choice=promptJokerSelection();
+    if(!choice){ game.player.splice(idx,0,playable); renderAll(); return; }
+    game.discard.push({rank:choice.rank,suit:choice.suit,joker:true});
+    game.lastPlayedCard={rank:choice.rank,suit:choice.suit,joker:true};
+  } else {
+    game.discard.push(playable); game.lastPlayedCard=playable;
+  }
+  game.lastPlayedBy='player'; applyCoverRules(game.lastPlayedCard); renderAll();
+  if(game.player.length===0){ setStatus("You win!"); game.gameOver=true; return; }
+  game.current=getNextPlayer('player');
+  setTimeout(()=>{ if(game.current!=='player') aiTakeTurn(); },1000);
+}
+
+// ------------------ TURN FLOW ------------------
+function getNextPlayer(current){
+  const order=['player','aiRight','aiTop','aiLeft'];
+  const idx=order.indexOf(current);
+  return order[(idx+game.direction+order.length)%order.length];
+}
+
+function drawCard(){
+  if(game.deck.length===0||game.current!=='player'||game.gameOver)return;
+  const card=game.deck.pop(); game.player.push(card);
+  renderAll(); setStatus(`You drew ${card.rank}${card.suit}`);
+}
+
+// ------------------ AI TURN (simplified placeholder) ------------------
+function aiTakeTurn(){
+  if(game.current==='player'||game.gameOver)return;
+  const hand = game[game.current];
+  const top=game.discard[game.discard.length-1];
+  const playable=hand.find(c=>isPlayable(c,top));
+  if(playable){
+    hand.splice(hand.indexOf(playable),1);
+    game.discard.push(playable); game.lastPlayedCard=playable; game.lastPlayedBy='ai';
+    setStatus(`AI played ${playable.rank}${playable.suit}`);
+    applyCoverRules(playable);
+  } else if(game.deck.length>0){
+    hand.push(game.deck.pop()); setStatus("AI drew a card.");
+  } else { setStatus("AI skipped."); }
+  renderAll();
+  if(hand.length===0){ setStatus("AI wins!"); game.gameOver=true; return; }
+  game.current=getNextPlayer(game.current);
+  if(game.current!=='player') setTimeout(aiTakeTurn,1000);
+  else setStatus("Your turn!");
+}
+
+// ------------------ DECK & START ------------------
+function createDeck(){
+  const deck=[]; const copies=settings.doubleDeck?2:1;
+  for(let c=0;c<copies;c++){
+    for(const s of suits){ for(const r of ranks){ deck.push({rank:r,suit:s,joker:false}); } }
+    if(settings.jokerEnabled){ deck.push({rank:'JOKER',suit:'★',joker:true}); deck.push({rank:'JOKER',suit:'☆',joker:true}); }
+  }
+  for(let i=deck.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [deck[i],deck[j]]=[deck[j],deck[i]]; }
+  return deck;
+}
+
+function startGame(){
+  Object.assign(game,{deck:createDeck(),discard:[],player:[],aiTop:[],aiLeft:[],aiRight:[],
+    current:'player',direction:1,gameOver:false,lastPlayedCard:null,lastPlayedBy:null,
+    mustCoverQueen:false,mustCoverKing:false});
+  selected.clear(); UI.eventLog.innerHTML='';
+  for(let i=0;i<settings.startingHand;i++){ game.player.push(game.deck.pop()); game.aiTop.push(game.deck.pop()); game.aiLeft.push(game.deck.pop()); game.aiRight.push(game.deck.pop()); }
+  let top; do{ top=game.deck.pop(); }while(top&&top.joker); game.discard.push(top||game.deck.pop());
+  renderAll(); setStatus("Your turn!");
+}
+
+// ------------------ RULES & LOG TOGGLE ------------------
+function toggleRulesPanel(){ UI.rulesPanel.style.display = UI.rulesPanel.style.display==='block'?'none':'block'; }
+function toggleLogPanel(){ UI.logContent.style.display = UI.logContent.style.display==='block'?'none':'block'; }
+
+// ------------------ INIT ------------------
+document.addEventListener('DOMContentLoaded',()=>{
+  UI.btnPlay.addEventListener('click',startGame);
+  UI.btnPlaySelected.addEventListener('click',playSelectedCards);
+  UI.btnClear.addEventListener('click',clearSelection);
+  UI.btnDraw.addEventListener('click',drawCard);
+  UI.btnLastCard.addEventListener('click',()=>{ setStatus("You declared Last Card!"); });
+  UI.deckCard.addEventListener('click',drawCard);
+  UI.btnRules.addEventListener('click',toggleRulesPanel);
+  UI.logHeader.addEventListener('click',toggleLogPanel);
+});
+
