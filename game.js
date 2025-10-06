@@ -92,12 +92,18 @@ function countActivePlayers(){
   return c;
 }
 
-function isPlayable(card,top){
-  if(!card||!top)return false;
-  if(card.joker)return true;
-  if(top.joker)return card.suit===top.suit;
-  return card.rank===top.rank||card.suit===top.suit;
+function isPlayable(card, top) {
+  if (!card || !top) return false;
+  if (card.joker) return true;
+  if (top.joker) return card.suit === top.suit;
+
+  // ✅ Ace wild only when played
+  if (card.rank === 'A') return true;
+
+  // Normal rule: match rank or suit
+  return card.rank === top.rank || card.suit === top.suit;
 }
+
 
 function isValidRun(cards){
   if(cards.length<2)return false;
@@ -290,23 +296,32 @@ function playSelectedCards(){
 // Queen cover enforcement
 if (game.mustCoverQueen) {
   if (!cards.some(c => isPlayable(c, top))) {
-    setStatus("You must cover your Queen."); 
-    logEvent("Queen cover attempt failed","penalty");
+    // ❌ Failed to cover → draw 1 card
+    if (game.deck.length === 0) reshuffleFromDiscard();
+    if (game.deck.length > 0) {
+      const penalty = game.deck.pop();
+      game.player.push(penalty);
+      setStatus("You failed to cover your Queen. You draw 1 card.");
+      logEvent("Player failed to cover Queen → drew 1 card","penalty");
+    }
     return;
   }
-  // ✅ Reset once a valid cover is played
-  game.mustCoverQueen = false;
+  game.mustCoverQueen = false; // ✅ reset after successful cover
   logEvent("Queen successfully covered","power");
 }
 
 // King cover enforcement
 if (game.mustCoverKing) {
   if (!cards.some(c => isPlayable(c, top))) {
-    setStatus("You must cover your King."); 
-    logEvent("King cover attempt failed","penalty");
+    if (game.deck.length === 0) reshuffleFromDiscard();
+    if (game.deck.length > 0) {
+      const penalty = game.deck.pop();
+      game.player.push(penalty);
+      setStatus("You failed to cover your King. You draw 1 card.");
+      logEvent("Player failed to cover King → drew 1 card","penalty");
+    }
     return;
   }
-  // ✅ Reset once a valid cover is played
   game.mustCoverKing = false;
   logEvent("King successfully covered","power");
 }
@@ -446,19 +461,52 @@ function aiTakeTurn(){
   const top = game.discard[game.discard.length - 1];
   let playable = hand.find(c => isPlayable(c, top));
 
+  // --- Queen cover enforcement ---
+  if (game.mustCoverQueen) {
+    if (!playable) {
+      if (game.deck.length === 0) reshuffleFromDiscard();
+      if (game.deck.length > 0) {
+        const penalty = game.deck.pop();
+        hand.push(penalty);
+        setStatus("AI failed to cover Queen → drew 1 card.");
+        logEvent("AI failed to cover Queen → drew 1 card","penalty");
+      }
+      return;
+    }
+    game.mustCoverQueen = false;
+    logEvent("AI covered Queen","power");
+  }
+
+  // --- King cover enforcement ---
+  if (game.mustCoverKing) {
+    if (!playable) {
+      if (game.deck.length === 0) reshuffleFromDiscard();
+      if (game.deck.length > 0) {
+        const penalty = game.deck.pop();
+        hand.push(penalty);
+        setStatus("AI failed to cover King → drew 1 card.");
+        logEvent("AI failed to cover King → drew 1 card","penalty");
+      }
+      return;
+    }
+    game.mustCoverKing = false;
+    logEvent("AI covered King","power");
+  }
+
+  // --- If AI has a playable card ---
   if (playable) {
     hand.splice(hand.indexOf(playable), 1);
 
     if (playable.joker) {
       let declared;
 
-      // Penalty cover active → match top card’s rank/suit
+      // If covering a penalty → match top card
       if (game.mustCoverQueen || game.mustCoverKing) {
         declared = { rank: top.rank, suit: top.suit, joker: true };
         setStatus(`AI played a Joker to match ${top.rank}${top.suit}`);
         logEvent(`⚙ AI declared Joker as ${top.rank}${top.suit} (penalty cover)`, 'ai-play');
       } else {
-        // No penalty → pick suit AI has most of
+        // Otherwise → pick suit AI has most of
         const suitCounts = { '♠':0, '♥':0, '♦':0, '♣':0 };
         hand.forEach(c => { if (!c.joker) suitCounts[c.suit]++; });
         const bestSuit = Object.keys(suitCounts).reduce((a,b)=> suitCounts[a]>suitCounts[b]?a:b);
@@ -482,21 +530,9 @@ function aiTakeTurn(){
       applyCoverRules(playable);
     }
 
-    // ✅ Reset cover flags if AI successfully covered
-    if (game.mustCoverQueen && isPlayable(game.lastPlayedCard, top)) {
-      game.mustCoverQueen = false;
-      logEvent("AI covered Queen","power");
-    }
-    if (game.mustCoverKing && isPlayable(game.lastPlayedCard, top)) {
-      game.mustCoverKing = false;
-      logEvent("AI covered King","power");
-    }
-
   } else {
-    // No playable card → try to draw
-    if (game.deck.length === 0) {
-      reshuffleFromDiscard();
-    }
+    // --- No playable card → draw ---
+    if (game.deck.length === 0) reshuffleFromDiscard();
     if (game.deck.length > 0) {
       const drawn = game.deck.pop();
       hand.push(drawn);
@@ -510,6 +546,7 @@ function aiTakeTurn(){
 
   renderAll();
 
+  // --- Win check ---
   if (hand.length === 0) {
     setStatus("♔ AI wins!");
     logEvent("♔ AI wins the game", "game");
@@ -517,6 +554,7 @@ function aiTakeTurn(){
     return;
   }
 
+  // --- Advance turn ---
   game.current = getNextPlayer(game.current);
   if (game.current !== 'player') {
     setTimeout(aiTakeTurn, 1000);
