@@ -4,6 +4,8 @@ const suits = ['♠', '♥', '♦', '♣'];
 const ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 const rankValues = { A: 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10, J: 11, Q: 12, K: 13 };
 
+
+
 const UI = {
   deckCard: document.getElementById('deck-card'),
   discardCard: document.getElementById('discard-card'),
@@ -111,6 +113,142 @@ function applyCoverRules(card) {
     setStatus("You must cover your King with a compatible card.");
   }
 }
+
+
+let selected = new Set();
+
+function renderAll() {
+  renderCenterStacks();
+  renderHands();
+  renderCounts();
+  updateControls();
+}
+
+function renderCenterStacks() {
+  UI.deckCount.textContent = game.deck.length;
+  UI.deckCard.textContent = '🂠';
+  const top = game.discard[game.discard.length - 1];
+  UI.discardCard.innerHTML = cardHTML(top);
+}
+
+function renderCounts() {
+  UI.playerCount.textContent = game.player.length;
+  UI.aiTopCount.textContent = game.aiTop.length;
+  UI.aiLeftCount.textContent = game.aiLeft.length;
+  UI.aiRightCount.textContent = game.aiRight.length;
+}
+
+function calculateCardScale(handSize) {
+  if (handSize <= 7) return 1.0;
+  if (handSize <= 10) return 0.85;
+  if (handSize <= 13) return 0.7;
+  return 0.6;
+}
+
+function calculateCardSpacing(handSize) {
+  if (handSize <= 7) return 0;
+  if (handSize <= 10) return -10;
+  if (handSize <= 13) return -20;
+  return -30;
+}
+
+function renderHands() {
+  UI.playerHand.innerHTML = '';
+  const scale = calculateCardScale(game.player.length);
+  const spacing = calculateCardSpacing(game.player.length);
+
+  game.player.forEach((card, idx) => {
+    const el = document.createElement('div');
+    el.className = 'card selectable';
+    if (selected.has(idx)) el.classList.add('selected');
+    el.innerHTML = cardHTML(card);
+    el.style.transform = `scale(${scale})`;
+    el.style.marginLeft = idx > 0 ? `${spacing}px` : '0';
+    el.addEventListener('click', () => toggleSelect(idx));
+    UI.playerHand.appendChild(el);
+  });
+
+  // AI hands
+  renderAIHand(UI.aiTopHand, game.aiTop);
+  renderAIHand(UI.aiLeftHand, game.aiLeft, 'vertical');
+  renderAIHand(UI.aiRightHand, game.aiRight, 'vertical');
+}
+
+function renderAIHand(container, hand, orientation = 'horizontal') {
+  container.innerHTML = '';
+  const scale = calculateCardScale(hand.length);
+  const spacing = calculateCardSpacing(hand.length);
+
+  hand.forEach((card, i) => {
+    const el = document.createElement('div');
+    el.className = 'card back';
+    el.textContent = '🂠';
+    el.style.transform = `scale(${scale})`;
+    if (orientation === 'vertical') {
+      el.style.marginTop = i > 0 ? `${spacing}px` : '0';
+    } else {
+      el.style.marginLeft = i > 0 ? `${spacing}px` : '0';
+    }
+    container.appendChild(el);
+  });
+}
+
+function toggleSelect(idx) {
+  if (game.current !== 'player' || game.gameOver) return;
+  if (selected.has(idx)) {
+    selected.delete(idx);
+  } else {
+    selected.add(idx);
+  }
+  renderHands();
+  updateControls();
+}
+
+function clearSelection() {
+  selected.clear();
+  renderHands();
+  updateControls();
+}
+
+function updateControls() {
+  UI.btnPlaySelected.disabled = selected.size === 0 || game.current !== 'player';
+  UI.btnLastCard.disabled = game.gameOver;
+}
+
+function cardHTML(card) {
+  if (!card || card.joker) {
+    return `
+      <div class="card-face">
+        <div class="card-corners"><span>JOKER</span><span>${card?.suit || '★'}</span></div>
+        <div class="card-icon"><span class="black">${card?.suit || '★'}</span></div>
+        <div class="card-corners"><span>${card?.suit || '★'}</span><span>JOKER</span></div>
+      </div>
+    `;
+  }
+
+  const isRed = card.suit === '♥' || card.suit === '♦';
+  const suitClass = isRed ? 'red' : 'black';
+  let centerIcon = card.suit;
+  if (card.rank === 'K') centerIcon = '♛';
+  if (card.rank === 'Q') centerIcon = '♕';
+  if (card.rank === 'J') centerIcon = '🛡';
+
+  return `
+    <div class="card-face">
+      <div class="card-corners ${suitClass}">
+        <span>${card.rank}</span><span>${card.suit}</span>
+      </div>
+      <div class="card-icon ${suitClass}">
+        <span>${centerIcon}</span>
+      </div>
+      <div class="card-corners ${suitClass}">
+        <span>${card.suit}</span><span>${card.rank}</span>
+      </div>
+    </div>
+  `;
+}
+
+
 
 function promptJokerSelection() {
   const input = prompt(`Transform your Joker into any card:\n\nEnter: [RANK][SUIT]\nExample: AS (Ace of Spades), 10H (10 of Hearts), KC (King of Clubs)\n\nRanks: A,2–10,J,Q,K\nSuits: S(♠), H(♥), D(♦), C(♣)`);
