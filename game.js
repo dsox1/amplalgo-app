@@ -1,11 +1,9 @@
-console.log("🎮 Backyard BlackJack - Corrected Build");
+console.log("🎮 Backyard BlackJack - Corrected Build with Logs & Cover Rules");
 
-// ------------------ CONSTANTS ------------------
 const suits = ['♠', '♥', '♦', '♣'];
 const ranks = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
 const rankValues = {A:1,'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'10':10,J:11,Q:12,K:13};
 
-// ------------------ UI HOOKS ------------------
 const UI = {
   deckCard: document.getElementById('deck-card'),
   discardCard: document.getElementById('discard-card'),
@@ -31,7 +29,6 @@ const UI = {
   logContent: document.getElementById('log-content')
 };
 
-// ------------------ GAME STATE ------------------
 const settings = { startingHand:7, jokerEnabled:true, doubleDeck:false };
 
 const game = {
@@ -45,8 +42,11 @@ const game = {
 
 let selected = new Set();
 
-// ------------------ UTILITIES ------------------
-function setStatus(text){ if(UI.status) UI.status.textContent=text; }
+// ------------------ STATUS & LOG ------------------
+function setStatus(text){
+  if(UI.status) UI.status.textContent=text;
+  console.log("📢 Status:", text);
+}
 
 function logEvent(message,type='info'){
   game.eventCounter++;
@@ -59,8 +59,17 @@ function logEvent(message,type='info'){
     <span class="log-message">${message}</span>`;
   UI.eventLog.insertBefore(logElement,UI.eventLog.firstChild);
   while(UI.eventLog.children.length>50) UI.eventLog.removeChild(UI.eventLog.lastChild);
+  console.log("📝 Log:", message);
 }
 
+function toggleRulesPanel(){
+  UI.rulesPanel.style.display = UI.rulesPanel.style.display==='block'?'none':'block';
+}
+function toggleLogPanel(){
+  UI.logContent.style.display = UI.logContent.style.display==='block'?'none':'block';
+}
+
+// ------------------ HELPERS ------------------
 function countActivePlayers(){
   let c=0;
   if(game.player.length>0)c++;
@@ -99,101 +108,118 @@ function isValidRun(cards){
 }
 
 function applyCoverRules(card){
-  if(card.rank==='Q'){ game.mustCoverQueen=true; setStatus("You must cover your Queen."); }
+  if(card.rank==='Q'){ game.mustCoverQueen=true; setStatus("You must cover your Queen."); logEvent("Queen must be covered","power"); }
   if(card.rank==='K' && countActivePlayers()===2){
     game.mustCoverKing=true;
     game.current=game.lastPlayedBy;
-    setStatus("You must cover your King.");
+    setStatus("You must cover your King."); logEvent("King must be covered","power");
   }
 }
 
 // ------------------ RENDERING ------------------
-function renderAll(){ renderCenterStacks(); renderHands(); renderCounts(); updateControls(); }
+function renderAll(){
+  renderCenterStacks();
+  renderHands();
+  renderCounts();
+  updateControls();
+}
 
 function renderCenterStacks(){
-  UI.deckCount.textContent=game.deck.length;
-  UI.deckCard.textContent='🂠';
-  const top=game.discard[game.discard.length-1];
-  UI.discardCard.innerHTML=cardHTML(top);
+  UI.deckCount.textContent = game.deck.length;
+  UI.deckCard.textContent = '🂠';
+  const top = game.discard[game.discard.length-1];
+  UI.discardCard.innerHTML = cardHTML(top);
 }
 
 function renderCounts(){
-  UI.playerCount.textContent=game.player.length;
-  UI.aiTopCount.textContent=game.aiTop.length;
-  UI.aiLeftCount.textContent=game.aiLeft.length;
-  UI.aiRightCount.textContent=game.aiRight.length;
+  UI.playerCount.textContent = game.player.length;
+  UI.aiTopCount.textContent = game.aiTop.length;
+  UI.aiLeftCount.textContent = game.aiLeft.length;
+  UI.aiRightCount.textContent = game.aiRight.length;
 }
 
-function calculateCardScale(n){ if(n<=7)return 1; if(n<=10)return .85; if(n<=13)return .7; return .6; }
-function calculateCardSpacing(n){ if(n<=7)return 0; if(n<=10)return -10; if(n<=13)return -20; return -30; }
+function calculateCardScale(n){
+  if(n<=7) return 1;
+  if(n<=10) return 0.85;
+  if(n<=13) return 0.7;
+  return 0.6;
+}
+function calculateCardSpacing(n){
+  if(n<=7) return 0;
+  if(n<=10) return -10;
+  if(n<=13) return -20;
+  return -30;
+}
 
 function renderHands(){
-  // Player
-  UI.playerHand.innerHTML='';
-  const scale=calculateCardScale(game.player.length);
-  const spacing=calculateCardSpacing(game.player.length);
-  game.player.forEach((card,idx)=>{
-    const el=document.createElement('div');
-    el.className='card selectable';
+  // Player hand
+  UI.playerHand.innerHTML = '';
+  const scale = calculateCardScale(game.player.length);
+  const spacing = calculateCardSpacing(game.player.length);
+  game.player.forEach((card, idx)=>{
+    const el = document.createElement('div');
+    el.className = 'card selectable';
     if(selected.has(idx)) el.classList.add('selected');
-    el.innerHTML=cardHTML(card);
-    el.style.transform=`scale(${scale})`;
-    el.style.marginLeft=idx>0?`${spacing}px`:'0';
-    el.addEventListener('click',()=>toggleSelect(idx));
+    el.innerHTML = cardHTML(card);
+    el.style.transform = `scale(${scale})`;
+    el.style.marginLeft = idx>0 ? `${spacing}px` : '0';
+    el.addEventListener('click', ()=>toggleSelect(idx));
     UI.playerHand.appendChild(el);
   });
 
-  // AI Top (fanned)
-  UI.aiTopHand.innerHTML='';
-  const aiScale=calculateCardScale(game.aiTop.length);
-  const angleStep=Math.min(10,60/Math.max(1,game.aiTop.length-1));
-  const startAngle=-((game.aiTop.length-1)*angleStep)/2;
+  // AI Top hand (fanned arc)
+  UI.aiTopHand.innerHTML = '';
+  const aiScale = calculateCardScale(game.aiTop.length);
+  const angleStep = Math.min(10, 60/Math.max(1, game.aiTop.length-1));
+  const startAngle = -((game.aiTop.length-1)*angleStep)/2;
   game.aiTop.forEach((c,i)=>{
-    const el=document.createElement('div');
-    el.className='card back';
-    el.textContent='🂠';
-    const angle=startAngle+i*angleStep;
-    el.style.transform=`rotate(${angle}deg) scale(${aiScale})`;
+    const el = document.createElement('div');
+    el.className = 'card back';
+    el.textContent = '🂠';
+    const angle = startAngle + i*angleStep;
+    el.style.transform = `rotate(${angle}deg) scale(${aiScale})`;
     UI.aiTopHand.appendChild(el);
   });
 
   // AI Left
-  UI.aiLeftHand.innerHTML='';
-  const leftScale=calculateCardScale(game.aiLeft.length);
+  UI.aiLeftHand.innerHTML = '';
+  const leftScale = calculateCardScale(game.aiLeft.length);
   game.aiLeft.forEach((c,i)=>{
-    const el=document.createElement('div');
-    el.className='card back'; el.textContent='🂠';
-    el.style.transform=`scale(${leftScale})`;
-    el.style.marginTop=i>0?`${calculateCardSpacing(game.aiLeft.length)}px`:'0';
+    const el = document.createElement('div');
+    el.className = 'card back';
+    el.textContent = '🂠';
+    el.style.transform = `scale(${leftScale})`;
+    el.style.marginTop = i>0 ? `${calculateCardSpacing(game.aiLeft.length)}px` : '0';
     UI.aiLeftHand.appendChild(el);
   });
 
   // AI Right
-  UI.aiRightHand.innerHTML='';
-  const rightScale=calculateCardScale(game.aiRight.length);
+  UI.aiRightHand.innerHTML = '';
+  const rightScale = calculateCardScale(game.aiRight.length);
   game.aiRight.forEach((c,i)=>{
-    const el=document.createElement('div');
-    el.className='card back'; el.textContent='🂠';
-    el.style.transform=`scale(${rightScale})`;
-    el.style.marginTop=i>0?`${calculateCardSpacing(game.aiRight.length)}px`:'0';
+    const el = document.createElement('div');
+    el.className = 'card back';
+    el.textContent = '🂠';
+    el.style.transform = `scale(${rightScale})`;
+    el.style.marginTop = i>0 ? `${calculateCardSpacing(game.aiRight.length)}px` : '0';
     UI.aiRightHand.appendChild(el);
   });
 }
 
 function cardHTML(card){
-  if(!card||card.joker){
+  if(!card || card.joker){
     return `<div class="card-face">
       <div class="card-corners"><span>JOKER</span><span>${card?.suit||'★'}</span></div>
       <div class="card-icon"><span class="black">${card?.suit||'★'}</span></div>
-      <div class="card-corners"><span>${card?.suit || '★'}</span><span>JOKER</span></div>
+      <div class="card-corners"><span>${card?.suit||'★'}</span><span>JOKER</span></div>
     </div>`;
   }
-  const isRed = card.suit === '♥' || card.suit === '♦';
+  const isRed = card.suit==='♥' || card.suit==='♦';
   const suitClass = isRed ? 'red' : 'black';
   let centerIcon = card.suit;
-  if (card.rank === 'K') centerIcon = '♛';
-  if (card.rank === 'Q') centerIcon = '♕';
-  if (card.rank === 'J') centerIcon = '🛡';
+  if(card.rank==='K') centerIcon = '♛';
+  if(card.rank==='Q') centerIcon = '♕';
+  if(card.rank==='J') centerIcon = '🛡';
   return `<div class="card-face">
     <div class="card-corners ${suitClass}">
       <span>${card.rank}</span><span>${card.suit}</span>
@@ -209,7 +235,7 @@ function cardHTML(card){
 
 // ------------------ SELECTION ------------------
 function toggleSelect(idx){
-  if(game.current!=='player'||game.gameOver)return;
+  if(game.current!=='player' || game.gameOver) return;
   if(selected.has(idx)) selected.delete(idx); else selected.add(idx);
   renderHands(); updateControls();
 }
@@ -236,17 +262,29 @@ function promptJokerSelection(){
 
 // ------------------ PLAY LOGIC ------------------
 function playSelectedCards(){
-  if(game.current!=='player'||selected.size===0||game.gameOver)return;
-  const top=game.discard[game.discard.length-1];
-  const indices=[...selected]; const cards=indices.map(i=>game.player[i]);
+  if(game.current!=='player' || selected.size===0 || game.gameOver) return;
 
-  // Cover rules
+  const top=game.discard[game.discard.length-1];
+  const indices=[...selected];
+  const cards=indices.map(i=>game.player[i]);
+
+  // Queen cover enforcement
   if(game.mustCoverQueen){
-    if(!cards.some(c=>isPlayable(c,top))){ setStatus("You must cover your Queen."); return; }
+    if(!cards.some(c=>isPlayable(c,top))){
+      setStatus("You must cover your Queen."); 
+      logEvent("Queen cover attempt failed","penalty");
+      return;
+    }
     game.mustCoverQueen=false;
   }
+
+  // King cover enforcement
   if(game.mustCoverKing){
-    if(!cards.some(c=>isPlayable(c,top))){ setStatus("You must cover your King."); return; }
+    if(!cards.some(c=>isPlayable(c,top))){
+      setStatus("You must cover your King."); 
+      logEvent("King cover attempt failed","penalty");
+      return;
+    }
     game.mustCoverKing=false;
   }
 
@@ -254,10 +292,15 @@ function playSelectedCards(){
   if(cards.length>1 && isValidRun(cards)){
     indices.sort((a,b)=>b-a).forEach(i=>game.player.splice(i,1));
     cards.forEach(c=>game.discard.push(c));
-    game.lastPlayedCard=cards[cards.length-1]; game.lastPlayedBy='player';
-    selected.clear(); setStatus("You played a run.");
-    applyCoverRules(game.lastPlayedCard); renderAll();
-    if(game.player.length===0){ setStatus("You win!"); game.gameOver=true; return; }
+    game.lastPlayedCard=cards[cards.length-1];
+    game.lastPlayedBy='player';
+    selected.clear();
+    const runDesc=cards.map(c=>`${c.rank}${c.suit}`).join(', ');
+    setStatus(`You played a run: ${runDesc}`);
+    logEvent(`● Run played: ${runDesc}`,'player-play');
+    applyCoverRules(game.lastPlayedCard);
+    renderAll();
+    if(game.player.length===0){ setStatus("♔ You win!"); logEvent("♔ Player wins","game"); game.gameOver=true; return; }
     game.current=getNextPlayer('player');
     setTimeout(()=>{ if(game.current!=='player') aiTakeTurn(); },1000);
     return;
@@ -265,18 +308,45 @@ function playSelectedCards(){
 
   // Single card
   const playable=cards.find(c=>isPlayable(c,top));
-  if(!playable){ setStatus("Selected cards can't be played."); return; }
-  const idx=game.player.indexOf(playable); game.player.splice(idx,1); selected.clear();
+  if(!playable){
+    setStatus("Selected cards can't be played.");
+    logEvent("Invalid play attempt","penalty");
+    return;
+  }
+
+  const idx=game.player.indexOf(playable);
+  game.player.splice(idx,1);
+  selected.clear();
+
   if(playable.joker){
     const choice=promptJokerSelection();
-    if(!choice){ game.player.splice(idx,0,playable); renderAll(); return; }
+    if(!choice){
+      game.player.splice(idx,0,playable); // put back
+      renderAll();
+      return;
+    }
     game.discard.push({rank:choice.rank,suit:choice.suit,joker:true});
     game.lastPlayedCard={rank:choice.rank,suit:choice.suit,joker:true};
+    setStatus(`You played a Joker as ${choice.rank}${choice.suit}`);
+    logEvent(`● Joker transformed into ${choice.rank}${choice.suit}`,'player-play');
   } else {
-    game.discard.push(playable); game.lastPlayedCard=playable;
+    game.discard.push(playable);
+    game.lastPlayedCard=playable;
+    setStatus(`You played ${playable.rank}${playable.suit}`);
+    logEvent(`● You played ${playable.rank}${playable.suit}`,'player-play');
+    applyCoverRules(playable);
   }
-  game.lastPlayedBy='player'; applyCoverRules(game.lastPlayedCard); renderAll();
-  if(game.player.length===0){ setStatus("You win!"); game.gameOver=true; return; }
+
+  game.lastPlayedBy='player';
+  renderAll();
+
+  if(game.player.length===0){
+    setStatus("♔ You win!");
+    logEvent("♔ Player wins","game");
+    game.gameOver=true;
+    return;
+  }
+
   game.current=getNextPlayer('player');
   setTimeout(()=>{ if(game.current!=='player') aiTakeTurn(); },1000);
 }
@@ -289,30 +359,54 @@ function getNextPlayer(current){
 }
 
 function drawCard(){
-  if(game.deck.length===0||game.current!=='player'||game.gameOver)return;
-  const card=game.deck.pop(); game.player.push(card);
-  renderAll(); setStatus(`You drew ${card.rank}${card.suit}`);
+  if(game.deck.length===0 || game.current!=='player' || game.gameOver) return;
+  const card=game.deck.pop();
+  game.player.push(card);
+  renderAll();
+  setStatus(`You drew ${card.rank}${card.suit}`);
+  logEvent(`● You drew ${card.rank}${card.suit}`,'player-play');
 }
 
-// ------------------ AI TURN (simplified placeholder) ------------------
+// ------------------ AI TURN ------------------
 function aiTakeTurn(){
-  if(game.current==='player'||game.gameOver)return;
+  if(game.current==='player' || game.gameOver) return;
   const hand = game[game.current];
   const top=game.discard[game.discard.length-1];
   const playable=hand.find(c=>isPlayable(c,top));
+
   if(playable){
     hand.splice(hand.indexOf(playable),1);
-    game.discard.push(playable); game.lastPlayedCard=playable; game.lastPlayedBy='ai';
+    game.discard.push(playable);
+    game.lastPlayedCard=playable;
+    game.lastPlayedBy='ai';
     setStatus(`AI played ${playable.rank}${playable.suit}`);
+    logEvent(`⚙ AI played ${playable.rank}${playable.suit}`,'ai-play');
     applyCoverRules(playable);
   } else if(game.deck.length>0){
-    hand.push(game.deck.pop()); setStatus("AI drew a card.");
-  } else { setStatus("AI skipped."); }
+    const drawn=game.deck.pop();
+    hand.push(drawn);
+    setStatus("AI drew a card.");
+    logEvent("⚙ AI drew a card",'ai-action');
+  } else {
+    setStatus("AI skipped.");
+    logEvent("⚙ AI skipped turn",'ai-action');
+  }
+
   renderAll();
-  if(hand.length===0){ setStatus("AI wins!"); game.gameOver=true; return; }
+
+  if(hand.length===0){
+    setStatus("♔ AI wins!");
+    logEvent("♔ AI wins the game","game");
+    game.gameOver=true;
+    return;
+  }
+
   game.current=getNextPlayer(game.current);
-  if(game.current!=='player') setTimeout(aiTakeTurn,1000);
-  else setStatus("Your turn!");
+  if(game.current!=='player'){
+    setTimeout(aiTakeTurn,1000);
+  } else {
+    setStatus("Your turn!");
+  }
 }
 
 // ------------------ DECK & START ------------------
@@ -320,25 +414,45 @@ function createDeck(){
   const deck=[]; const copies=settings.doubleDeck?2:1;
   for(let c=0;c<copies;c++){
     for(const s of suits){ for(const r of ranks){ deck.push({rank:r,suit:s,joker:false}); } }
-    if(settings.jokerEnabled){ deck.push({rank:'JOKER',suit:'★',joker:true}); deck.push({rank:'JOKER',suit:'☆',joker:true}); }
+    if(settings.jokerEnabled){
+      deck.push({rank:'JOKER',suit:'★',joker:true});
+      deck.push({rank:'JOKER',suit:'☆',joker:true});
+    }
   }
-  for(let i=deck.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [deck[i],deck[j]]=[deck[j],deck[i]]; }
+  for(let i=deck.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [deck[i],deck[j]]=[deck[j],deck[i]];
+  }
   return deck;
 }
 
 function startGame(){
-  Object.assign(game,{deck:createDeck(),discard:[],player:[],aiTop:[],aiLeft:[],aiRight:[],
-    current:'player',direction:1,gameOver:false,lastPlayedCard:null,lastPlayedBy:null,
-    mustCoverQueen:false,mustCoverKing:false});
-  selected.clear(); UI.eventLog.innerHTML='';
-  for(let i=0;i<settings.startingHand;i++){ game.player.push(game.deck.pop()); game.aiTop.push(game.deck.pop()); game.aiLeft.push(game.deck.pop()); game.aiRight.push(game.deck.pop()); }
-  let top; do{ top=game.deck.pop(); }while(top&&top.joker); game.discard.push(top||game.deck.pop());
-  renderAll(); setStatus("Your turn!");
-}
+  Object.assign(game,{
+    deck:createDeck(), discard:[],
+    player:[], aiTop:[], aiLeft:[], aiRight:[],
+    current:'player', direction:1, gameOver:false,
+    lastPlayedCard:null, lastPlayedBy:null,
+    mustCoverQueen:false, mustCoverKing:false,
+    eventCounter:0
+  });
+  selected.clear();
+  UI.eventLog.innerHTML='';
 
-// ------------------ RULES & LOG TOGGLE ------------------
-function toggleRulesPanel(){ UI.rulesPanel.style.display = UI.rulesPanel.style.display==='block'?'none':'block'; }
-function toggleLogPanel(){ UI.logContent.style.display = UI.logContent.style.display==='block'?'none':'block'; }
+  for(let i=0;i<settings.startingHand;i++){
+    game.player.push(game.deck.pop());
+    game.aiTop.push(game.deck.pop());
+    game.aiLeft.push(game.deck.pop());
+    game.aiRight.push(game.deck.pop());
+  }
+
+  let top;
+  do{ top=game.deck.pop(); } while(top && top.joker);
+  game.discard.push(top||game.deck.pop());
+
+  renderAll();
+  setStatus("Your turn! Match suit or rank, play runs, or use power cards.");
+  logEvent(`▶ New game started! Starting card: ${top.rank}${top.suit}`,'game');
+}
 
 // ------------------ INIT ------------------
 document.addEventListener('DOMContentLoaded',()=>{
@@ -346,9 +460,11 @@ document.addEventListener('DOMContentLoaded',()=>{
   UI.btnPlaySelected.addEventListener('click',playSelectedCards);
   UI.btnClear.addEventListener('click',clearSelection);
   UI.btnDraw.addEventListener('click',drawCard);
-  UI.btnLastCard.addEventListener('click',()=>{ setStatus("You declared Last Card!"); });
+  UI.btnLastCard.addEventListener('click',()=>{
+    setStatus("You declared Last Card!");
+    logEvent("● Player declared Last Card",'player-play');
+  });
   UI.deckCard.addEventListener('click',drawCard);
   UI.btnRules.addEventListener('click',toggleRulesPanel);
   UI.logHeader.addEventListener('click',toggleLogPanel);
 });
-
