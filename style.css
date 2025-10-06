@@ -211,28 +211,21 @@ body {
 }
 
 /* Status Panel — Glowing Info Board */
-.status {
-  position: absolute;
-  top: 80px;
-  left: 80%;
-  transform: translateX(-50%);
-  background: #111;
-  color: #00ffcc;
-  font-family: 'Courier New', monospace;
-  font-size: 18px;
-  padding: 12px 20px;
-  border: 2px solid #00ffcc;
-  border-radius: 8px;
-  box-shadow: 0 0 12px #00ffcc;
-  animation: pulse 1.5s infinite;
-  z-index: 5;
+#status {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.9em;
+  color: #eee;
+}
+.status-entry {
+  animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes pulse {
-  0% { box-shadow: 0 0 8px #00ffcc; }
-  50% { box-shadow: 0 0 20px #00ffcc; }
-  100% { box-shadow: 0 0 8px #00ffcc; }
-}
 
 /* Controls */
 .controls {
