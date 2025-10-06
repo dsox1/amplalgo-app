@@ -121,13 +121,19 @@ function isValidRun(cards){
 }
 
 function applyCoverRules(card){
-  if(card.rank==='Q'){ game.mustCoverQueen=true; setStatus("You must cover your Queen."); logEvent("Queen must be covered","power"); }
-  if(card.rank==='K' && countActivePlayers()===2){
-    game.mustCoverKing=true;
-    game.current=game.lastPlayedBy;
-    setStatus("You must cover your King."); logEvent("King must be covered","power");
+  if(card.rank === 'Q'){
+    game.mustCoverQueen = true;
+    setStatus("You must cover your Queen.");
+    logEvent("Queen must be covered","power");
+  }
+  if(card.rank === 'K' && countActivePlayers() === 2){
+    game.mustCoverKing = true;
+    game.current = game.lastPlayedBy;
+    setStatus("You must cover your King.");
+    logEvent("King must be covered","power");
   }
 }
+
 
 // ------------------ RENDERING ------------------
 function renderAll(){
@@ -281,25 +287,30 @@ function playSelectedCards(){
   const indices=[...selected];
   const cards=indices.map(i=>game.player[i]);
 
-  // Queen cover enforcement
-  if(game.mustCoverQueen){
-    if(!cards.some(c=>isPlayable(c,top))){
-      setStatus("You must cover your Queen."); 
-      logEvent("Queen cover attempt failed","penalty");
-      return;
-    }
-    game.mustCoverQueen=false;
+// Queen cover enforcement
+if (game.mustCoverQueen) {
+  if (!cards.some(c => isPlayable(c, top))) {
+    setStatus("You must cover your Queen."); 
+    logEvent("Queen cover attempt failed","penalty");
+    return;
   }
+  // ✅ Reset once a valid cover is played
+  game.mustCoverQueen = false;
+  logEvent("Queen successfully covered","power");
+}
 
-  // King cover enforcement
-  if(game.mustCoverKing){
-    if(!cards.some(c=>isPlayable(c,top))){
-      setStatus("You must cover your King."); 
-      logEvent("King cover attempt failed","penalty");
-      return;
-    }
-    game.mustCoverKing=false;
+// King cover enforcement
+if (game.mustCoverKing) {
+  if (!cards.some(c => isPlayable(c, top))) {
+    setStatus("You must cover your King."); 
+    logEvent("King cover attempt failed","penalty");
+    return;
   }
+  // ✅ Reset once a valid cover is played
+  game.mustCoverKing = false;
+  logEvent("King successfully covered","power");
+}
+
 
   // Runs
   if(cards.length>1 && isValidRun(cards)){
@@ -429,77 +440,91 @@ function drawCard() {
 
 // ------------------ AI TURN ------------------
 function aiTakeTurn(){
-  if(game.current==='player' || game.gameOver) return;
+  if (game.current === 'player' || game.gameOver) return;
+
   const hand = game[game.current];
-  const top=game.discard[game.discard.length-1];
-  let playable=hand.find(c=>isPlayable(c,top));
+  const top = game.discard[game.discard.length - 1];
+  let playable = hand.find(c => isPlayable(c, top));
 
-  if(playable){
-    hand.splice(hand.indexOf(playable),1);
+  if (playable) {
+    hand.splice(hand.indexOf(playable), 1);
 
-    if(playable.joker){
+    if (playable.joker) {
       let declared;
-      if(game.mustCoverQueen || game.mustCoverKing){
-        // Penalty cover: match top card’s rank/suit
-        declared = { rank: top.rank, suit: top.suit, joker:true };
+
+      // Penalty cover active → match top card’s rank/suit
+      if (game.mustCoverQueen || game.mustCoverKing) {
+        declared = { rank: top.rank, suit: top.suit, joker: true };
         setStatus(`AI played a Joker to match ${top.rank}${top.suit}`);
-        logEvent(`⚙ AI declared Joker as ${top.rank}${top.suit} (penalty cover)`,'ai-play');
+        logEvent(`⚙ AI declared Joker as ${top.rank}${top.suit} (penalty cover)`, 'ai-play');
       } else {
-        // No penalty: pick suit AI has most of
+        // No penalty → pick suit AI has most of
         const suitCounts = { '♠':0, '♥':0, '♦':0, '♣':0 };
-        hand.forEach(c => { if(!c.joker) suitCounts[c.suit]++; });
+        hand.forEach(c => { if (!c.joker) suitCounts[c.suit]++; });
         const bestSuit = Object.keys(suitCounts).reduce((a,b)=> suitCounts[a]>suitCounts[b]?a:b);
         const randRank = ranks[Math.floor(Math.random()*ranks.length)];
-        declared = { rank: randRank, suit: bestSuit, joker:true };
+        declared = { rank: randRank, suit: bestSuit, joker: true };
         setStatus(`AI played a Joker as ${randRank}${bestSuit}`);
-        logEvent(`⚙ AI declared Joker as ${randRank}${bestSuit}`,'ai-play');
+        logEvent(`⚙ AI declared Joker as ${randRank}${bestSuit}`, 'ai-play');
       }
+
       game.discard.push(declared);
-      game.lastPlayedCard=declared;
-      game.lastPlayedBy='ai';
+      game.lastPlayedCard = declared;
+      game.lastPlayedBy = 'ai';
       applyCoverRules(declared);
 
     } else {
       game.discard.push(playable);
-      game.lastPlayedCard=playable;
-      game.lastPlayedBy='ai';
+      game.lastPlayedCard = playable;
+      game.lastPlayedBy = 'ai';
       setStatus(`AI played ${playable.rank}${playable.suit}`);
-      logEvent(`⚙ AI played ${playable.rank}${playable.suit}`,'ai-play');
+      logEvent(`⚙ AI played ${playable.rank}${playable.suit}`, 'ai-play');
       applyCoverRules(playable);
     }
 
+    // ✅ Reset cover flags if AI successfully covered
+    if (game.mustCoverQueen && isPlayable(game.lastPlayedCard, top)) {
+      game.mustCoverQueen = false;
+      logEvent("AI covered Queen","power");
+    }
+    if (game.mustCoverKing && isPlayable(game.lastPlayedCard, top)) {
+      game.mustCoverKing = false;
+      logEvent("AI covered King","power");
+    }
+
   } else {
-    // No playable card: try to draw
+    // No playable card → try to draw
     if (game.deck.length === 0) {
       reshuffleFromDiscard();
     }
     if (game.deck.length > 0) {
-      const drawn=game.deck.pop();
+      const drawn = game.deck.pop();
       hand.push(drawn);
       setStatus("AI drew a card.");
-      logEvent("⚙ AI drew a card",'ai-action');
+      logEvent("⚙ AI drew a card", 'ai-action');
     } else {
       setStatus("AI skipped (deck empty).");
-      logEvent("⚙ AI skipped turn (deck empty)",'ai-action');
+      logEvent("⚙ AI skipped turn (deck empty)", 'ai-action');
     }
   }
 
   renderAll();
 
-  if(hand.length===0){
+  if (hand.length === 0) {
     setStatus("♔ AI wins!");
-    logEvent("♔ AI wins the game","game");
-    game.gameOver=true;
+    logEvent("♔ AI wins the game", "game");
+    game.gameOver = true;
     return;
   }
 
-  game.current=getNextPlayer(game.current);
-  if(game.current!=='player'){
-    setTimeout(aiTakeTurn,1000);
+  game.current = getNextPlayer(game.current);
+  if (game.current !== 'player') {
+    setTimeout(aiTakeTurn, 1000);
   } else {
     setStatus("Your turn!");
   }
 }
+
 
 
 
