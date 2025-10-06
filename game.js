@@ -55,7 +55,7 @@ function setStatus(text) {
   UI.status.insertBefore(entry, UI.status.firstChild);
 
   // Keep only the last 5 messages
-  while (UI.status.children.length > 5) {
+  while (UI.status.children.length > 2) {
     UI.status.removeChild(UI.status.lastChild);
   }
 }
