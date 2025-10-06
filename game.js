@@ -185,7 +185,7 @@ function cardHTML(card){
     return `<div class="card-face">
       <div class="card-corners"><span>JOKER</span><span>${card?.suit||'★'}</span></div>
       <div class="card-icon"><span class="black">${card?.suit||'★'}</span></div>
-      <div class="card-corners"><span>${card?.suit|| ${card?.suit || '★'}</span><span>JOKER</span></div>
+      <div class="card-corners"><span>${card?.suit || '★'}</span><span>JOKER</span></div>
     </div>`;
   }
   const isRed = card.suit === '♥' || card.suit === '♦';
