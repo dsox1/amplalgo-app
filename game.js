@@ -338,10 +338,11 @@ function playSelectedCards(){
       renderAll();
       return;
     }
-    game.discard.push({rank:choice.rank,suit:choice.suit,joker:true});
-    game.lastPlayedCard={rank:choice.rank,suit:choice.suit,joker:true};
+    const declared={rank:choice.rank,suit:choice.suit,joker:true};
+    game.discard.push(declared);
+    game.lastPlayedCard=declared;
     setStatus(`You played a Joker as ${choice.rank}${choice.suit}`);
-    logEvent(`● Joker transformed into ${choice.rank}${choice.suit}`,'player-play');
+    logEvent(`● Joker declared as ${choice.rank}${choice.suit}`,'player-play');
   } else {
     game.discard.push(playable);
     game.lastPlayedCard=playable;
@@ -363,6 +364,7 @@ function playSelectedCards(){
   game.current=getNextPlayer('player');
   setTimeout(()=>{ if(game.current!=='player') aiTakeTurn(); },1000);
 }
+
 
 // ------------------ TURN FLOW ------------------
 function getNextPlayer(current){
@@ -396,16 +398,45 @@ function aiTakeTurn(){
   if(game.current==='player' || game.gameOver) return;
   const hand = game[game.current];
   const top=game.discard[game.discard.length-1];
-  const playable=hand.find(c=>isPlayable(c,top));
+  let playable=hand.find(c=>isPlayable(c,top));
 
   if(playable){
     hand.splice(hand.indexOf(playable),1);
-    game.discard.push(playable);
-    game.lastPlayedCard=playable;
-    game.lastPlayedBy='ai';
-    setStatus(`AI played ${playable.rank}${playable.suit}`);
-    logEvent(`⚙ AI played ${playable.rank}${playable.suit}`,'ai-play');
-    applyCoverRules(playable);
+
+    if(playable.joker){
+      let declared;
+
+      // Check if reacting to a penalty card (Q or K cover active)
+      if(game.mustCoverQueen || game.mustCoverKing){
+        // Try to match top card's rank
+        declared = { rank: top.rank, suit: top.suit, joker:true };
+        setStatus(`AI played a Joker to match ${top.rank}${top.suit}`);
+        logEvent(`⚙ AI declared Joker as ${top.rank}${top.suit} (penalty cover)`,'ai-play');
+      } else {
+        // No penalty: pick suit AI has most of
+        const suitCounts = { '♠':0, '♥':0, '♦':0, '♣':0 };
+        hand.forEach(c => { if(!c.joker) suitCounts[c.suit]++; });
+        const bestSuit = Object.keys(suitCounts).reduce((a,b)=> suitCounts[a]>suitCounts[b]?a:b);
+        const randRank = ranks[Math.floor(Math.random()*ranks.length)];
+        declared = { rank: randRank, suit: bestSuit, joker:true };
+        setStatus(`AI played a Joker as ${randRank}${bestSuit}`);
+        logEvent(`⚙ AI declared Joker as ${randRank}${bestSuit}`,'ai-play');
+      }
+
+      game.discard.push(declared);
+      game.lastPlayedCard=declared;
+      game.lastPlayedBy='ai';
+      applyCoverRules(declared);
+
+    } else {
+      game.discard.push(playable);
+      game.lastPlayedCard=playable;
+      game.lastPlayedBy='ai';
+      setStatus(`AI played ${playable.rank}${playable.suit}`);
+      logEvent(`⚙ AI played ${playable.rank}${playable.suit}`,'ai-play');
+      applyCoverRules(playable);
+    }
+
   } else if(game.deck.length>0){
     const drawn=game.deck.pop();
     hand.push(drawn);
@@ -432,6 +463,7 @@ function aiTakeTurn(){
     setStatus("Your turn!");
   }
 }
+
 
 // ------------------ DECK & START ------------------
 function createDeck(){
