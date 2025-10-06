@@ -373,8 +373,41 @@ function getNextPlayer(current){
   return order[(idx+game.direction+order.length)%order.length];
 }
 
+function reshuffleFromDiscard() {
+  if (game.discard.length <= 1) return; // can't reshuffle if only one card
+
+  // Keep the top card
+  const topCard = game.discard.pop();
+
+  // Shuffle the rest into a new deck
+  game.deck = game.discard;
+  for (let i = game.deck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [game.deck[i], game.deck[j]] = [game.deck[j], game.deck[i]];
+  }
+
+  // Reset discard pile with just the top card
+  game.discard = [topCard];
+
+  logEvent("♻ Deck reshuffled from discard pile","game");
+  setStatus("Deck reshuffled");
+}
+
+
+
 function drawCard() {
-  if (game.deck.length === 0 || game.current !== 'player' || game.gameOver) return;
+  if (game.current !== 'player' || game.gameOver) return;
+
+  // Reshuffle if deck is empty
+  if (game.deck.length === 0) {
+    reshuffleFromDiscard();
+    if (game.deck.length === 0) {
+      setStatus("No cards left to draw!");
+      logEvent("⚠ Deck empty, cannot draw","game");
+      return;
+    }
+  }
+
   const card = game.deck.pop();
   game.player.push(card);
   renderAll();
@@ -393,6 +426,7 @@ function drawCard() {
 }
 
 
+
 // ------------------ AI TURN ------------------
 function aiTakeTurn(){
   if(game.current==='player' || game.gameOver) return;
@@ -405,10 +439,8 @@ function aiTakeTurn(){
 
     if(playable.joker){
       let declared;
-
-      // Check if reacting to a penalty card (Q or K cover active)
       if(game.mustCoverQueen || game.mustCoverKing){
-        // Try to match top card's rank
+        // Penalty cover: match top card’s rank/suit
         declared = { rank: top.rank, suit: top.suit, joker:true };
         setStatus(`AI played a Joker to match ${top.rank}${top.suit}`);
         logEvent(`⚙ AI declared Joker as ${top.rank}${top.suit} (penalty cover)`,'ai-play');
@@ -422,7 +454,6 @@ function aiTakeTurn(){
         setStatus(`AI played a Joker as ${randRank}${bestSuit}`);
         logEvent(`⚙ AI declared Joker as ${randRank}${bestSuit}`,'ai-play');
       }
-
       game.discard.push(declared);
       game.lastPlayedCard=declared;
       game.lastPlayedBy='ai';
@@ -437,14 +468,20 @@ function aiTakeTurn(){
       applyCoverRules(playable);
     }
 
-  } else if(game.deck.length>0){
-    const drawn=game.deck.pop();
-    hand.push(drawn);
-    setStatus("AI drew a card.");
-    logEvent("⚙ AI drew a card",'ai-action');
   } else {
-    setStatus("AI skipped.");
-    logEvent("⚙ AI skipped turn",'ai-action');
+    // No playable card: try to draw
+    if (game.deck.length === 0) {
+      reshuffleFromDiscard();
+    }
+    if (game.deck.length > 0) {
+      const drawn=game.deck.pop();
+      hand.push(drawn);
+      setStatus("AI drew a card.");
+      logEvent("⚙ AI drew a card",'ai-action');
+    } else {
+      setStatus("AI skipped (deck empty).");
+      logEvent("⚙ AI skipped turn (deck empty)",'ai-action');
+    }
   }
 
   renderAll();
@@ -463,6 +500,7 @@ function aiTakeTurn(){
     setStatus("Your turn!");
   }
 }
+
 
 
 // ------------------ DECK & START ------------------
