@@ -36,7 +36,7 @@ const game = {
   player:[], aiTop:[], aiLeft:[], aiRight:[],
   current:'player', direction:1, gameOver:false,
   lastPlayedCard:null, lastPlayedBy:null,
-  mustCoverQueen:false, mustCoverKing:false,
+  mustCoverQueen:null, mustCoverKing:null,
   eventCounter:0
 };
 
@@ -286,14 +286,16 @@ function promptJokerSelection(){
 
 // ------------------ PLAY LOGIC ------------------
 function playSelectedCards(){
-  if(game.current!=='player' || selected.size===0 || game.gameOver) return;
-  const top=game.discard[game.discard.length-1];
-  const indices=[...selected];
-  const cards=indices.map(i=>game.player[i]);
+  if (game.current !== 'player' || selected.size === 0 || game.gameOver) return;
+
+  const top = game.discard[game.discard.length - 1];
+  const indices = [...selected];
+  const cards = indices.map(i => game.player[i]);
 
   // Queen cover enforcement (only if player was the one who played it)
   if (game.mustCoverQueen === 'player') {
-    if (!cards.some(c => isPlayable(c, top))) {
+    const canCover = cards.some(c => isPlayable(c, top));
+    if (!canCover) {
       if (game.deck.length === 0) reshuffleFromDiscard();
       if (game.deck.length > 0) {
         const penalty = game.deck.pop();
@@ -301,7 +303,7 @@ function playSelectedCards(){
         setStatus("You failed to cover your Queen. You draw 1 card.");
         logEvent("Player failed to cover Queen → drew 1 card","penalty");
       }
-      return;
+      return; // turn stays on player; they can try again next click
     }
     game.mustCoverQueen = null;
     logEvent("Queen successfully covered","power");
@@ -309,7 +311,8 @@ function playSelectedCards(){
 
   // King cover enforcement (only if player was the one who played it)
   if (game.mustCoverKing === 'player') {
-    if (!cards.some(c => isPlayable(c, top))) {
+    const canCover = cards.some(c => isPlayable(c, top));
+    if (!canCover) {
       if (game.deck.length === 0) reshuffleFromDiscard();
       if (game.deck.length > 0) {
         const penalty = game.deck.pop();
@@ -323,7 +326,95 @@ function playSelectedCards(){
     logEvent("King successfully covered","power");
   }
 
-  // ... (rest of your playSelectedCards logic unchanged: runs, single card, Joker, etc.)
+  // Runs (multi-card play)
+  if (cards.length > 1 && isValidRun(cards)) {
+    // Remove played cards from player's hand (highest index first)
+    indices.sort((a,b) => b - a).forEach(i => game.player.splice(i, 1));
+    // Push all run cards to discard in the given order
+    cards.forEach(c => game.discard.push(c));
+
+    game.lastPlayedCard = cards[cards.length - 1];
+    game.lastPlayedBy = 'player';
+    selected.clear();
+
+    const runDesc = cards.map(c => `${c.rank}${c.suit}`).join(', ');
+    setStatus(`You played a run: ${runDesc}`);
+    logEvent(`● Run played: ${runDesc}`, 'player-play');
+
+    applyCoverRules(game.lastPlayedCard);
+    renderAll();
+
+    // Win check
+    if (game.player.length === 0) {
+      setStatus("♔ You win!");
+      logEvent("♔ Player wins", "game");
+      game.gameOver = true;
+      return;
+    }
+
+    // Advance turn
+    game.current = getNextPlayer('player');
+    if (game.current !== 'player') {
+      setTimeout(aiTakeTurn, 1000);
+    } else {
+      setStatus("Your turn again!");
+    }
+    return;
+  }
+
+  // Single-card play
+  const playable = cards.find(c => isPlayable(c, top));
+  if (!playable) {
+    setStatus("Selected cards can't be played.");
+    logEvent("Invalid play attempt","penalty");
+    return;
+  }
+
+  const idx = game.player.indexOf(playable);
+  game.player.splice(idx, 1);
+  selected.clear();
+
+  if (playable.joker) {
+    const choice = promptJokerSelection();
+    if (!choice) {
+      // revert if player cancels
+      game.player.splice(idx, 0, playable);
+      renderAll();
+      return;
+    }
+    const declared = { rank: choice.rank, suit: choice.suit, joker: true };
+    game.discard.push(declared);
+    game.lastPlayedCard = declared;
+    game.lastPlayedBy = 'player';
+    setStatus(`You played a Joker as ${choice.rank}${choice.suit}`);
+    logEvent(`● Joker declared as ${choice.rank}${choice.suit}`, 'player-play');
+    applyCoverRules(declared);
+  } else {
+    game.discard.push(playable);
+    game.lastPlayedCard = playable;
+    game.lastPlayedBy = 'player';
+    setStatus(`You played ${playable.rank}${playable.suit}`);
+    logEvent(`● You played ${playable.rank}${playable.suit}`, 'player-play');
+    applyCoverRules(playable);
+  }
+
+  renderAll();
+
+  // Win check
+  if (game.player.length === 0) {
+    setStatus("♔ You win!");
+    logEvent("♔ Player wins","game");
+    game.gameOver = true;
+    return;
+  }
+
+  // Advance turn
+  game.current = getNextPlayer('player');
+  if (game.current !== 'player') {
+    setTimeout(aiTakeTurn, 1000);
+  } else {
+    setStatus("Your turn!");
+  }
 }
 
 
@@ -517,7 +608,7 @@ function startGame(){
     player:[], aiTop:[], aiLeft:[], aiRight:[],
     current:'player', direction:1, gameOver:false,
     lastPlayedCard:null, lastPlayedBy:null,
-    mustCoverQueen:false, mustCoverKing:false,
+    mustCoverQueen:null, mustCoverKing:null,
     eventCounter:0
   });
   selected.clear();
