@@ -302,15 +302,9 @@ function playSelectedCards(){
         game.player.push(penalty);
         setStatus("You failed to cover your Queen. You draw 1 card.");
         logEvent("Player failed to cover Queen → drew 1 card","penalty");
-        game.mustCoverQueen = null; // ✅ clear obligation after penalty
-        renderAll();
-        // Now advance turn
-        game.current = getNextPlayer('player');
-        setTimeout(aiTakeTurn, 1000);
       }
-      return;
+      return; // turn stays on player; they can try again next click
     }
-    // If they did cover, clear flag and continue
     game.mustCoverQueen = null;
     logEvent("Queen successfully covered","power");
   }
@@ -325,10 +319,6 @@ function playSelectedCards(){
         game.player.push(penalty);
         setStatus("You failed to cover your King. You draw 1 card.");
         logEvent("Player failed to cover King → drew 1 card","penalty");
-        game.mustCoverKing = null;
-        renderAll();
-        game.current = getNextPlayer('player');
-        setTimeout(aiTakeTurn, 1000);
       }
       return;
     }
@@ -336,80 +326,41 @@ function playSelectedCards(){
     logEvent("King successfully covered","power");
   }
 
-  // Runs
+  // Runs (multi-card play)
   if (cards.length > 1 && isValidRun(cards)) {
-    indices.sort((a,b)=>b-a).forEach(i=>game.player.splice(i,1));
-    cards.forEach(c=>game.discard.push(c));
-    game.lastPlayedCard = cards[cards.length-1];
+    // Remove played cards from player's hand (highest index first)
+    indices.sort((a,b) => b - a).forEach(i => game.player.splice(i, 1));
+    // Push all run cards to discard in the given order
+    cards.forEach(c => game.discard.push(c));
+
+    game.lastPlayedCard = cards[cards.length - 1];
     game.lastPlayedBy = 'player';
     selected.clear();
-    const runDesc = cards.map(c=>`${c.rank}${c.suit}`).join(', ');
+
+    const runDesc = cards.map(c => `${c.rank}${c.suit}`).join(', ');
     setStatus(`You played a run: ${runDesc}`);
-    logEvent(`● Run played: ${runDesc}`,'player-play');
+    logEvent(`● Run played: ${runDesc}`, 'player-play');
+
     applyCoverRules(game.lastPlayedCard);
     renderAll();
 
-    // If last card was a Queen/King, trap the turn until resolved
-    if (game.lastPlayedCard.rank === 'Q' || game.lastPlayedCard.rank === 'K') {
-      setStatus("You must cover your card or draw 1 penalty card.");
+    // Win check
+    if (game.player.length === 0) {
+      setStatus("♔ You win!");
+      logEvent("♔ Player wins", "game");
+      game.gameOver = true;
       return;
     }
 
-    if (game.player.length === 0){ setStatus("♔ You win!"); logEvent("♔ Player wins","game"); game.gameOver=true; return; }
+    // Advance turn
     game.current = getNextPlayer('player');
-    setTimeout(aiTakeTurn, 1000);
-    return;
-  }
-
-  // Single card
-  const playable = cards.find(c => isPlayable(c, top));
-  if (!playable) {
-    setStatus("Selected cards can't be played.");
-    logEvent("Invalid play attempt","penalty");
-    return;
-  }
-
-  const idx = game.player.indexOf(playable);
-  game.player.splice(idx,1);
-  selected.clear();
-
-  if (playable.joker) {
-    const choice = promptJokerSelection();
-    if (!choice) {
-      game.player.splice(idx,0,playable);
-      renderAll();
-      return;
+    if (game.current !== 'player') {
+      setTimeout(aiTakeTurn, 1000);
+    } else {
+      setStatus("Your turn again!");
     }
-    const declared = { rank: choice.rank, suit: choice.suit, joker: true };
-    game.discard.push(declared);
-    game.lastPlayedCard = declared;
-    game.lastPlayedBy = 'player';
-    setStatus(`You played a Joker as ${choice.rank}${choice.suit}`);
-    logEvent(`● Joker declared as ${choice.rank}${choice.suit}`,'player-play');
-    applyCoverRules(declared);
-  } else {
-    game.discard.push(playable);
-    game.lastPlayedCard = playable;
-    game.lastPlayedBy = 'player';
-    setStatus(`You played ${playable.rank}${playable.suit}`);
-    logEvent(`● You played ${playable.rank}${playable.suit}`,'player-play');
-    applyCoverRules(playable);
-  }
-
-  renderAll();
-
-  // If last card was a Queen/King, trap the turn until resolved
-  if (playable.rank === 'Q' || playable.rank === 'K') {
-    setStatus("You must cover your card or draw 1 penalty card.");
     return;
   }
-
-  if (game.player.length === 0){ setStatus("♔ You win!"); logEvent("♔ Player wins","game"); game.gameOver=true; return; }
-  game.current = getNextPlayer('player');
-  setTimeout(aiTakeTurn, 1000);
-}
-
-
 
   // Single-card play
   const playable = cards.find(c => isPlayable(c, top));
@@ -496,9 +447,11 @@ function reshuffleFromDiscard() {
 }
 
 
+
 function drawCard() {
   if (game.current !== 'player' || game.gameOver) return;
 
+  // Reshuffle if deck is empty
   if (game.deck.length === 0) {
     reshuffleFromDiscard();
     if (game.deck.length === 0) {
@@ -516,23 +469,7 @@ function drawCard() {
   setStatus(message);
   logEvent(message, 'player-action');
 
-  // If drawing was to satisfy a cover obligation, clear it and advance turn
-  if (game.mustCoverQueen === 'player') {
-    game.mustCoverQueen = null;
-    logEvent("Player failed to cover Queen → drew 1 card","penalty");
-    game.current = getNextPlayer('player');
-    setTimeout(aiTakeTurn, 1000);
-    return;
-  }
-  if (game.mustCoverKing === 'player') {
-    game.mustCoverKing = null;
-    logEvent("Player failed to cover King → drew 1 card","penalty");
-    game.current = getNextPlayer('player');
-    setTimeout(aiTakeTurn, 1000);
-    return;
-  }
-
-  // Otherwise, normal draw just advances turn
+  // Advance turn
   game.current = getNextPlayer('player');
   if (game.current !== 'player') {
     setTimeout(aiTakeTurn, 1000);
@@ -540,7 +477,6 @@ function drawCard() {
     setStatus("Your turn again!");
   }
 }
-
 
 
 
