@@ -676,33 +676,50 @@ function createDeck(){
 }
 
 function startGame(){
-  Object.assign(game,{
-    game.pendingPenalty = { player:0, aiTop:0, aiLeft:0, aiRight:0 };
-    deck:createDeck(), discard:[],
-    player:[], aiTop:[], aiLeft:[], aiRight:[],
-    current:'player', direction:1, gameOver:false,
-    lastPlayedCard:null, lastPlayedBy:null,
-    mustCoverQueen:null, mustCoverKing:null,
-    eventCounter:0
+  Object.assign(game, {
+    deck: createDeck(),
+    discard: [],
+    player: [],
+    aiTop: [],
+    aiLeft: [],
+    aiRight: [],
+    current: 'player',
+    direction: 1,
+    gameOver: false,
+    lastPlayedCard: null,
+    lastPlayedBy: null,
+    mustCoverQueen: null,
+    mustCoverKing: null,
+    pendingPenalty: {        // ✅ define as a property here
+      player: 0,
+      aiTop: 0,
+      aiLeft: 0,
+      aiRight: 0
+    },
+    eventCounter: 0
   });
-  selected.clear();
-  UI.eventLog.innerHTML='';
 
-  for(let i=0;i<settings.startingHand;i++){
+  selected.clear();
+  UI.eventLog.innerHTML = '';
+
+  // Deal starting hands
+  for (let i = 0; i < settings.startingHand; i++) {
     game.player.push(game.deck.pop());
     game.aiTop.push(game.deck.pop());
     game.aiLeft.push(game.deck.pop());
     game.aiRight.push(game.deck.pop());
   }
 
+  // Flip first non-joker card to discard
   let top;
-  do{ top=game.deck.pop(); } while(top && top.joker);
-  game.discard.push(top||game.deck.pop());
+  do { top = game.deck.pop(); } while (top && top.joker);
+  game.discard.push(top || game.deck.pop());
 
   renderAll();
   setStatus("Your turn! Match suit or rank, play runs, or use power cards.");
-  logEvent(`▶ New game started! Starting card: ${top.rank}${top.suit}`,'game');
+  logEvent(`▶ New game started! Starting card: ${top.rank}${top.suit}`, 'game');
 }
+
 
 // ------------------ INIT ------------------
 document.addEventListener('DOMContentLoaded',()=>{
