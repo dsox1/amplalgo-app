@@ -514,12 +514,12 @@ function drawCard() {
 // ------------------ AI TURN ------------------
 function aiTakeTurn(){
   if (game.pendingPenalty[game.current] > 0) {
-  const count = game.pendingPenalty[game.current];
-  for (let i=0; i<count; i++) {
-    if (game.deck.length === 0) reshuffleFromDiscard();
-    if (game.deck.length > 0) {
-      const card = game.deck.pop();
-      game[game.current].push(card);
+    const count = game.pendingPenalty[game.current];
+    for (let i=0; i<count; i++) {
+      if (game.deck.length === 0) reshuffleFromDiscard();
+      if (game.deck.length > 0) {
+        const card = game.deck.pop();
+        game[game.current].push(card);
     }
   }
   setStatus(`${game.current} drew ${count} penalty card(s).`);
