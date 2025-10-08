@@ -676,6 +676,7 @@ function createDeck(){
 }
 
 function startGame(){
+  game.pendingPenalty = { player:0, aiTop:0, aiLeft:0, aiRight:0 };
   Object.assign(game,{
     deck:createDeck(), discard:[],
     player:[], aiTop:[], aiLeft:[], aiRight:[],
