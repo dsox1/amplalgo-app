@@ -286,6 +286,28 @@ function promptJokerSelection(){
 
 // ------------------ PLAY LOGIC ------------------
 function playSelectedCards(){
+  if (game.pendingPenalty[game.current] > 0) {
+  const count = game.pendingPenalty[game.current];
+  for (let i=0; i<count; i++) {
+    if (game.deck.length === 0) reshuffleFromDiscard();
+    if (game.deck.length > 0) {
+      const card = game.deck.pop();
+      game[game.current].push(card);
+    }
+  }
+  setStatus(`${game.current} drew ${count} penalty card(s).`);
+  logEvent(`${game.current} drew ${count} penalty card(s).`, "penalty");
+  game.pendingPenalty[game.current] = 0; // ✅ clear obligation
+  renderAll();
+
+  // After enforcing, advance turn
+  game.current = getNextPlayer(game.current);
+  if (game.current !== 'player') setTimeout(aiTakeTurn, 1000);
+  return;
+}
+
+
+  
   if (game.current !== 'player' || selected.size === 0 || game.gameOver) return;
 
   const top = game.discard[game.discard.length - 1];
@@ -491,6 +513,28 @@ function drawCard() {
 
 // ------------------ AI TURN ------------------
 function aiTakeTurn(){
+  if (game.pendingPenalty[game.current] > 0) {
+  const count = game.pendingPenalty[game.current];
+  for (let i=0; i<count; i++) {
+    if (game.deck.length === 0) reshuffleFromDiscard();
+    if (game.deck.length > 0) {
+      const card = game.deck.pop();
+      game[game.current].push(card);
+    }
+  }
+  setStatus(`${game.current} drew ${count} penalty card(s).`);
+  logEvent(`${game.current} drew ${count} penalty card(s).`, "penalty");
+  game.pendingPenalty[game.current] = 0; // ✅ clear obligation
+  renderAll();
+
+  // After enforcing, advance turn
+  game.current = getNextPlayer(game.current);
+  if (game.current !== 'player') setTimeout(aiTakeTurn, 1000);
+  return;
+}
+
+
+  
   if (game.current === 'player' || game.gameOver) return;
 
   const hand = game[game.current];
