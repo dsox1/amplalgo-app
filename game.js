@@ -676,13 +676,13 @@ function createDeck(){
 }
 
 function startGame(){
-  game.pendingPenalty = { player:0, aiTop:0, aiLeft:0, aiRight:0 };
   Object.assign(game,{
     deck:createDeck(), discard:[],
     player:[], aiTop:[], aiLeft:[], aiRight:[],
     current:'player', direction:1, gameOver:false,
     lastPlayedCard:null, lastPlayedBy:null,
     mustCoverQueen:null, mustCoverKing:null,
+    game.pendingPenalty = { player:0, aiTop:0, aiLeft:0, aiRight:0 };
     eventCounter:0
   });
   selected.clear();
