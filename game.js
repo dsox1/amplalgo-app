@@ -499,35 +499,55 @@ function aiTakeTurn(){
 
   // Queen cover enforcement (only if this AI played it)
   if (game.mustCoverQueen === game.current) {
-    if (!playable) {
-      if (game.deck.length === 0) reshuffleFromDiscard();
-      if (game.deck.length > 0) {
-        const penalty = game.deck.pop();
-        hand.push(penalty);
-        setStatus(`${game.current} failed to cover Queen → drew 1 card.`);
-        logEvent(`${game.current} failed to cover Queen → drew 1 card`,"penalty");
-      }
-      return;
+  if (!playable) {
+    if (game.deck.length === 0) reshuffleFromDiscard();
+    if (game.deck.length > 0) {
+      const penalty = game.deck.pop();
+      hand.push(penalty);
+      setStatus(`${game.current} failed to cover Queen → drew 1 card.`);
+      logEvent(`${game.current} failed to cover Queen → drew 1 card`,"penalty");
     }
-    game.mustCoverQueen = null;
-    logEvent(`${game.current} covered Queen`,"power");
+    game.mustCoverQueen = null; // ✅ clear obligation
+    renderAll();
+    // ✅ advance turn
+    game.current = getNextPlayer(game.current);
+    if (game.current !== 'player') {
+      setTimeout(aiTakeTurn, 1000);
+    } else {
+      setStatus("Your turn!");
+    }
+    return;
   }
+  game.mustCoverQueen = null;
+  logEvent(`${game.current} covered Queen`,"power");
+}
+
 
   // King cover enforcement (only if this AI played it)
   if (game.mustCoverKing === game.current) {
-    if (!playable) {
-      if (game.deck.length === 0) reshuffleFromDiscard();
-      if (game.deck.length > 0) {
-        const penalty = game.deck.pop();
-        hand.push(penalty);
-        setStatus(`${game.current} failed to cover King → drew 1 card.`);
-        logEvent(`${game.current} failed to cover King → drew 1 card`,"penalty");
-      }
-      return;
+  if (!playable) {
+    if (game.deck.length === 0) reshuffleFromDiscard();
+    if (game.deck.length > 0) {
+      const penalty = game.deck.pop();
+      hand.push(penalty);
+      setStatus(`${game.current} failed to cover King → drew 1 card.`);
+      logEvent(`${game.current} failed to cover King → drew 1 card`,"penalty");
     }
-    game.mustCoverKing = null;
-    logEvent(`${game.current} covered King`,"power");
+    game.mustCoverKing = null; // ✅ clear obligation
+    renderAll();
+    // ✅ advance turn
+    game.current = getNextPlayer(game.current);
+    if (game.current !== 'player') {
+      setTimeout(aiTakeTurn, 1000);
+    } else {
+      setStatus("Your turn!");
+    }
+    return;
   }
+  game.mustCoverKing = null;
+  logEvent(`${game.current} covered King`,"power");
+}
+
 
   // --- Normal AI play logic ---
   if (playable) {
