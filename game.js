@@ -54,7 +54,7 @@ function setStatus(text) {
   // Insert at the top
   UI.status.insertBefore(entry, UI.status.firstChild);
 
-  // Keep only the last 5 messages
+  // Keep only the last 2 messages
   while (UI.status.children.length > 2) {
     UI.status.removeChild(UI.status.lastChild);
   }
@@ -145,11 +145,14 @@ function applyCoverRules(card){
     setStatus(`${next} must draw 2 cards.`);
     logEvent(`${next} penalised with 2 cards`,"penalty");
   }
-  if (card.rank === '5') {
-    const next = getNextPlayer(game.lastPlayedBy);
-    game.pendingPenalty[next] += 5;
-    setStatus(`${next} must draw 5 cards.`);
-    logEvent(`${next} penalised with 5 cards`,"penalty");
+  if (card.rank === 'J' && (card.suit === '♠' || card.suit === '♣')) {
+  // This is a Jack of Spades or Jack of Clubs
+  const next = getNextPlayer(game.lastPlayedBy);
+  game.pendingPenalty[next] += 5;   // serve 5‑card penalty
+  setStatus(`${next} must draw 5 cards (Black Jack penalty).`);
+  logEvent(`${next} penalised with 5 cards (Black Jack)`, "penalty");
+}
+
   }
 }
 
