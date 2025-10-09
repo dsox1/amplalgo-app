@@ -151,7 +151,6 @@ function applyCoverRules(card){
     game.pendingPenalty[next] += 5;   // serve 5‑card penalty
     setStatus(`${next} must draw 5 cards (Black Jack penalty).`);
     logEvent(`${next} penalised with 5 cards (Black Jack)`, "penalty");
-  }
 
   }
 }
