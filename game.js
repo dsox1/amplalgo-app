@@ -146,12 +146,12 @@ function applyCoverRules(card){
     logEvent(`${next} penalised with 2 cards`,"penalty");
   }
   if (card.rank === 'J' && (card.suit === '♠' || card.suit === '♣')) {
-  // This is a Jack of Spades or Jack of Clubs
-  const next = getNextPlayer(game.lastPlayedBy);
-  game.pendingPenalty[next] += 5;   // serve 5‑card penalty
-  setStatus(`${next} must draw 5 cards (Black Jack penalty).`);
-  logEvent(`${next} penalised with 5 cards (Black Jack)`, "penalty");
-}
+    // This is a Jack of Spades or Jack of Clubs
+    const next = getNextPlayer(game.lastPlayedBy);
+    game.pendingPenalty[next] += 5;   // serve 5‑card penalty
+    setStatus(`${next} must draw 5 cards (Black Jack penalty).`);
+    logEvent(`${next} penalised with 5 cards (Black Jack)`, "penalty");
+  }
 
   }
 }
