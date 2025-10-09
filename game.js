@@ -92,12 +92,17 @@ function countActivePlayers(){
   return c;
 }
 
+
 function isPlayable(card, top) {
   if (!card || !top) return false;
+  // Jokers that haven’t been declared yet are always playable
   if (card.joker) return true;
-  if (top.joker) return card.suit === top.suit;
+  // If the top card was a Joker that was declared, treat it like its chosen rank/suit
+  if (top.jokerDeclared) {
+    return card.rank === top.rank || card.suit === top.suit;
+  }
 
-  // ✅ Ace wild only when played
+  // Ace wild (always playable)
   if (card.rank === 'A') return true;
 
   // Normal rule: match rank or suit
@@ -145,15 +150,25 @@ function applyCoverRules(card){
     setStatus(`${next} must draw 2 cards.`);
     logEvent(`${next} penalised with 2 cards`,"penalty");
   }
-  if (card.rank === 'J' && (card.suit === '♠' || card.suit === '♣')) {
-    // This is a Jack of Spades or Jack of Clubs
+  // If a Joker was declared as a Jack
+  if (card.rank === 'J' && card.jokerDeclared) {
     const next = getNextPlayer(game.lastPlayedBy);
-    game.pendingPenalty[next] += 5;   // serve 5‑card penalty
-    setStatus(`${next} must draw 5 cards (Black Jack penalty).`);
-    logEvent(`${next} penalised with 5 cards (Black Jack)`, "penalty");
 
+  if (card.suit === '♥' || card.suit === '♦') {
+    // Red Jack Joker cancels penalty
+    game.pendingPenalty[next] = 0;
+    setStatus(`Penalty cancelled by Red Jack Joker!`);
+    logEvent(`Penalty cancelled by Red Jack Joker`, "power");
+  }
+
+  if (card.suit === '♠' || card.suit === '♣') {
+    // Black Jack Joker stacks penalty
+    game.pendingPenalty[next] += 5;
+    setStatus(`${next} must draw 5 more cards (Black Jack Joker).`);
+    logEvent(`${next} penalised with 5 more cards (Black Jack Joker)`, "penalty");
   }
 }
+
 
 
 
@@ -413,27 +428,32 @@ function playSelectedCards(){
   selected.clear();
 
   if (playable.joker) {
-    const choice = promptJokerSelection();
-    if (!choice) {
-      game.player.splice(idx,0,playable);
-      renderAll();
-      return;
-    }
-    const declared = { rank: choice.rank, suit: choice.suit, joker: true };
-    game.discard.push(declared);
-    game.lastPlayedCard = declared;
-    game.lastPlayedBy = 'player';
-    setStatus(`You played a Joker as ${choice.rank}${choice.suit}`);
-    logEvent(`● Joker declared as ${choice.rank}${choice.suit}`,'player-play');
-    applyCoverRules(declared);
-  } else {
-    game.discard.push(playable);
-    game.lastPlayedCard = playable;
-    game.lastPlayedBy = 'player';
-    setStatus(`You played ${playable.rank}${playable.suit}`);
-    logEvent(`● You played ${playable.rank}${playable.suit}`,'player-play');
-    applyCoverRules(playable);
+  const choice = promptJokerSelection();
+  if (!choice) {
+    // Cancelled → put Joker back in hand
+    game.player.splice(idx, 0, playable);
+    renderAll();
+    return;
   }
+
+  // ✅ Treat declared Joker as a normal card for playability
+  const declared = { 
+    rank: choice.rank, 
+    suit: choice.suit, 
+    joker: false,          // behaves like a real card
+    jokerDeclared: true    // track that it was originally a Joker
+  };
+
+  game.discard.push(declared);
+  game.lastPlayedCard = declared;
+  game.lastPlayedBy = 'player';
+
+  setStatus(`You played a Joker as ${choice.rank}${choice.suit}`);
+  logEvent(`● Joker declared as ${choice.rank}${choice.suit}`,'player-play');
+
+  applyCoverRules(declared);
+}
+
 
   renderAll();
 
