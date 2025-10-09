@@ -477,10 +477,32 @@ function reshuffleFromDiscard() {
 }
 
 
-
 function drawCard() {
   if (game.current !== 'player' || game.gameOver) return;
 
+  // ✅ Enforce pending penalties first
+  if (game.pendingPenalty['player'] > 0) {
+    const count = game.pendingPenalty['player'];
+    for (let i = 0; i < count; i++) {
+      if (game.deck.length === 0) reshuffleFromDiscard();
+      if (game.deck.length > 0) {
+        game.player.push(game.deck.pop());
+      }
+    }
+    setStatus(`You drew ${count} penalty card(s).`);
+    logEvent(`Player drew ${count} penalty card(s).`, "penalty");
+    game.pendingPenalty['player'] = 0; // ✅ clear obligation
+    renderAll();
+
+    // Advance turn immediately after penalty
+    game.current = getNextPlayer('player');
+    if (game.current !== 'player') {
+      setTimeout(aiTakeTurn, 1000);
+    }
+    return;
+  }
+
+  // Normal draw (no penalty pending)
   if (game.deck.length === 0) {
     reshuffleFromDiscard();
     if (game.deck.length === 0) {
@@ -498,23 +520,7 @@ function drawCard() {
   setStatus(message);
   logEvent(message, 'player-action');
 
-  // If drawing was to satisfy a cover obligation, clear it and advance turn
-  if (game.mustCoverQueen === 'player') {
-    game.mustCoverQueen = null;
-    logEvent("Player failed to cover Queen → drew 1 card","penalty");
-    game.current = getNextPlayer('player');
-    setTimeout(aiTakeTurn, 1000);
-    return;
-  }
-  if (game.mustCoverKing === 'player') {
-    game.mustCoverKing = null;
-    logEvent("Player failed to cover King → drew 1 card","penalty");
-    game.current = getNextPlayer('player');
-    setTimeout(aiTakeTurn, 1000);
-    return;
-  }
-
-  // Otherwise, normal draw just advances turn
+  // Advance turn
   game.current = getNextPlayer('player');
   if (game.current !== 'player') {
     setTimeout(aiTakeTurn, 1000);
@@ -522,7 +528,6 @@ function drawCard() {
     setStatus("Your turn again!");
   }
 }
-
 
 
 
