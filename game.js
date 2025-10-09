@@ -128,7 +128,7 @@ function isValidRun(cards){
 
 function applyCoverRules(card){
   if (card.rank === 'Q') {
-    game.mustCoverQueen = game.lastPlayedBy; // track who must cover
+    game.mustCoverQueen = game.lastPlayedBy;
     setStatus(`${game.lastPlayedBy} must cover their Queen.`);
     logEvent(`${game.lastPlayedBy} must cover Queen`,"power");
   }
@@ -137,7 +137,22 @@ function applyCoverRules(card){
     setStatus(`${game.lastPlayedBy} must cover their King.`);
     logEvent(`${game.lastPlayedBy} must cover King`,"power");
   }
+
+  // ✅ Penalty cards
+  if (card.rank === '2') {
+    const next = getNextPlayer(game.lastPlayedBy);
+    game.pendingPenalty[next] += 2;
+    setStatus(`${next} must draw 2 cards.`);
+    logEvent(`${next} penalised with 2 cards`,"penalty");
+  }
+  if (card.rank === '5') {
+    const next = getNextPlayer(game.lastPlayedBy);
+    game.pendingPenalty[next] += 5;
+    setStatus(`${next} must draw 5 cards.`);
+    logEvent(`${next} penalised with 5 cards`,"penalty");
+  }
 }
+
 
 
 // ------------------ RENDERING ------------------
