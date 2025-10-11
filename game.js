@@ -1,3 +1,5 @@
+
+
 console.log("🎮 Backyard BlackJack - Corrected Build with Logs & Cover Rules");
 
 const suits = ['♠', '♥', '♦', '♣'];
@@ -131,16 +133,18 @@ function isValidRun(cards){
   return true;
 }
 
-function applyCoverRules(card){
+
+function applyCoverRules(card) {
   if (card.rank === 'Q') {
     game.mustCoverQueen = game.lastPlayedBy;
     setStatus(`${game.lastPlayedBy} must cover their Queen.`);
-    logEvent(`${game.lastPlayedBy} must cover Queen`,"power");
+    logEvent(`${game.lastPlayedBy} must cover Queen`, "power");
   }
+
   if (card.rank === 'K' && countActivePlayers() === 2) {
     game.mustCoverKing = game.lastPlayedBy;
     setStatus(`${game.lastPlayedBy} must cover their King.`);
-    logEvent(`${game.lastPlayedBy} must cover King`,"power");
+    logEvent(`${game.lastPlayedBy} must cover King`, "power");
   }
 
   // ✅ Penalty cards
@@ -148,26 +152,28 @@ function applyCoverRules(card){
     const next = getNextPlayer(game.lastPlayedBy);
     game.pendingPenalty[next] += 2;
     setStatus(`${next} must draw 2 cards.`);
-    logEvent(`${next} penalised with 2 cards`,"penalty");
+    logEvent(`${next} penalised with 2 cards`, "penalty");
   }
-  // If a Joker was declared as a Jack
+
+  // ✅ Joker declared as Jack
   if (card.rank === 'J' && card.jokerDeclared) {
     const next = getNextPlayer(game.lastPlayedBy);
 
-  if (card.suit === '♥' || card.suit === '♦') {
-    // Red Jack Joker cancels penalty
-    game.pendingPenalty[next] = 0;
-    setStatus(`Penalty cancelled by Red Jack Joker!`);
-    logEvent(`Penalty cancelled by Red Jack Joker`, "power");
-  }
+    if (card.suit === '♥' || card.suit === '♦') {
+      // Red Jack Joker cancels penalty
+      game.pendingPenalty[next] = 0;
+      setStatus(`Penalty cancelled by Red Jack Joker!`);
+      logEvent(`Penalty cancelled by Red Jack Joker`, "power");
+    }
 
-  if (card.suit === '♠' || card.suit === '♣') {
-    // Black Jack Joker stacks penalty
-    game.pendingPenalty[next] += 5;
-    setStatus(`${next} must draw 5 more cards (Black Jack Joker).`);
-    logEvent(`${next} penalised with 5 more cards (Black Jack Joker)`, "penalty");
+    if (card.suit === '♠' || card.suit === '♣') {
+      // Black Jack Joker stacks penalty
+      game.pendingPenalty[next] += 5;
+      setStatus(`${next} must draw 5 more cards (Black Jack Joker).`);
+      logEvent(`${next} penalised with 5 more cards (Black Jack Joker)`, "penalty");
+    }
   }
-}
+} // ✅ properly closes the function
 
 
 
@@ -327,13 +333,12 @@ function playSelectedCards() {
         const card = game.deck.pop();
         game[game.current].push(card);
       }
-    } // <-- properly close the for loop here
+    } // ✅ close for loop
     setStatus(`${game.current} drew ${count} penalty card(s).`);
     logEvent(`${game.current} drew ${count} penalty card(s).`, "penalty");
-    game.pendingPenalty[game.current] = 0; // clear obligation
+    game.pendingPenalty[game.current] = 0;
     renderAll();
 
-    // After enforcing, advance turn
     game.current = getNextPlayer(game.current);
     if (game.current !== 'player') setTimeout(aiTakeTurn, 1000);
     return;
@@ -354,7 +359,7 @@ function playSelectedCards() {
         const penalty = game.deck.pop();
         game.player.push(penalty);
         setStatus("You failed to cover your Queen. You draw 1 card.");
-        logEvent("Player failed to cover Queen → drew 1 card","penalty");
+        logEvent("Player failed to cover Queen → drew 1 card", "penalty");
         game.mustCoverQueen = null;
         renderAll();
         game.current = getNextPlayer('player');
@@ -363,7 +368,7 @@ function playSelectedCards() {
       return;
     }
     game.mustCoverQueen = null;
-    logEvent("Queen successfully covered","power");
+    logEvent("Queen successfully covered", "power");
   }
 
   // King cover enforcement
@@ -375,7 +380,7 @@ function playSelectedCards() {
         const penalty = game.deck.pop();
         game.player.push(penalty);
         setStatus("You failed to cover your King. You draw 1 card.");
-        logEvent("Player failed to cover King → drew 1 card","penalty");
+        logEvent("Player failed to cover King → drew 1 card", "penalty");
         game.mustCoverKing = null;
         renderAll();
         game.current = getNextPlayer('player');
@@ -384,7 +389,7 @@ function playSelectedCards() {
       return;
     }
     game.mustCoverKing = null;
-    logEvent("King successfully covered","power");
+    logEvent("King successfully covered", "power");
   }
 
   // Runs
@@ -396,7 +401,7 @@ function playSelectedCards() {
     selected.clear();
     const runDesc = cards.map(c=>`${c.rank}${c.suit}`).join(', ');
     setStatus(`You played a run: ${runDesc}`);
-    logEvent(`● Run played: ${runDesc}`,'player-play');
+    logEvent(`● Run played: ${runDesc}`, 'player-play');
     applyCoverRules(game.lastPlayedCard);
     renderAll();
 
@@ -407,7 +412,7 @@ function playSelectedCards() {
 
     if (game.player.length === 0) {
       setStatus("♔ You win!");
-      logEvent("♔ Player wins","game");
+      logEvent("♔ Player wins", "game");
       game.gameOver = true;
       return;
     }
@@ -420,7 +425,7 @@ function playSelectedCards() {
   const playable = cards.find(c => isPlayable(c, top));
   if (!playable) {
     setStatus("Selected cards can't be played.");
-    logEvent("Invalid play attempt","penalty");
+    logEvent("Invalid play attempt", "penalty");
     return;
   }
 
@@ -434,13 +439,13 @@ function playSelectedCards() {
       game.player.splice(idx, 0, playable);
       renderAll();
       return;
-    } // <-- properly close the if (!choice)
+    } // ✅ close if (!choice)
 
     const declared = { 
       rank: choice.rank, 
       suit: choice.suit, 
-      joker: false,          // behaves like a real card
-      jokerDeclared: true    // track that it was originally a Joker
+      joker: false, 
+      jokerDeclared: true 
     };
 
     game.discard.push(declared);
@@ -448,7 +453,7 @@ function playSelectedCards() {
     game.lastPlayedBy = 'player';
 
     setStatus(`You played a Joker as ${choice.rank}${choice.suit}`);
-    logEvent(`● Joker declared as ${choice.rank}${choice.suit}`,'player-play');
+    logEvent(`● Joker declared as ${choice.rank}${choice.suit}`, 'player-play');
 
     applyCoverRules(declared);
   } else {
@@ -456,7 +461,7 @@ function playSelectedCards() {
     game.lastPlayedCard = playable;
     game.lastPlayedBy = 'player';
     setStatus(`You played ${playable.rank}${playable.suit}`);
-    logEvent(`● You played ${playable.rank}${playable.suit}`,'player-play');
+    logEvent(`● You played ${playable.rank}${playable.suit}`, 'player-play');
     applyCoverRules(playable);
   }
 
@@ -469,13 +474,14 @@ function playSelectedCards() {
 
   if (game.player.length === 0) {
     setStatus("♔ You win!");
-    logEvent("♔ Player wins","game");
+    logEvent("♔ Player wins", "game");
     game.gameOver = true;
     return;
   }
   game.current = getNextPlayer('player');
   setTimeout(aiTakeTurn, 1000);
 }
+
 
 
 
