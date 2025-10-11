@@ -564,6 +564,7 @@ function aiTakeTurn(){
         game[game.current].push(card);
     }
   }
+  }
   setStatus(`${game.current} drew ${count} penalty card(s).`);
   logEvent(`${game.current} drew ${count} penalty card(s).`, "penalty");
   game.pendingPenalty[game.current] = 0; // ✅ clear obligation
