@@ -428,7 +428,7 @@ function playSelectedCards(){
   selected.clear();
 
   if (playable.joker) {
-  const choice = promptJokerSelection();
+    const choice = promptJokerSelection();
   if (!choice) {
     // Cancelled → put Joker back in hand
     game.player.splice(idx, 0, playable);
