@@ -317,36 +317,35 @@ function promptJokerSelection(){
 }
 
 // ------------------ PLAY LOGIC ------------------
-function playSelectedCards(){
+function playSelectedCards() {
+  // ✅ Enforce pending penalties first
   if (game.pendingPenalty[game.current] > 0) {
     const count = game.pendingPenalty[game.current];
-    for (let i=0; i<count; i++) {
+    for (let i = 0; i < count; i++) {
       if (game.deck.length === 0) reshuffleFromDiscard();
       if (game.deck.length > 0) {
         const card = game.deck.pop();
         game[game.current].push(card);
-    }
+      }
+    } // <-- properly close the for loop here
+    setStatus(`${game.current} drew ${count} penalty card(s).`);
+    logEvent(`${game.current} drew ${count} penalty card(s).`, "penalty");
+    game.pendingPenalty[game.current] = 0; // clear obligation
+    renderAll();
+
+    // After enforcing, advance turn
+    game.current = getNextPlayer(game.current);
+    if (game.current !== 'player') setTimeout(aiTakeTurn, 1000);
+    return;
   }
-  setStatus(`${game.current} drew ${count} penalty card(s).`);
-  logEvent(`${game.current} drew ${count} penalty card(s).`, "penalty");
-  game.pendingPenalty[game.current] = 0; // ✅ clear obligation
-  renderAll();
 
-  // After enforcing, advance turn
-  game.current = getNextPlayer(game.current);
-  if (game.current !== 'player') setTimeout(aiTakeTurn, 1000);
-  return;
-}
-
-
-  
   if (game.current !== 'player' || selected.size === 0 || game.gameOver) return;
 
   const top = game.discard[game.discard.length - 1];
   const indices = [...selected];
   const cards = indices.map(i => game.player[i]);
 
-  // Queen cover enforcement (only if player was the one who played it)
+  // Queen cover enforcement
   if (game.mustCoverQueen === 'player') {
     const canCover = cards.some(c => isPlayable(c, top));
     if (!canCover) {
@@ -356,20 +355,18 @@ function playSelectedCards(){
         game.player.push(penalty);
         setStatus("You failed to cover your Queen. You draw 1 card.");
         logEvent("Player failed to cover Queen → drew 1 card","penalty");
-        game.mustCoverQueen = null; // ✅ clear obligation after penalty
+        game.mustCoverQueen = null;
         renderAll();
-        // Now advance turn
         game.current = getNextPlayer('player');
         setTimeout(aiTakeTurn, 1000);
       }
       return;
     }
-    // If they did cover, clear flag and continue
     game.mustCoverQueen = null;
     logEvent("Queen successfully covered","power");
   }
 
-  // King cover enforcement (only if player was the one who played it)
+  // King cover enforcement
   if (game.mustCoverKing === 'player') {
     const canCover = cards.some(c => isPlayable(c, top));
     if (!canCover) {
@@ -403,13 +400,17 @@ function playSelectedCards(){
     applyCoverRules(game.lastPlayedCard);
     renderAll();
 
-    // If last card was a Queen/King, trap the turn until resolved
     if (game.lastPlayedCard.rank === 'Q' || game.lastPlayedCard.rank === 'K') {
       setStatus("You must cover your card or draw 1 penalty card.");
       return;
     }
 
-    if (game.player.length === 0){ setStatus("♔ You win!"); logEvent("♔ Player wins","game"); game.gameOver=true; return; }
+    if (game.player.length === 0) {
+      setStatus("♔ You win!");
+      logEvent("♔ Player wins","game");
+      game.gameOver = true;
+      return;
+    }
     game.current = getNextPlayer('player');
     setTimeout(aiTakeTurn, 1000);
     return;
@@ -430,40 +431,48 @@ function playSelectedCards(){
   if (playable.joker) {
     const choice = promptJokerSelection();
     if (!choice) {
-      // Cancelled → put Joker back in hand
       game.player.splice(idx, 0, playable);
       renderAll();
       return;
+    } // <-- properly close the if (!choice)
+
+    const declared = { 
+      rank: choice.rank, 
+      suit: choice.suit, 
+      joker: false,          // behaves like a real card
+      jokerDeclared: true    // track that it was originally a Joker
+    };
+
+    game.discard.push(declared);
+    game.lastPlayedCard = declared;
+    game.lastPlayedBy = 'player';
+
+    setStatus(`You played a Joker as ${choice.rank}${choice.suit}`);
+    logEvent(`● Joker declared as ${choice.rank}${choice.suit}`,'player-play');
+
+    applyCoverRules(declared);
+  } else {
+    game.discard.push(playable);
+    game.lastPlayedCard = playable;
+    game.lastPlayedBy = 'player';
+    setStatus(`You played ${playable.rank}${playable.suit}`);
+    logEvent(`● You played ${playable.rank}${playable.suit}`,'player-play');
+    applyCoverRules(playable);
   }
-
-  // ✅ Treat declared Joker as a normal card for playability
-  const declared = { 
-    rank: choice.rank, 
-    suit: choice.suit, 
-    joker: false,          // behaves like a real card
-    jokerDeclared: true    // track that it was originally a Joker
-  };
-
-  game.discard.push(declared);
-  game.lastPlayedCard = declared;
-  game.lastPlayedBy = 'player';
-
-  setStatus(`You played a Joker as ${choice.rank}${choice.suit}`);
-  logEvent(`● Joker declared as ${choice.rank}${choice.suit}`,'player-play');
-
-  applyCoverRules(declared);
-}
-
 
   renderAll();
 
-  // If last card was a Queen/King, trap the turn until resolved
-  if (playable.rank === 'Q' || playable.rank === 'K') {
+  if (game.lastPlayedCard.rank === 'Q' || game.lastPlayedCard.rank === 'K') {
     setStatus("You must cover your card or draw 1 penalty card.");
     return;
   }
 
-  if (game.player.length === 0){ setStatus("♔ You win!"); logEvent("♔ Player wins","game"); game.gameOver=true; return; }
+  if (game.player.length === 0) {
+    setStatus("♔ You win!");
+    logEvent("♔ Player wins","game");
+    game.gameOver = true;
+    return;
+  }
   game.current = getNextPlayer('player');
   setTimeout(aiTakeTurn, 1000);
 }
