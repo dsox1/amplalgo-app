@@ -429,11 +429,11 @@ function playSelectedCards(){
 
   if (playable.joker) {
     const choice = promptJokerSelection();
-  if (!choice) {
-    // Cancelled → put Joker back in hand
-    game.player.splice(idx, 0, playable);
-    renderAll();
-    return;
+    if (!choice) {
+      // Cancelled → put Joker back in hand
+      game.player.splice(idx, 0, playable);
+      renderAll();
+      return;
   }
 
   // ✅ Treat declared Joker as a normal card for playability
