@@ -135,19 +135,21 @@ function isValidRun(cards){
 
 
 function applyCoverRules(card) {
+  // Queen cover obligation
   if (card.rank === 'Q') {
     game.mustCoverQueen = game.lastPlayedBy;
     setStatus(`${game.lastPlayedBy} must cover their Queen.`);
     logEvent(`${game.lastPlayedBy} must cover Queen`, "power");
   }
 
+  // King cover obligation (only in heads-up)
   if (card.rank === 'K' && countActivePlayers() === 2) {
     game.mustCoverKing = game.lastPlayedBy;
     setStatus(`${game.lastPlayedBy} must cover their King.`);
     logEvent(`${game.lastPlayedBy} must cover King`, "power");
   }
 
-  // ✅ Penalty cards
+  // 2 → next player draws 2
   if (card.rank === '2') {
     const next = getNextPlayer(game.lastPlayedBy);
     game.pendingPenalty[next] += 2;
@@ -155,26 +157,33 @@ function applyCoverRules(card) {
     logEvent(`${next} penalised with 2 cards`, "penalty");
   }
 
-  // ✅ Joker declared as Jack
+  // Black Jack penalty (real card: J♠ or J♣)
+  if (card.rank === 'J' && (card.suit === '♠' || card.suit === '♣') && !card.jokerDeclared) {
+    const next = getNextPlayer(game.lastPlayedBy);
+    game.pendingPenalty[next] += 5;
+    setStatus(`${next} must draw 5 cards (Black Jack penalty).`);
+    logEvent(`${next} penalised with 5 cards (Black Jack)`, "penalty");
+  }
+
+  // Joker declared as Jack:
   if (card.rank === 'J' && card.jokerDeclared) {
     const next = getNextPlayer(game.lastPlayedBy);
 
+    // Red Jack (J♥ or J♦) cancels any pending penalty
     if (card.suit === '♥' || card.suit === '♦') {
-      // Red Jack Joker cancels penalty
       game.pendingPenalty[next] = 0;
       setStatus(`Penalty cancelled by Red Jack Joker!`);
       logEvent(`Penalty cancelled by Red Jack Joker`, "power");
     }
 
+    // Black Jack (J♠ or J♣) stacks +5
     if (card.suit === '♠' || card.suit === '♣') {
-      // Black Jack Joker stacks penalty
       game.pendingPenalty[next] += 5;
       setStatus(`${next} must draw 5 more cards (Black Jack Joker).`);
       logEvent(`${next} penalised with 5 more cards (Black Jack Joker)`, "penalty");
     }
   }
-} // ✅ properly closes the function
-
+}
 
 
 
