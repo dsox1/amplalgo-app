@@ -342,15 +342,15 @@ function promptJokerSelection(){
 // ------------------ PLAY LOGIC ------------------
 function playSelectedCards() {
   if (game.skipTurns[game.current] > 0) {
-  const skips = game.skipTurns[game.current];
-  game.skipTurns[game.current] = 0; // reset after applying
-  setStatus(`${game.current} skips ${skips} turn(s).`);
-  logEvent(`${game.current} skipped ${skips} turn(s).`, "power");
+    const skips = game.skipTurns[game.current];
+    game.skipTurns[game.current] = 0; // reset after applying
+    setStatus(`${game.current} skips ${skips} turn(s).`);
+    logEvent(`${game.current} skipped ${skips} turn(s).`, "power");
 
-  // Advance turn
-  game.current = getNextPlayer(game.current);
-  if (game.current !== 'player') {
-    setTimeout(aiTakeTurn, 1000);
+    // Advance turn
+    game.current = getNextPlayer(game.current);
+    if (game.current !== 'player') {
+      setTimeout(aiTakeTurn, 1000);
   }
   return;
   }
@@ -377,9 +377,9 @@ function playSelectedCards() {
 
   if (game.current !== 'player' || selected.size === 0 || game.gameOver) return;
 
-  const top = game.discard[game.discard.length - 1];
-  const indices = [...selected];
-  const cards = indices.map(i => game.player[i]);
+    const top = game.discard[game.discard.length - 1];
+    const indices = [...selected];
+    const cards = indices.map(i => game.player[i]);
 
   // Queen cover enforcement
   if (game.mustCoverQueen === 'player') {
@@ -602,15 +602,15 @@ function drawCard() {
 // ------------------ AI TURN ------------------
 function aiTakeTurn(){
   if (game.skipTurns[game.current] > 0) {
-  const skips = game.skipTurns[game.current];
-  game.skipTurns[game.current] = 0; // reset after applying
-  setStatus(`${game.current} skips ${skips} turn(s).`);
-  logEvent(`${game.current} skipped ${skips} turn(s).`, "power");
+    const skips = game.skipTurns[game.current];
+    game.skipTurns[game.current] = 0; // reset after applying
+    setStatus(`${game.current} skips ${skips} turn(s).`);
+    logEvent(`${game.current} skipped ${skips} turn(s).`, "power");
 
-  // Advance turn
-  game.current = getNextPlayer(game.current);
-  if (game.current !== 'player') {
-    setTimeout(aiTakeTurn, 1000);
+    // Advance turn
+    game.current = getNextPlayer(game.current);
+    if (game.current !== 'player') {
+      setTimeout(aiTakeTurn, 1000);
   }
   return;
   }
