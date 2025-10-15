@@ -157,7 +157,15 @@ function applyCoverRules(card) {
     logEvent(`${next} penalised with 2 cards`, "penalty");
   }
 
-  // Black Jack penalty (real card: J♠ or J♣)
+  // 8 → next player skips a turn (stackable)
+  if (card.rank === '8') {
+    const next = getNextPlayer(game.lastPlayedBy);
+    game.skipTurns[next] += 1;
+    setStatus(`${next} will miss ${game.skipTurns[next]} turn(s).`);
+    logEvent(`${next} must skip ${game.skipTurns[next]} turn(s)`, "power");
+  }
+
+  // Black Jack penalty (real card J♠ or J♣)
   if (card.rank === 'J' && (card.suit === '♠' || card.suit === '♣') && !card.jokerDeclared) {
     const next = getNextPlayer(game.lastPlayedBy);
     game.pendingPenalty[next] += 5;
@@ -165,18 +173,18 @@ function applyCoverRules(card) {
     logEvent(`${next} penalised with 5 cards (Black Jack)`, "penalty");
   }
 
-  // Joker declared as Jack:
+  // Joker declared as Jack
   if (card.rank === 'J' && card.jokerDeclared) {
     const next = getNextPlayer(game.lastPlayedBy);
 
-    // Red Jack (J♥ or J♦) cancels any pending penalty
+    // Red Jack Joker cancels penalty
     if (card.suit === '♥' || card.suit === '♦') {
       game.pendingPenalty[next] = 0;
       setStatus(`Penalty cancelled by Red Jack Joker!`);
       logEvent(`Penalty cancelled by Red Jack Joker`, "power");
     }
 
-    // Black Jack (J♠ or J♣) stacks +5
+    // Black Jack Joker stacks penalty
     if (card.suit === '♠' || card.suit === '♣') {
       game.pendingPenalty[next] += 5;
       setStatus(`${next} must draw 5 more cards (Black Jack Joker).`);
