@@ -341,6 +341,20 @@ function promptJokerSelection(){
 
 // ------------------ PLAY LOGIC ------------------
 function playSelectedCards() {
+  if (game.skipTurns[game.current] > 0) {
+  const skips = game.skipTurns[game.current];
+  game.skipTurns[game.current] = 0; // reset after applying
+  setStatus(`${game.current} skips ${skips} turn(s).`);
+  logEvent(`${game.current} skipped ${skips} turn(s).`, "power");
+
+  // Advance turn
+  game.current = getNextPlayer(game.current);
+  if (game.current !== 'player') {
+    setTimeout(aiTakeTurn, 1000);
+  }
+  return;
+}
+
   // ✅ Enforce pending penalties first
   if (game.pendingPenalty[game.current] > 0) {
     const count = game.pendingPenalty[game.current];
@@ -587,6 +601,20 @@ function drawCard() {
 
 // ------------------ AI TURN ------------------
 function aiTakeTurn(){
+  if (game.skipTurns[game.current] > 0) {
+  const skips = game.skipTurns[game.current];
+  game.skipTurns[game.current] = 0; // reset after applying
+  setStatus(`${game.current} skips ${skips} turn(s).`);
+  logEvent(`${game.current} skipped ${skips} turn(s).`, "power");
+
+  // Advance turn
+  game.current = getNextPlayer(game.current);
+  if (game.current !== 'player') {
+    setTimeout(aiTakeTurn, 1000);
+  }
+  return;
+}
+
   if (game.pendingPenalty[game.current] > 0) {
     const count = game.pendingPenalty[game.current];
     for (let i=0; i<count; i++) {
