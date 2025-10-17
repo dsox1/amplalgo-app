@@ -353,7 +353,7 @@ function playSelectedCards() {
       setTimeout(aiTakeTurn, 1000);
     }
     return;
-  //}
+  }
 
   // ✅ Enforce pending penalties first
   if (game.pendingPenalty[game.current] > 0) {
