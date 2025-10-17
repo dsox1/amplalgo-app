@@ -615,6 +615,7 @@ function aiTakeTurn(){
   }
   return;
   }
+}
 
   if (game.pendingPenalty[game.current] > 0) {
     const count = game.pendingPenalty[game.current];
