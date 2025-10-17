@@ -1,5 +1,3 @@
-
-
 console.log("🎮 Backyard BlackJack - Corrected Build with Logs & Cover Rules");
 
 const suits = ['♠', '♥', '♦', '♣'];
@@ -341,6 +339,23 @@ function promptJokerSelection(){
 
 // ------------------ PLAY LOGIC ------------------
 function playSelectedCards() {
+  // ✅ Enforce skip turns first
+  if (game.skipTurns[game.current] > 0) {
+    const skips = game.skipTurns[game.current];
+    game.skipTurns[game.current] = 0;
+    setStatus(`${game.current} skips ${skips} turn(s).`);
+    logEvent(`${game.current} skipped ${skips} turn(s).`, "power");
+
+    // Advance turn and exit
+    game.current = getNextPlayer(game.current);
+    if (game.current !== 'player') {
+      setTimeout(aiTakeTurn, 1000);
+    }
+    return; // <-- now correctly inside the if
+  }
+
+  // … rest of your penalty enforcement, run logic, single card logic …
+
  
 
 
