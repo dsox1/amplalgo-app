@@ -346,7 +346,7 @@ function playSelectedCards() {
     game.skipTurns[game.current] = 0; // reset after applying
     setStatus(`${game.current} skips ${skips} turn(s).`);
     logEvent(`${game.current} skipped ${skips} turn(s).`, "power");
-  }
+  
     // Advance turn
     game.current = getNextPlayer(game.current);
     if (game.current !== 'player') {
@@ -354,6 +354,7 @@ function playSelectedCards() {
     }
     return;
   }
+}
 
   // ✅ Enforce pending penalties first
   if (game.pendingPenalty[game.current] > 0) {
