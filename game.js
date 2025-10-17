@@ -802,6 +802,12 @@ function startGame(){
     lastPlayedBy: null,
     mustCoverQueen: null,
     mustCoverKing: null,
+    skipTurns: {
+      player: 0,
+      aiTop: 0,
+      aiLeft: 0,
+      aiRight: 0
+    },
     pendingPenalty: {        // ✅ define as a property here
       player: 0,
       aiTop: 0,
