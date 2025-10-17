@@ -606,20 +606,24 @@ function drawCard() {
 
 // ------------------ AI TURN ------------------
 function aiTakeTurn(){
+  // ✅ Enforce skip turns first
   if (game.skipTurns[game.current] > 0) {
     const skips = game.skipTurns[game.current];
-    game.skipTurns[game.current] = 0; // reset after applying
+    game.skipTurns[game.current] = 0;
     setStatus(`${game.current} skips ${skips} turn(s).`);
     logEvent(`${game.current} skipped ${skips} turn(s).`, "power");
 
-    // Advance turn
+    // Advance turn and exit
     game.current = getNextPlayer(game.current);
     if (game.current !== 'player') {
       setTimeout(aiTakeTurn, 1000);
+    }
+    return; // <-- now correctly inside the if
   }
-  return;
-  }
+
+  // … rest of your penalty enforcement, run logic, single card logic …
 }
+
 
   if (game.pendingPenalty[game.current] > 0) {
     const count = game.pendingPenalty[game.current];
