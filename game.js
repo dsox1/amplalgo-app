@@ -712,7 +712,8 @@ function aiTakeTurn(){
     if (playable.joker) {
       let declared;
       if (game.mustCoverQueen === game.current || game.mustCoverKing === game.current) {
-        declared = { rank: top.rank, suit: top.suit, joker: true };
+        //declared = { rank: top.rank, suit: top.suit, joker: true };
+        declared = { rank: randRank, suit: bestSuit, joker: false, jokerDeclared: true };
         setStatus(`${game.current} played a Joker to match ${top.rank}${top.suit}`);
         logEvent(`⚙ ${game.current} declared Joker as ${top.rank}${top.suit} (penalty cover)`, 'ai-play');
       } else {
