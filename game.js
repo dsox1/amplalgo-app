@@ -621,7 +621,7 @@ function aiTakeTurn(){
   }
 
   // … rest of your penalty enforcement, run logic, single card logic …
-}
+
 
 
   if (game.pendingPenalty[game.current] > 0) {
