@@ -61,6 +61,24 @@ function setStatus(text) {
 }
 
 
+function startPlayerTurn() {
+  if (game.skipTurns['player'] > 0) {
+    const skips = game.skipTurns['player'];
+    game.skipTurns['player'] = 0;
+    setStatus(`You skip ${skips} turn(s).`);
+    logEvent(`Player skipped ${skips} turn(s).`, "power");
+
+    game.current = getNextPlayer('player');
+    setTimeout(aiTakeTurn, 1000);
+    return;
+  }
+
+  setStatus("Your turn! Match suit or rank, play runs, or use power cards.");
+  updateControls();
+}
+
+
+
 function logEvent(message,type='info'){
   game.eventCounter++;
   const timestamp=new Date().toLocaleTimeString();
@@ -598,6 +616,7 @@ function drawCard() {
     setTimeout(aiTakeTurn, 1000);
   } else {
     setStatus("Your turn again!");
+    startPlayerTurn();
   }
 }
 
@@ -669,7 +688,8 @@ function aiTakeTurn(){
     if (game.current !== 'player') {
       setTimeout(aiTakeTurn, 1000);
     } else {
-      setStatus("Your turn!");
+      //setStatus("Your turn!");
+      startPlayerTurn();
     }
     return;
   }
@@ -695,7 +715,8 @@ function aiTakeTurn(){
     if (game.current !== 'player') {
       setTimeout(aiTakeTurn, 1000);
     } else {
-      setStatus("Your turn!");
+      //setStatus("Your turn!");
+      startPlayerTurn();
     }
     return;
   }
@@ -834,7 +855,8 @@ function startGame(){
   game.discard.push(top || game.deck.pop());
 
   renderAll();
-  setStatus("Your turn! Match suit or rank, play runs, or use power cards.");
+  //setStatus("Your turn! Match suit or rank, play runs, or use power cards.");
+  startPlayerTurn();
   logEvent(`▶ New game started! Starting card: ${top.rank}${top.suit}`, 'game');
 }
 
