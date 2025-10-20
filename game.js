@@ -364,44 +364,41 @@ function playSelectedCards() {
     setStatus(`${game.current} skips ${skips} turn(s).`);
     logEvent(`${game.current} skipped ${skips} turn(s).`, "power");
 
-    // Advance turn and exit
     game.current = getNextPlayer(game.current);
     if (game.current !== 'player') {
       setTimeout(aiTakeTurn, 1000);
     }
-    return; // <-- now correctly inside the if
-  }
-
-  // … rest of your penalty enforcement, run logic, single card logic …
-
- 
-
-
-  // ✅ Enforce pending penalties first
-  if (game.pendingPenalty[game.current] > 0) {
-    const count = game.pendingPenalty[game.current];
-    for (let i = 0; i < count; i++) {
-      if (game.deck.length === 0) reshuffleFromDiscard();
-      if (game.deck.length > 0) {
-        const card = game.deck.pop();
-        game[game.current].push(card);
-      }
-    } // ✅ close for loop
-    setStatus(`${game.current} drew ${count} penalty card(s).`);
-    logEvent(`${game.current} drew ${count} penalty card(s).`, "penalty");
-    game.pendingPenalty[game.current] = 0;
-    renderAll();
-
-    game.current = getNextPlayer(game.current);
-    if (game.current !== 'player') setTimeout(aiTakeTurn, 1000);
     return;
   }
 
   if (game.current !== 'player' || selected.size === 0 || game.gameOver) return;
 
-    const top = game.discard[game.discard.length - 1];
-    const indices = [...selected];
-    const cards = indices.map(i => game.player[i]);
+  const top = game.discard[game.discard.length - 1];
+  const indices = [...selected];
+  const cards = indices.map(i => game.player[i]);
+
+  // ✅ Penalty enforcement (only if player fails to respond with a 2)
+  if (game.pendingPenalty['player'] > 0) {
+    const canStack = cards.some(c => c.rank === '2');
+    if (!canStack) {
+      const count = game.pendingPenalty['player'];
+      for (let i = 0; i < count; i++) {
+        if (game.deck.length === 0) reshuffleFromDiscard();
+        if (game.deck.length > 0) {
+          game.player.push(game.deck.pop());
+        }
+      }
+      setStatus(`You drew ${count} penalty card(s).`);
+      logEvent(`Player drew ${count} penalty card(s).`, "penalty");
+      game.pendingPenalty['player'] = 0;
+      renderAll();
+
+      game.current = getNextPlayer('player');
+      setTimeout(aiTakeTurn, 1000);
+      return;
+    }
+    // ✅ If player plays a 2, continue and stack penalty
+  }
 
   // Queen cover enforcement
   if (game.mustCoverQueen === 'player') {
@@ -492,7 +489,7 @@ function playSelectedCards() {
       game.player.splice(idx, 0, playable);
       renderAll();
       return;
-    } // ✅ close if (!choice)
+    }
 
     const declared = { 
       rank: choice.rank, 
@@ -531,10 +528,10 @@ function playSelectedCards() {
     game.gameOver = true;
     return;
   }
+
   game.current = getNextPlayer('player');
   setTimeout(aiTakeTurn, 1000);
 }
-
 
 
 
