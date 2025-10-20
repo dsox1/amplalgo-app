@@ -377,9 +377,12 @@ function playSelectedCards() {
   const indices = [...selected];
   const cards = indices.map(i => game.player[i]);
 
-  // ✅ Penalty enforcement (only if player fails to respond with a 2)
+  // ✅ Penalty enforcement (only if player fails to respond with a stackable card)
   if (game.pendingPenalty['player'] > 0) {
-    const canStack = cards.some(c => c.rank === '2');
+    const canStack = cards.some(c =>
+      c.rank === '2' ||
+      (c.rank === 'J' && (c.suit === '♠' || c.suit === '♣'))
+    );
     if (!canStack) {
       const count = game.pendingPenalty['player'];
       for (let i = 0; i < count; i++) {
@@ -397,7 +400,7 @@ function playSelectedCards() {
       setTimeout(aiTakeTurn, 1000);
       return;
     }
-    // ✅ If player plays a 2, continue and stack penalty
+    // ✅ If player plays a 2 or Black Jack, continue and stack penalty
   }
 
   // Queen cover enforcement
@@ -532,8 +535,6 @@ function playSelectedCards() {
   game.current = getNextPlayer('player');
   setTimeout(aiTakeTurn, 1000);
 }
-
-
 
 
 // ------------------ TURN FLOW ------------------
