@@ -771,6 +771,14 @@ function aiTakeTurn(){
 
   renderAll();
 
+  if ((game.mustCoverQueen === game.current || game.mustCoverKing === game.current) && hand.length === 0) {
+    setStatus(`${game.current} must cover their ${game.mustCoverQueen ? 'Queen' : 'King'} before winning.`);
+    logEvent(`${game.current} attempted to win without covering ${game.mustCoverQueen ? 'Queen' : 'King'}`, "penalty");
+    // Do not end game — allow AI to cover next turn
+  return;
+  }
+
+  
   if (hand.length === 0) {
     setStatus(`♔ ${game.current} wins!`);
     logEvent(`♔ ${game.current} wins the game`, "game");
