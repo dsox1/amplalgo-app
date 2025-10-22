@@ -613,7 +613,7 @@ function drawCard() {
   if (game.current !== 'player') {
     setTimeout(aiTakeTurn, 1000);
   } else {
-    setStatus("Your turn again!");
+    //setStatus("Your turn again!");
     startPlayerTurn();
   }
 }
