@@ -646,15 +646,16 @@ function aiTakeTurn() {
         game[game.current].push(card);
       }
     }
-    setStatus(`${game.current} drew ${count} penalty card(s).`);
-    logEvent(`${game.current} drew ${count} penalty card(s).`, "penalty");
-    game.pendingPenalty[game.current] = 0;
-    renderAll();
+  setStatus(`${game.current} drew ${count} penalty card(s).`);
+  logEvent(`${game.current} drew ${count} penalty card(s).`, "penalty");
+  game.pendingPenalty[game.current] = 0;
+  renderAll();
 
-    game.current = getNextPlayer(game.current);
-    if (game.current !== 'player') setTimeout(aiTakeTurn, 1000);
-    return;
-  }
+  game.current = getNextPlayer(game.current);
+  if (game.current !== 'player') setTimeout(aiTakeTurn, 1000);
+  return;
+}
+
 
   if (game.current === 'player' || game.gameOver) return;
 
