@@ -664,51 +664,61 @@ function aiTakeTurn() {
 
   // ✅ Queen cover enforcement
   if (game.mustCoverQueen === game.current) {
-    if (!playable || !isPlayable(playable, top)) {
-      if (game.deck.length === 0) reshuffleFromDiscard();
-      if (game.deck.length > 0) {
-        const penalty = game.deck.pop();
-        hand.push(penalty);
-        setStatus(`${game.current} failed to cover Queen → drew 1 card.`);
-        logEvent(`${game.current} failed to cover Queen → drew 1 card`, "penalty");
-      }
-      game.mustCoverQueen = null;
-      renderAll();
-      game.current = getNextPlayer(game.current);
-      if (game.current !== 'player') {
-        setTimeout(aiTakeTurn, 1000);
-      } else {
-        startPlayerTurn();
-      }
-      return;
+    const top = game.discard[game.discard.length - 1];
+    const coversQueen = playable && isPlayable(playable, top);
+
+  if (!coversQueen) {
+    if (game.deck.length === 0) reshuffleFromDiscard();
+    if (game.deck.length > 0) {
+      const penalty = game.deck.pop();
+      hand.push(penalty);
+      setStatus(`${game.current} failed to cover Queen → drew 1 card.`);
+      logEvent(`${game.current} failed to cover Queen → drew 1 card`, "penalty");
     }
     game.mustCoverQueen = null;
-    logEvent(`${game.current} covered Queen`, "power");
+    renderAll();
+    game.current = getNextPlayer(game.current);
+    if (game.current !== 'player') {
+      setTimeout(aiTakeTurn, 1000);
+    } else {
+      startPlayerTurn();
+    }
+    return;
   }
+
+  game.mustCoverQueen = null;
+  logEvent(`${game.current} covered Queen`, "power");
+}
+
 
   // ✅ King cover enforcement
   if (game.mustCoverKing === game.current) {
-    if (!playable || !isPlayable(playable, top)) {
-      if (game.deck.length === 0) reshuffleFromDiscard();
-      if (game.deck.length > 0) {
-        const penalty = game.deck.pop();
-        hand.push(penalty);
-        setStatus(`${game.current} failed to cover King → drew 1 card.`);
-        logEvent(`${game.current} failed to cover King → drew 1 card`, "penalty");
-      }
-      game.mustCoverKing = null;
-      renderAll();
-      game.current = getNextPlayer(game.current);
-      if (game.current !== 'player') {
-        setTimeout(aiTakeTurn, 1000);
-      } else {
-        startPlayerTurn();
-      }
-      return;
+    const top = game.discard[game.discard.length - 1];
+    const coversKing = playable && isPlayable(playable, top);
+
+  if (!coversKing) {
+    if (game.deck.length === 0) reshuffleFromDiscard();
+    if (game.deck.length > 0) {
+      const penalty = game.deck.pop();
+      hand.push(penalty);
+      setStatus(`${game.current} failed to cover King → drew 1 card.`);
+      logEvent(`${game.current} failed to cover King → drew 1 card`, "penalty");
     }
     game.mustCoverKing = null;
-    logEvent(`${game.current} covered King`, "power");
+    renderAll();
+    game.current = getNextPlayer(game.current);
+    if (game.current !== 'player') {
+      setTimeout(aiTakeTurn, 1000);
+    } else {
+      startPlayerTurn();
+    }
+    return;
   }
+
+  game.mustCoverKing = null;
+  logEvent(`${game.current} covered King`, "power");
+}
+
 
   // ✅ Normal AI play
   if (playable) {
