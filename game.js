@@ -636,38 +636,38 @@ function aiTakeTurn() {
     return;
   }
 
-// ✅ Enforce pending penalties
-let hand = game[game.current];
-let top = game.discard[game.discard.length - 1];
-let playable = hand.find(c => isPlayable(c, top));
+  // ✅ Enforce pending penalties
+  let hand = game[game.current];
+  let top = game.discard[game.discard.length - 1];
+  let playable = hand.find(c => isPlayable(c, top));
 
-// ✅ Check if AI can stack penalty
-if (game.pendingPenalty[game.current] > 0) {
-  const canStack = hand.some(c =>
-    c.rank === '2' ||
-    (c.rank === 'J' && (c.suit === '♠' || c.suit === '♣'))
-  );
+  // ✅ Check if AI can stack penalty
+  if (game.pendingPenalty[game.current] > 0) {
+    const canStack = hand.some(c =>
+      c.rank === '2' ||
+      (c.rank === 'J' && (c.suit === '♠' || c.suit === '♣'))
+    );
 
-  if (!canStack) {
-    const count = game.pendingPenalty[game.current];
-    for (let i = 0; i < count; i++) {
-      if (game.deck.length === 0) reshuffleFromDiscard();
-      if (game.deck.length > 0) {
-        const card = game.deck.pop();
-        hand.push(card);
+    if (!canStack) {
+      const count = game.pendingPenalty[game.current];
+      for (let i = 0; i < count; i++) {
+        if (game.deck.length === 0) reshuffleFromDiscard();
+        if (game.deck.length > 0) {
+          const card = game.deck.pop();
+          hand.push(card);
+        }
       }
-    }
-    setStatus(`${game.current} drew ${count} penalty card(s).`);
-    logEvent(`${game.current} drew ${count} penalty card(s).`, "penalty");
-    game.pendingPenalty[game.current] = 0;
-    renderAll();
+      setStatus(`${game.current} drew ${count} penalty card(s).`);
+      logEvent(`${game.current} drew ${count} penalty card(s).`, "penalty");
+      game.pendingPenalty[game.current] = 0;
+      renderAll();
 
-    game.current = getNextPlayer(game.current);
-    if (game.current !== 'player') setTimeout(aiTakeTurn, 1000);
-    return;
+      game.current = getNextPlayer(game.current);
+      if (game.current !== 'player') setTimeout(aiTakeTurn, 1000);
+      return;
+    }
+    // ✅ If AI can stack, continue with normal play logic
   }
-  // ✅ If AI can stack, continue with normal play logic
-}
 
 
 
