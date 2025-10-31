@@ -665,7 +665,7 @@ function aiTakeTurn() {
       game.current = getNextPlayer(game.current);
       if (game.current !== 'player') setTimeout(aiTakeTurn, 1000);
       return;
-    }
+    //}
     // ✅ If AI can stack, continue with normal play logic
   }
 
