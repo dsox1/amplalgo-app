@@ -667,7 +667,7 @@ function aiTakeTurn() {
       return;
     }
     // ✅ If AI can stack, continue with normal play logic
-  //}
+  }
 
 
 
