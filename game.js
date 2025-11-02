@@ -622,7 +622,12 @@ function drawCard() {
 
 // ------------------ AI TURN ------------------
 function aiTakeTurn() {
-  // ✅ Enforce skip turns first
+  if (game.current === 'player' || game.gameOver) return;
+
+  const hand = game[game.current];
+  const top = game.discard[game.discard.length - 1];
+
+  // ✅ Skip turn enforcement
   if (game.skipTurns[game.current] > 0) {
     const skips = game.skipTurns[game.current];
     game.skipTurns[game.current] = 0;
@@ -630,18 +635,11 @@ function aiTakeTurn() {
     logEvent(`${game.current} skipped ${skips} turn(s).`, "power");
 
     game.current = getNextPlayer(game.current);
-    if (game.current !== 'player') {
-      setTimeout(aiTakeTurn, 1000);
-    }
+    setTimeout(aiTakeTurn, 1000);
     return;
   }
 
-  // ✅ Enforce pending penalties
-  let hand = game[game.current];
-  let top = game.discard[game.discard.length - 1];
-  let playable = hand.find(c => isPlayable(c, top));
-
-  // ✅ Check if AI can stack penalty
+  // ✅ Penalty stacking check
   if (game.pendingPenalty[game.current] > 0) {
     const canStack = hand.some(c =>
       c.rank === '2' ||
@@ -653,8 +651,7 @@ function aiTakeTurn() {
       for (let i = 0; i < count; i++) {
         if (game.deck.length === 0) reshuffleFromDiscard();
         if (game.deck.length > 0) {
-          const card = game.deck.pop();
-          hand.push(card);
+          hand.push(game.deck.pop());
         }
       }
       setStatus(`${game.current} drew ${count} penalty card(s).`);
@@ -663,79 +660,55 @@ function aiTakeTurn() {
       renderAll();
 
       game.current = getNextPlayer(game.current);
-      if (game.current !== 'player') setTimeout(aiTakeTurn, 1000);
+      setTimeout(aiTakeTurn, 1000);
       return;
     }
-    // ✅ If AI can stack, continue with normal play logic
+    // ✅ If AI can stack, continue with play
   }
 
-
-
-  if (game.current === 'player' || game.gameOver) return;
-
-  const hand = game[game.current];
-  const top = game.discard[game.discard.length - 1];
   let playable = hand.find(c => isPlayable(c, top));
 
   // ✅ Queen cover enforcement
   if (game.mustCoverQueen === game.current) {
-    const top = game.discard[game.discard.length - 1];
     const coversQueen = playable && isPlayable(playable, top);
-
-  if (!coversQueen) {
-    if (game.deck.length === 0) reshuffleFromDiscard();
-    if (game.deck.length > 0) {
-      const penalty = game.deck.pop();
-      hand.push(penalty);
-      setStatus(`${game.current} failed to cover Queen → drew 1 card.`);
-      logEvent(`${game.current} failed to cover Queen → drew 1 card`, "penalty");
+    if (!coversQueen) {
+      if (game.deck.length === 0) reshuffleFromDiscard();
+      if (game.deck.length > 0) {
+        hand.push(game.deck.pop());
+        setStatus(`${game.current} failed to cover Queen → drew 1 card.`);
+        logEvent(`${game.current} failed to cover Queen → drew 1 card`, "penalty");
+      }
+      game.mustCoverQueen = null;
+      renderAll();
+      game.current = getNextPlayer(game.current);
+      setTimeout(aiTakeTurn, 1000);
+      return;
     }
     game.mustCoverQueen = null;
-    renderAll();
-    game.current = getNextPlayer(game.current);
-    if (game.current !== 'player') {
-      setTimeout(aiTakeTurn, 1000);
-    } else {
-      startPlayerTurn();
-    }
-    return;
+    logEvent(`${game.current} covered Queen`, "power");
   }
-
-  game.mustCoverQueen = null;
-  logEvent(`${game.current} covered Queen`, "power");
-}
-
 
   // ✅ King cover enforcement
   if (game.mustCoverKing === game.current) {
-    const top = game.discard[game.discard.length - 1];
     const coversKing = playable && isPlayable(playable, top);
-
-  if (!coversKing) {
-    if (game.deck.length === 0) reshuffleFromDiscard();
-    if (game.deck.length > 0) {
-      const penalty = game.deck.pop();
-      hand.push(penalty);
-      setStatus(`${game.current} failed to cover King → drew 1 card.`);
-      logEvent(`${game.current} failed to cover King → drew 1 card`, "penalty");
+    if (!coversKing) {
+      if (game.deck.length === 0) reshuffleFromDiscard();
+      if (game.deck.length > 0) {
+        hand.push(game.deck.pop());
+        setStatus(`${game.current} failed to cover King → drew 1 card.`);
+        logEvent(`${game.current} failed to cover King → drew 1 card`, "penalty");
+      }
+      game.mustCoverKing = null;
+      renderAll();
+      game.current = getNextPlayer(game.current);
+      setTimeout(aiTakeTurn, 1000);
+      return;
     }
     game.mustCoverKing = null;
-    renderAll();
-    game.current = getNextPlayer(game.current);
-    if (game.current !== 'player') {
-      setTimeout(aiTakeTurn, 1000);
-    } else {
-      startPlayerTurn();
-    }
-    return;
+    logEvent(`${game.current} covered King`, "power");
   }
 
-  game.mustCoverKing = null;
-  logEvent(`${game.current} covered King`, "power");
-}
-
-
-  // ✅ Normal AI play
+  // ✅ Normal play
   if (playable) {
     hand.splice(hand.indexOf(playable), 1);
 
@@ -743,7 +716,7 @@ function aiTakeTurn() {
       const suitCounts = { '♠':0, '♥':0, '♦':0, '♣':0 };
       hand.forEach(c => { if (!c.joker) suitCounts[c.suit]++; });
       const bestSuit = Object.keys(suitCounts).reduce((a,b)=> suitCounts[a]>suitCounts[b]?a:b);
-      const randRank = ranks[Math.floor(Math.random()*ranks.length)];
+      const randRank = ranks[Math.floor(Math.random() * ranks.length)];
       const declared = { rank: randRank, suit: bestSuit, joker: false, jokerDeclared: true };
 
       game.discard.push(declared);
@@ -763,8 +736,7 @@ function aiTakeTurn() {
   } else {
     if (game.deck.length === 0) reshuffleFromDiscard();
     if (game.deck.length > 0) {
-      const drawn = game.deck.pop();
-      hand.push(drawn);
+      hand.push(game.deck.pop());
       setStatus(`${game.current} drew a card.`);
       logEvent(`⚙ ${game.current} drew a card`, 'ai-action');
     } else {
@@ -775,6 +747,7 @@ function aiTakeTurn() {
 
   renderAll();
 
+  // ✅ Prevent win if Queen/King still needs cover
   if ((game.mustCoverQueen === game.current || game.mustCoverKing === game.current) && hand.length === 0) {
     setStatus(`${game.current} must cover their ${game.mustCoverQueen ? 'Queen' : 'King'} before winning.`);
     logEvent(`${game.current} attempted to win without covering ${game.mustCoverQueen ? 'Queen' : 'King'}`, "penalty");
