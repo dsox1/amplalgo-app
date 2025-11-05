@@ -151,63 +151,65 @@ function isValidRun(cards){
 
 
 function applyCoverRules(card) {
-  // Queen cover obligation
+  const next = getNextPlayer(game.lastPlayedBy);
+  const target = game.penaltyTarget || next;
+
+  // Queen cover
   if (card.rank === 'Q') {
     game.mustCoverQueen = game.lastPlayedBy;
     setStatus(`${game.lastPlayedBy} must cover their Queen.`);
     logEvent(`${game.lastPlayedBy} must cover Queen`, "power");
   }
 
-  // King cover obligation (only in heads-up)
+  // King cover (heads-up only)
   if (card.rank === 'K' && countActivePlayers() === 2) {
     game.mustCoverKing = game.lastPlayedBy;
     setStatus(`${game.lastPlayedBy} must cover their King.`);
     logEvent(`${game.lastPlayedBy} must cover King`, "power");
   }
 
-  // 2 → next player draws 2
+  // 2 → stack penalty
   if (card.rank === '2') {
-    const next = getNextPlayer(game.lastPlayedBy);
-    game.pendingPenalty[next] += 2;
-    setStatus(`${next} must draw 2 cards.`);
-    logEvent(`${next} penalised with 2 cards`, "penalty");
+    game.pendingPenalty[target] += 2;
+    game.penaltyTarget = target;
+    setStatus(`${target} must draw ${game.pendingPenalty[target]} cards.`);
+    logEvent(`${target} penalised with ${game.pendingPenalty[target]} cards`, "penalty");
   }
 
-  // 8 → next player skips a turn (stackable)
-  if (card.rank === '8') {
-    const next = getNextPlayer(game.lastPlayedBy);
-    game.skipTurns[next] += 1;
-    setStatus(`${next} will miss ${game.skipTurns[next]} turn(s).`);
-    logEvent(`${next} must skip ${game.skipTurns[next]} turn(s)`, "power");
-  }
-
-  // Black Jack penalty (real card J♠ or J♣)
+  // Black Jack → stack penalty
   if (card.rank === 'J' && (card.suit === '♠' || card.suit === '♣') && !card.jokerDeclared) {
-    const next = getNextPlayer(game.lastPlayedBy);
-    game.pendingPenalty[next] += 5;
-    setStatus(`${next} must draw 5 cards (Black Jack penalty).`);
-    logEvent(`${next} penalised with 5 cards (Black Jack)`, "penalty");
+    game.pendingPenalty[target] += 5;
+    game.penaltyTarget = target;
+    setStatus(`${target} must draw ${game.pendingPenalty[target]} cards (Black Jack).`);
+    logEvent(`${target} penalised with ${game.pendingPenalty[target]} cards (Black Jack)`, "penalty");
+  }
+
+  // 8 → stack skip turns
+  if (card.rank === '8') {
+    game.skipTurns[target] += 1;
+    game.penaltyTarget = target;
+    setStatus(`${target} will miss ${game.skipTurns[target]} turn(s).`);
+    logEvent(`${target} must skip ${game.skipTurns[target]} turn(s)`, "power");
   }
 
   // Joker declared as Jack
   if (card.rank === 'J' && card.jokerDeclared) {
-    const next = getNextPlayer(game.lastPlayedBy);
-
-    // Red Jack Joker cancels penalty
     if (card.suit === '♥' || card.suit === '♦') {
-      game.pendingPenalty[next] = 0;
+      game.pendingPenalty[target] = 0;
+      game.penaltyTarget = null;
       setStatus(`Penalty cancelled by Red Jack Joker!`);
       logEvent(`Penalty cancelled by Red Jack Joker`, "power");
     }
 
-    // Black Jack Joker stacks penalty
     if (card.suit === '♠' || card.suit === '♣') {
-      game.pendingPenalty[next] += 5;
-      setStatus(`${next} must draw 5 more cards (Black Jack Joker).`);
-      logEvent(`${next} penalised with 5 more cards (Black Jack Joker)`, "penalty");
+      game.pendingPenalty[target] += 5;
+      game.penaltyTarget = target;
+      setStatus(`${target} must draw ${game.pendingPenalty[target]} cards (Black Jack Joker).`);
+      logEvent(`${target} penalised with ${game.pendingPenalty[target]} cards (Black Jack Joker)`, "penalty");
     }
   }
 }
+
 
 
 
@@ -746,7 +748,7 @@ function aiTakeTurn() {
   }
 
   renderAll();
-
+  
   // ✅ Prevent win if Queen/King still needs cover
   if ((game.mustCoverQueen === game.current || game.mustCoverKing === game.current) && hand.length === 0) {
     setStatus(`${game.current} must cover their ${game.mustCoverQueen ? 'Queen' : 'King'} before winning.`);
@@ -761,6 +763,7 @@ function aiTakeTurn() {
     return;
   }
 
+  game.penaltyTarget = null;
   game.current = getNextPlayer(game.current);
   if (game.current !== 'player') {
     setTimeout(aiTakeTurn, 1000);
@@ -800,6 +803,7 @@ function startGame(){
     current: 'player',
     direction: 1,
     gameOver: false,
+    penaltyTarget: null,
     lastPlayedCard: null,
     lastPlayedBy: null,
     mustCoverQueen: null,
