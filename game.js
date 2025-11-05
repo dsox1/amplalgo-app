@@ -154,21 +154,21 @@ function applyCoverRules(card) {
   const next = getNextPlayer(game.lastPlayedBy);
   const target = game.penaltyTarget || next;
 
-  // Queen cover
+  // 👑 Queen cover obligation
   if (card.rank === 'Q') {
     game.mustCoverQueen = game.lastPlayedBy;
     setStatus(`${game.lastPlayedBy} must cover their Queen.`);
     logEvent(`${game.lastPlayedBy} must cover Queen`, "power");
   }
 
-  // King cover (heads-up only)
+  // 👑 King cover obligation (only in heads-up)
   if (card.rank === 'K' && countActivePlayers() === 2) {
     game.mustCoverKing = game.lastPlayedBy;
     setStatus(`${game.lastPlayedBy} must cover their King.`);
     logEvent(`${game.lastPlayedBy} must cover King`, "power");
   }
 
-  // 2 → stack penalty
+  // 🃏 2 → stack penalty
   if (card.rank === '2') {
     game.pendingPenalty[target] += 2;
     game.penaltyTarget = target;
@@ -176,7 +176,7 @@ function applyCoverRules(card) {
     logEvent(`${target} penalised with ${game.pendingPenalty[target]} cards`, "penalty");
   }
 
-  // Black Jack → stack penalty
+  // 🃏 Black Jack → stack penalty
   if (card.rank === 'J' && (card.suit === '♠' || card.suit === '♣') && !card.jokerDeclared) {
     game.pendingPenalty[target] += 5;
     game.penaltyTarget = target;
@@ -184,7 +184,7 @@ function applyCoverRules(card) {
     logEvent(`${target} penalised with ${game.pendingPenalty[target]} cards (Black Jack)`, "penalty");
   }
 
-  // 8 → stack skip turns
+  // ⏭ 8 → stack skip turns
   if (card.rank === '8') {
     game.skipTurns[target] += 1;
     game.penaltyTarget = target;
@@ -192,7 +192,7 @@ function applyCoverRules(card) {
     logEvent(`${target} must skip ${game.skipTurns[target]} turn(s)`, "power");
   }
 
-  // Joker declared as Jack
+  // 🃏 Joker declared as Jack
   if (card.rank === 'J' && card.jokerDeclared) {
     if (card.suit === '♥' || card.suit === '♦') {
       game.pendingPenalty[target] = 0;
@@ -209,6 +209,7 @@ function applyCoverRules(card) {
     }
   }
 }
+
 
 
 
