@@ -113,19 +113,22 @@ function countActivePlayers(){
 
 function isPlayable(card, top) {
   if (!card || !top) return false;
-  // Jokers that haven’t been declared yet are always playable
+
+  // ✅ Always allow Ace wild
+  if (card.rank === 'A') return true;
+
+  // ✅ Jokers are always playable
   if (card.joker) return true;
-  // If the top card was a Joker that was declared, treat it like its chosen rank/suit
+
+  // ✅ If top card is a declared Joker, match its declared suit/rank
   if (top.jokerDeclared) {
     return card.rank === top.rank || card.suit === top.suit;
   }
 
-  // Ace wild (always playable)
-  if (card.rank === 'A') return true;
-
-  // Normal rule: match rank or suit
+  // ✅ Normal match: suit or rank
   return card.rank === top.rank || card.suit === top.suit;
 }
+
 
 
 function isValidRun(cards){
@@ -161,7 +164,7 @@ function applyCoverRules(card) {
     logEvent(`${game.lastPlayedBy} must cover Queen`, "power");
   }
 
-  // 👑 King cover obligation (only in heads-up)
+  // 👑 King cover obligation (heads-up only)
   if (card.rank === 'K' && countActivePlayers() === 2) {
     game.mustCoverKing = game.lastPlayedBy;
     setStatus(`${game.lastPlayedBy} must cover their King.`);
@@ -209,6 +212,7 @@ function applyCoverRules(card) {
     }
   }
 }
+
 
 
 
